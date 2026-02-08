@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pages Management - BlinkSite</title>
-    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <style>
@@ -90,7 +91,6 @@
                     </div>
 
                     <div class="overflow-x-auto w-full rounded-xl">
-                        
                         <table x-show="!loading && pages.length > 0" class="w-full text-left min-w-[800px]">
                             <thead class="bg-gray-50 dark:bg-gray-700 border-b dark:border-gray-600 text-gray-500 dark:text-gray-300 text-xs uppercase font-bold tracking-wider">
                                 <tr>
@@ -98,7 +98,7 @@
                                     <th class="p-4">Judul / Slug</th>
                                     <th class="p-4 w-32">Tipe Produk</th>
                                     <th class="p-4 w-32">Tanggal Dibuat</th>
-                                    <th class="p-4 text-right w-24">Aksi</th>
+                                    <th class="p-4 text-right w-40">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y dark:divide-gray-700 text-sm">
@@ -131,11 +131,19 @@
                                                   x-text="p.product_type"></span>
                                         </td>
                                         <td class="p-4 text-gray-500 whitespace-nowrap" x-text="new Date(p.created_at).toLocaleDateString('id-ID')"></td>
+                                        
                                         <td class="p-4 text-right">
-                                            <a :href="'/admin/editor?slug=' + p.slug" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-bold text-xs inline-flex items-center gap-2 shadow-sm transition whitespace-nowrap">
-                                                <i class="ph ph-pencil-simple"></i> Edit
-                                            </a>
+                                            <div class="flex items-center justify-end gap-2">
+                                                <a :href="'/admin/editor?slug=' + p.slug" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg font-bold text-xs inline-flex items-center gap-1 shadow-sm transition whitespace-nowrap">
+                                                    <i class="ph ph-pencil-simple"></i> Edit
+                                                </a>
+                                                
+                                                <button @click="deletePage(p.id)" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-2 rounded-lg font-bold text-xs inline-flex items-center gap-1 shadow-sm transition whitespace-nowrap">
+                                                    <i class="ph ph-trash"></i> Hapus
+                                                </button>
+                                            </div>
                                         </td>
+
                                     </tr>
                                 </template>
                             </tbody>
@@ -227,6 +235,28 @@
                         body: JSON.stringify({ slug })
                     });
                     if(res.ok) this.homepageSlug = slug;
+                },
+
+                // --- FUNGSI HAPUS HALAMAN ---
+                async deletePage(id) {
+                    if(!confirm('Yakin ingin menghapus halaman ini selamanya? Tindakan ini tidak bisa dibatalkan.')) return;
+                    
+                    const token = localStorage.getItem('admin_pass');
+                    try {
+                        const res = await fetch(`/api/admin/pages/${id}`, {
+                            method: 'DELETE',
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+
+                        if(res.ok) {
+                            // Hapus dari list di frontend agar tidak perlu refresh
+                            this.pages = this.pages.filter(p => p.id !== id);
+                        } else {
+                            alert('Gagal menghapus halaman.');
+                        }
+                    } catch(e) {
+                        alert('Terjadi kesalahan koneksi.');
+                    }
                 },
 
                 async createPage() {
