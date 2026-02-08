@@ -366,6 +366,18 @@ app.get('/api/admin/pages/:slug', async (c) => {
     return c.json(page || {});
 });
 
+app.delete('/api/admin/pages/:id', async (c) => {
+    try {
+        const id = c.req.param('id');
+        // Hapus dari database pages
+        await c.env.DB.prepare("DELETE FROM pages WHERE id = ?").bind(id).run();
+        // Opsional: Hapus juga pesan/analytics terkait halaman ini jika perlu
+        return c.json({ success: true });
+    } catch (e) {
+        return c.json({ error: e.message }, 500);
+    }
+});
+
 // --- MODULE: MESSAGES ---
 app.get('/api/admin/messages', async (c) => {
     try {
