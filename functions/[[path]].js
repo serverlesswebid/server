@@ -422,6 +422,15 @@ app.get('/api/admin/analytics/data', async (c) => {
     } catch(e) { return c.json({ success: false, error: e.message }, 500); }
 });
 
+app.get('/api/admin/reports', async (c) => {
+    try {
+        const weeklyStats = await c.env.DB.prepare(`SELECT DATE(created_at) as date, SUM(views) as views FROM analytics_rekap WHERE created_at >= date('now', '-7 days') GROUP BY DATE(created_at) ORDER BY date ASC`).all();
+        const leads = await c.env.DB.prepare(`SELECT count(*) as total FROM messages`).first();
+        const views = await c.env.DB.prepare(`SELECT sum(views) as total FROM analytics_rekap`).first();
+        return c.json({ success: true, chart_data: weeklyStats.results || [], summary: { total_leads: leads?.total || 0, total_views: views?.total || 0 } });
+    } catch (e) { return c.json({ error: e.message }, 500); }
+});
+
 // --- MODULE: SETTINGS & TEMPLATES ---
 app.post('/api/admin/credentials', async (c) => {
     const { provider, data } = await c.req.json();
