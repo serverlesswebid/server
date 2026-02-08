@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LandingBuilder Pro - Fix</title>
+    
+    <script>
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0] && typeof args[0] === 'string' && (args[0].includes('cdn.tailwindcss.com') || args[0].includes('production'))) return;
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.2/dist/css/grapes.min.css">
+    <script src="https://unpkg.com/grapesjs@0.21.2/dist/grapes.min.js"></script>
+    <script src="https://unpkg.com/grapesjs-blocks-basic@1.0.1"></script>
+    <script src="https://unpkg.com/grapesjs-plugin-forms@2.0.5"></script> 
+    <script src="https://unpkg.com/grapesjs-navbar@1.0.1"></script>
+    <script src="https://unpkg.com/grapesjs-tabs@1.0.6"></script>
+    <script src="https://unpkg.com/grapesjs-custom-code@1.0.1"></script>
+    <script src="https://unpkg.com/grapesjs-tooltip@0.1.7"></script>
+    <script src="https://unpkg.com/grapesjs-blocks-flexbox@0.1.1"></script>
+    <script src="https://unpkg.com/grapesjs-plugin-export@1.0.11"></script>
+    <script src="https://unpkg.com/grapesjs-typed@1.0.5"></script>
+    <script src="https://unpkg.com/grapesjs-style-bg@2.0.1"></script>
+
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: #fff; }
+        [x-cloak] { display: none !important; }
+
+        header {
+            height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100;
+            background: white; border-bottom: 1px solid #e2e8f0;
+            display: flex; align-items: center; justify-content: space-between; padding: 0 16px;
+        }
+
+        .mobile-tools {
+            display: none; height: 50px; width: 100%; position: fixed; top: 60px; left: 0; z-index: 90;
+            background: #f8fafc; border-bottom: 1px solid #e2e8f0;
+            align-items: center; justify-content: center; gap: 15px;
+        }
+
+        .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; }
+        #gjs { position: relative !important; flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; }
+
+        .sidebar-panel {
+            position: relative; width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0;
+            z-index: 50; display: flex; flex-direction: column; flex-shrink: 0;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-tools { display: flex; }
+            .workspace { top: 110px; } 
+            #gjs { right: 0 !important; bottom: 60px !important; }
+            .sidebar-panel {
+                position: fixed; right: 0; top: 110px; bottom: 60px; width: 100% !important;
+                z-index: 9999 !important; transform: translateX(100%);
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .sidebar-panel.open { transform: translateX(0); }
+            .mobile-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 150; top: 110px; bottom: 60px; display: none; }
+            .mobile-overlay.show { display: block; }
+        }
+
+        /* HIDE GRAPESJS DEFAULT PANELS */
+        .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; width: 0 !important; }
+        .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
+
+        /* ULTRA COMPACT WIDGET BUTTONS (3 KOLOM) */
+        .gjs-blocks-c { 
+            display: grid !important; 
+            grid-template-columns: repeat(3, 1fr) !important; 
+            gap: 4px !important; 
+            padding: 6px !important; 
+        }
+        .gjs-block { 
+            width: 100% !important; 
+            min-height: 45px !important; /* Sangat Pendek */
+            padding: 4px !important; 
+            background: #fff; 
+            border: 1px solid #e5e7eb; 
+            border-radius: 6px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 2px; 
+            cursor: pointer; 
+            transition: 0.2s;
+        }
+        .gjs-block-label { font-size: 7px !important; font-weight: 800; text-transform: uppercase; color: #4b5563; text-align: center; }
+        .gjs-block i, .gjs-block iconify-icon { font-size: 14px !important; color: #6366f1; }
+
+        .custom-scroll { overflow-y: auto; height: 100%; -webkit-overflow-scrolling: touch; }
+        .gjs-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px; }
+
+        /* TOOLBAR & RESIZER */
+        .gjs-toolbar { background-color: #4f46e5 !important; border-radius: 6px !important; display: flex !important; }
+        .gjs-toolbar-item { padding: 6px 8px !important; color: white !important; }
+        .gjs-resizer-h { width: 22px !important; height: 22px !important; background: #4f46e5 !important; border: 3px solid #fff !important; border-radius: 50% !important; z-index: 10 !important; }
+        /* Paksa Color Picker GrapesJS muncul di lapisan paling depan */
+        /* 1. Kotak warna di panel Styles (biar tetap kotak mungil, tidak memanjang) */
+.gjs-field-color-picker {
+    width: 25px !important;
+    height: 25px !important;
+    flex-shrink: 0 !important; /* Kunci biar tidak gepeng/panjang */
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    display: inline-block !important;
+}
+
+/* 2. Container input warna */
+.gjs-field-color {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    overflow: visible !important; /* WAJIB: biar popup tidak terpotong container sidebar */
+}
+
+/* 3. POPUP PALET WARNA (Spectrum) - Geser ke kiri */
+.sp-container {
+    z-index: 999999 !important; /* Jauh di atas sidebar 9999 */
+    position: fixed !important; /* Biar posisinya konsisten di layar HP */
+    /* Geser ke kiri sebesar 230px (lebar standar palet) agar tidak tertutup sidebar */
+    transform: translateX(-235px) !important; 
+    background: #ffffff !important;
+    border: 1px solid #ddd !important;
+    box-shadow: -5px 5px 20px rgba(0,0,0,0.3) !important;
+    padding: 8px !important;
+}
+
+/* 4. Memastikan input teks kode warna rapi */
+.gjs-field-color-input {
+    flex-grow: 1 !important;
+    height: 28px !important;
+}
+</style>
+</head>
+<body x-data="editorApp()">
+
+    <header>
+        <div class="flex items-center gap-3 overflow-hidden w-full max-w-[250px]">
+            <a href="/admin/pages" class="text-gray-400 hover:text-indigo-600 transition p-1.5 rounded shrink-0"><i class="ph ph-arrow-left text-xl"></i></a>
+            <div class="flex-1 min-w-0">
+                <input x-model="page.title" class="bg-transparent font-bold text-xs text-gray-800 outline-none w-full truncate" placeholder="Nama Halaman">
+                <div class="flex items-center gap-1">
+                    <span class="text-[8px] font-black text-gray-300 uppercase shrink-0">Slug:</span>
+                    <input x-model="page.slug" class="bg-transparent font-mono text-[9px] text-gray-400 outline-none w-full truncate">
+                </div>
+            </div>
+        </div>
+
+        <div class="hidden md:flex absolute left-1/2 transform -translate-x-1/2 items-center bg-gray-100 rounded-lg p-1 border shadow-sm">
+            <button @click="setDevice('desktop')" :class="device=='desktop'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-desktop text-lg"></i></button>
+            <button @click="setDevice('tablet')" :class="device=='tablet'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-tablet text-lg"></i></button>
+            <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile text-lg"></i></button>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button @click="showSettings=true" class="bg-white text-gray-600 px-3 py-2 rounded-lg text-xs font-bold border border-gray-200 hover:bg-gray-50 transition">Config</button>
+            <button @click="savePage" :disabled="loading" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-lg">
+                <span x-text="loading ? 'SAVING...' : 'PUBLISH'"></span>
+            </button>
+            <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden p-2 rounded-lg border border-gray-200" :class="mobileMenuOpen ? 'bg-indigo-50 text-indigo-600' : 'bg-white'">
+                <i class="ph" :class="mobileMenuOpen ? 'ph-x' : 'ph-list'" style="font-size: 24px;"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="mobile-tools">
+        <button @click="setDevice('desktop')" :class="device=='desktop'?'text-indigo-600 bg-white shadow-sm':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-desktop text-lg"></i></button>
+        <button @click="setDevice('tablet')" :class="device=='tablet'?'text-indigo-600 bg-white shadow-sm':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-tablet text-lg"></i></button>
+        <button @click="setDevice('mobile')" :class="device=='mobile'?'text-indigo-600 bg-white shadow-sm':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile text-lg"></i></button>
+        <div class="w-px h-4 bg-gray-300"></div>
+        <button @click="cmd('core:undo')" class="text-gray-500"><i class="ph ph-arrow-u-up-left text-lg"></i></button>
+        <button @click="cmd('core:redo')" class="text-gray-500"><i class="ph ph-arrow-u-up-right text-lg"></i></button>
+    </div>
+
+    <div class="workspace">
+        <div id="gjs"></div>
+        <div class="mobile-overlay md:hidden" :class="mobileMenuOpen ? 'show' : ''" @click="mobileMenuOpen = false"></div>
+        <div class="sidebar-panel" :class="mobileMenuOpen ? 'open' : ''">
+            <div class="flex border-b border-gray-200 bg-white shrink-0">
+                <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-squares-four text-xl"></i></button>
+                <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-paint-brush text-xl"></i></button>
+                <button @click="tab='traits'" :class="tab=='traits'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-sliders text-xl"></i></button>
+                <button @click="tab='layers'" :class="tab=='layers'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-stack text-xl"></i></button>
+            </div>
+            <div class="flex-1 bg-white custom-scroll relative w-full">
+                <div x-show="tab=='blocks'" class="h-full pb-20"><div id="blocks-container" class="p-2"></div></div>
+                <div x-show="tab=='styles'" class="h-full pb-20">
+                    <div id="selectors-container" class="p-3 bg-gray-50 border-b"></div>
+                    <div id="styles-container" class="p-1"></div>
+                </div>
+                <div x-show="tab=='traits'" class="h-full pb-20"><div id="traits-container" class="p-4"></div></div>
+                <div x-show="tab=='layers'" class="h-full pb-20"><div id="layers-container"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="md:hidden fixed bottom-0 left-0 w-full h-[60px] bg-white border-t border-gray-200 flex items-center justify-around z-[300] px-2 shadow-lg">
+        <button @click="cmd('core:preview')" class="flex flex-col items-center justify-center w-16 text-gray-500"><i class="ph ph-eye text-2xl"></i><span class="text-[9px] font-bold">View</span></button>
+        <button @click="showSettings=true" class="flex flex-col items-center justify-center w-16 text-gray-500"><i class="ph ph-gear-six text-2xl"></i><span class="text-[9px] font-bold">Config</span></button>
+        <button @click="savePage" :disabled="loading" class="bg-indigo-600 text-white px-6 py-2 rounded-full shadow-lg text-xs font-bold uppercase">Publish</button>
+    </div>
+
+    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[400] bg-slate-900/50 backdrop-blur-sm flex justify-end" @click.self="showSettings = false">
+    <div class="w-full md:w-[480px] h-full bg-white shadow-2xl flex flex-col border-l border-gray-200">
+        
+        <div class="p-5 border-b flex justify-between items-center bg-gray-50">
+            <h2 class="font-bold text-gray-800 flex items-center gap-2"><i class="ph ph-faders text-indigo-600 text-xl"></i> Page Settings</h2>
+            <button @click="showSettings = false" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button>
+        </div>
+
+        <div class="flex border-b text-[11px] font-black uppercase bg-white">
+            <button @click="settingsTab='commerce'" :class="settingsTab==='commerce'?'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 py-4">Commerce</button>
+            <button @click="settingsTab='seo'" :class="settingsTab==='seo'?'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 py-4">SEO</button>
+            <button @click="settingsTab='advanced'" :class="settingsTab==='advanced'?'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 py-4">Scripts & Pixel</button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+            <div x-show="settingsTab === 'commerce'" class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Nama Halaman</label>
+                    <input x-model="page.title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500 transition" placeholder="Judul Halaman">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">URL Slug</label>
+                    <input x-model="page.slug" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500 transition">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tipe Produk</label>
+                    <select x-model="page.product_type" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm">
+                        <option value="physical">Physical Product</option>
+                        <option value="digital">Digital Product</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Base Price (Rp)</label>
+                    <input type="number" x-model="page.config.price" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none">
+                </div>
+            </div>
+
+            <div x-show="settingsTab === 'seo'" class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Meta Description</label>
+                    <textarea x-model="page.meta.description" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm h-24 outline-none resize-none" placeholder="Deskripsi pencarian Google..."></textarea>
+                </div>
+                
+                <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Favicon URL</label>
+                    <div class="flex gap-2 mt-2">
+                        <input x-model="page.meta.favicon" class="flex-1 px-4 py-2 bg-white border rounded-lg text-xs outline-none focus:border-indigo-500 transition" placeholder="https://...">
+                        <div class="w-10 h-10 bg-white border rounded flex items-center justify-center overflow-hidden shrink-0">
+                            <template x-if="page.meta.favicon"><img :src="page.meta.favicon" class="w-6 h-6 object-contain"></template>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Social Share Image (OG URL)</label>
+                    <input x-model="page.meta.og_image" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500" placeholder="https://...">
+                </div>
+            </div>
+
+            <div x-show="settingsTab === 'advanced'" class="space-y-6">
+                <div class="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 space-y-4">
+                    <h4 class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Tracking Analytics</h4>
+                    <div>
+                        <label class="text-[9px] font-bold text-indigo-400 uppercase">Facebook Pixel ID</label>
+                        <input x-model="page.analytics.fb_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none" placeholder="Contoh: 123456789">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-indigo-400 uppercase">TikTok Pixel ID</label>
+                        <input x-model="page.analytics.tiktok_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none" placeholder="Contoh: C123456">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-indigo-400 uppercase">Google Analytics ID</label>
+                        <input x-model="page.analytics.ga_id" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none" placeholder="G-XXXXXXXX">
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Custom Header Script</label>
+                        <textarea x-model="page.scripts.header" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none" placeholder="<script>...</script>"></textarea>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Custom Footer Script</label>
+                        <textarea x-model="page.scripts.footer" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none" placeholder="Sebelum </body>"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Metode Pembayaran Aktif</label>
+            <div class="grid grid-cols-2 gap-2 mt-3">
+                <label class="flex items-center gap-2 p-2 bg-white border rounded-lg cursor-pointer hover:border-indigo-500 transition">
+                    <input type="checkbox" value="whatsapp" x-model="page.config.active_payments" class="w-4 h-4 rounded text-indigo-600">
+                    <span class="text-[11px] font-medium text-gray-700">WhatsApp</span>
+                </label>
+                <template x-for="p in paymentProviders" :key="p.slug">
+                    <label class="flex items-center gap-2 p-2 bg-white border rounded-lg cursor-pointer hover:border-indigo-500 transition">
+                        <input type="checkbox" :value="p.slug" x-model="page.config.active_payments" class="w-4 h-4 rounded text-indigo-600">
+                        <span class="text-[11px] font-medium text-gray-700" x-text="p.name"></span>
+                    </label>
+                </template>
+            </div>
+        </div>
+        <div class="p-4 border-t bg-gray-50 flex justify-end gap-3">
+            <button @click="showSettings=false" class="px-5 py-2 text-xs font-bold text-gray-500">CANCEL</button>
+            <button @click="savePage(); showSettings=false" class="px-8 py-2 bg-indigo-600 text-white text-xs font-black rounded-xl shadow-lg shadow-indigo-200 active:scale-95 transition-all">SIMPAN PERUBAHAN</button>
+        </div>
+    </div>
+</div>
+
+    <div class="fixed bottom-20 left-5 z-[9999] flex flex-col gap-2 pointer-events-none">
+        <template x-for="n in notifications" :key="n.id">
+            <div x-show="n.show" x-transition class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border-l-4 bg-white min-w-[250px]" :class="n.type==='success'?'border-green-500':'border-red-500'">
+                <i class="ph text-xl" :class="n.type==='success'?'ph-check-circle text-green-500':'ph-warning-circle text-red-500'"></i>
+                <div><h4 class="text-xs font-bold text-gray-800" x-text="n.title"></h4><p class="text-[10px] text-gray-500" x-text="n.msg"></p></div>
+            </div>
+        </template>
+    </div>
+
+    <div id="iconify-picker-modal" class="fixed inset-0 hidden z-[99999] bg-black/40 flex items-start justify-center p-6 backdrop-blur-sm">
+        <div class="bg-white rounded-xl w-full max-w-xl shadow-2xl mt-10 overflow-hidden">
+            <div class="flex items-center justify-between p-4 border-b bg-gray-50">
+                <input id="iconify-picker-search" placeholder="Cari icon..." class="w-full bg-transparent outline-none text-sm" />
+                <button id="iconify-picker-close"><i class="ph ph-x text-lg"></i></button>
+            </div>
+            <div id="iconify-picker-results" class="p-4 grid grid-cols-6 gap-3 max-h-[300px] overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- LOGIKA ICONIFY PICKER ---
+        (function(){
+            let activeModel = null; const modal = document.getElementById('iconify-picker-modal'); const input = document.getElementById('iconify-picker-search'); const results = document.getElementById('iconify-picker-results');
+            window.openIconifyPicker = function(model) { activeModel = model; modal.classList.remove('hidden'); input.value = ''; input.focus(); searchIcons('star'); };
+            document.getElementById('iconify-picker-close').onclick = () => modal.classList.add('hidden'); input.oninput = (e) => searchIcons(e.target.value);
+            async function searchIcons(q) { if(!q) return; try { const res = await fetch(`https://api.iconify.design/search?query=${q}&limit=18`); const data = await res.json(); results.innerHTML = ''; if(data.icons) { data.icons.forEach(icon => { const btn = document.createElement('button'); btn.className = 'p-2 hover:bg-indigo-50 rounded flex flex-col items-center gap-1'; btn.innerHTML = `<iconify-icon icon="${icon}" width="24"></iconify-icon><span class="text-[9px] text-gray-400 truncate w-full text-center">${icon.split(':')[1]}</span>`; btn.onclick = () => { if(activeModel) activeModel.setAttributes({ icon: icon }); modal.classList.add('hidden'); }; results.appendChild(btn); }); } } catch(e) {} }
+        })();
+
+        // --- APP LOGIC (ALPINE JS) ---
+        function editorApp() {
+            return {
+                device: 'desktop', tab: 'blocks', settingsTab: 'commerce', clipboard: null, mobileMenuOpen: false, showSettings: false, loading: false, notifications: [], paymentProviders: [],
+                page: { 
+                id: 0, 
+                slug: '', 
+                title: '', 
+                product_type: 'physical', 
+                slug_payment: 'whatsapp',
+                meta: { 
+                    description: '', 
+                    keywords: '', 
+                    og_image: '', 
+                    favicon: '' 
+                },
+                analytics: { 
+                    fb_pixel: '', 
+                    ga_id: '', 
+                    tiktok_pixel: '' 
+                },
+                scripts: { 
+                    header: '', 
+                    footer: '' 
+                },
+                config: { 
+                    price: 0, 
+                    active_payments: [], // Ini wajib array untuk checklist pembayaran
+                    variants: [], 
+                    shipping: { 
+                        weight: 1000, 
+                        cod: false 
+                    }, 
+                    order_bump: { 
+                        active: false 
+                    }, 
+                    coupons: [], 
+                    settings: {} 
+                } 
+            },
+            settingsTab: 'commerce', // Inisialisasi tab default
+
+                async init() {
+                    this.initGrapes();
+                    const slug = new URLSearchParams(window.location.search).get('slug');
+                    if (slug) await this.loadPageData(slug);
+                    else { this.page.slug = 'halaman-' + Date.now(); this.page.title = 'Halaman Baru'; }
+                },
+
+                async loadPageData(slug) {
+                    this.loading = true;
+                    try {
+                        const res = await fetch(`/api/admin/pages/${slug}`, { credentials: 'same-origin' });
+                        const data = await res.json();
+                        if (data) {
+                            this.page.id = data.id || 0; this.page.slug = data.slug || slug; this.page.title = data.title || '';
+                            if (data.meta) this.page.meta = typeof data.meta === 'string' ? JSON.parse(data.meta) : data.meta;
+                            if (window.editor) {
+                                if (data.html_content) window.editor.setComponents(data.html_content);
+                                if (data.css_content) window.editor.setStyle(data.css_content);
+                            }
+                        }
+                    } catch (e) {}
+                    this.loading = false;
+                },
+
+                async savePage() {
+                    this.loading = true;
+                    try {
+                        const payload = {
+                            id: this.page.id, slug: this.page.slug, title: this.page.title,
+                            html: `${window.editor.getHtml()}<script>${window.editor.getJs()}<\/script>`,
+                            css: window.editor.getCss(), meta: this.page.meta, product_config: this.page.config
+                        };
+                        const res = await fetch('/api/admin/pages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                        this.notify(res.ok ? 'Sukses' : 'Error', res.ok ? 'Published!' : 'Gagal', res.ok ? 'success' : 'error');
+                    } catch (e) { this.notify('Error', 'Masalah koneksi', 'error'); }
+                    this.loading = false;
+                },
+
+                notify(title, msg, type = 'success') { 
+                    const id = Date.now(); this.notifications.push({ id, title, msg, type, show: true }); 
+                    setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); 
+                },
+
+                setDevice(d) { this.device = d; if (window.editor) window.editor.setDevice(d); },
+                cmd(c) { window.editor.runCommand(c); },
+
+                initGrapes() {
+                    const bridgeCSS = `
+                        body { min-height: 100vh; background: #fff; overflow-x: hidden; font-family: 'Inter', sans-serif; }
+                        .product-gallery { display: flex; flex-direction: column; gap: 12px; width: 100%; overflow: hidden; }
+                        .gallery-main { display: flex; transition: transform 0.4s; width: 100%; }
+                        .gallery-main img { width: 100%; flex-shrink: 0; aspect-ratio: 4/3; object-fit: cover; border-radius: 12px; }
+                        .gallery-thumbs { display: flex; gap: 10px; overflow-x: auto; padding: 5px 0; }
+                        .thumb-item { min-width: 60px; width: 60px; height: 60px; flex-shrink: 0; border-radius: 8px; cursor: pointer; opacity: 0.6; object-fit: cover; }
+                        .thumb-item.active { border: 2px solid #4f46e5; opacity: 1; }
+                    `;
+
+                    window.editor = grapesjs.init({
+                        container: '#gjs', height: '100%', storageManager: false, panels: { defaults: [] },
+                        canvas: {
+                            scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
+                            styles: ['https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap', 'https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
+                            content: `<style>${bridgeCSS}</style>`
+                        },
+                        plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-tabs', 'grapesjs-custom-code', 'grapesjs-tooltip', 'grapesjs-blocks-flexbox', 'grapesjs-typed', 'grapesjs-style-bg'],
+                        deviceManager: { devices: [{ id: 'desktop', width: '' }, { id: 'tablet', width: '768px' }, { id: 'mobile', width: '375px' }] },
+                        blockManager: { appendTo: '#blocks-container' },
+                        layerManager: { appendTo: '#layers-container' },
+                        selectorManager: { appendTo: '#selectors-container' },
+                        traitManager: { appendTo: '#traits-container' },
+                        styleManager: { 
+                            appendTo: '#styles-container', 
+                            sectors: [
+                                { name: 'Typography', open:true, buildProps:['font-family','font-size','font-weight','color','text-align','line-height','letter-spacing'] },
+                                { name: 'Decorations', buildProps:['background-color','border','border-radius','box-shadow','opacity'] },
+                                { name: 'Dimensions', buildProps:['width','height','max-width','padding','margin'] }
+                            ] 
+                        }
+                    });
+
+                    const domc = window.editor.DomComponents;
+                    const bm = window.editor.BlockManager;
+
+                    // --- COMPONENT: ICONIFY (FIXED) ---
+                    domc.addType('iconify-icon', { model: { defaults: { tagName: 'iconify-icon', attributes: { icon: 'ph:star-fill', width: '32' }, traits: [{ type: 'button', text: 'Change Icon', command: (ed, t) => window.openIconifyPicker(t.target) }] } } });
+                    
+                    // --- COMPONENT: GALLERY ---
+                    domc.addType('product-gallery', {
+                        model: { defaults: { script: function() {
+                            const main = this.querySelector('.gallery-main'); const thumbs = this.querySelectorAll('.thumb-item');
+                            const goTo = (i) => { if(!main) return; main.style.transform = `translateX(-${i * 100}%)`; thumbs.forEach((t, idx) => idx === i ? t.classList.add('active') : t.classList.remove('active')); };
+                            thumbs.forEach((t, i) => t.onclick = () => goTo(i));
+                        }}}
+                    });
+                    domc.addType('countdown-smart', { model: { defaults: { traits: [{ type: 'datetime-local', name: 'data-expire', label: 'Waktu Berakhir' }], attributes: { 'data-expire': '2026-12-31T23:59' }, script: function() { const el = this; const update = () => { const dist = new Date(el.getAttribute('data-expire')).getTime() - new Date().getTime(); if (dist < 0) return; el.querySelector('.js-d').innerText = Math.floor(dist / 864e5); el.querySelector('.js-h').innerText = Math.floor((dist % 864e5) / 36e5); el.querySelector('.js-m').innerText = Math.floor((dist % 36e5) / 6e4); el.querySelector('.js-s').innerText = Math.floor((dist % 6e4) / 1e3); }; setInterval(update, 1000); update(); } } } });
+                    domc.addType('countdown-dynamic', { model: { defaults: { attributes: { 'data-reset': '2' }, script: function() { const el = this; let target = Date.now() + (parseFloat(el.getAttribute('data-reset')) * 3600000); const update = () => { let dist = target - Date.now(); if (dist < 0) { target = Date.now() + (parseFloat(el.getAttribute('data-reset')) * 3600000); dist = target - Date.now(); } el.querySelector('.js-h').innerText = Math.floor(dist / 36e5); el.querySelector('.js-m').innerText = Math.floor((dist % 36e5) / 6e4); el.querySelector('.js-s').innerText = Math.floor((dist % 6e4) / 1e3); }; setInterval(update, 1000); update(); } } } });
+
+            // --- LISTENERS ---
+                    // --- LISTENERS: ICONIFY DOUBLE CLICK (FIXED) ---
+                    window.editor.on('component:dblclick', (m) => { if(m.get('tagName') === 'iconify-icon') window.openIconifyPicker(m); });
+                    
+                    // --- LISTENERS: TOOLBAR (FIXED) ---
+                    window.editor.on('component:selected', (model) => {
+                        const toolbar = model.get('toolbar'); if (toolbar.find(item => item.id === 'cut-comp')) return;
+                        toolbar.unshift(
+                            { id: 'move-up', command: () => { const i = model.index(); if (i > 0) model.parent().components().add(model, { at: i - 1 }); }, label: '<i class="ph ph-arrow-up"></i>' },
+                            { id: 'move-down', command: () => { const i = model.index(); model.parent().components().add(model, { at: i + 2 }); }, label: '<i class="ph ph-arrow-down"></i>' },
+                            { id: 'cut-comp', command: () => { this.clipboard = model.toHTML(); model.remove(); this.notify('Cut', 'Dipotong', 'info'); }, label: '<i class="ph ph-scissors"></i>' },
+                            { id: 'paste-inside', command: () => { if (this.clipboard) { model.append(this.clipboard); this.notify('Sukses', 'Ditempel', 'success'); } }, label: '<i class="ph ph-box-arrow-down"></i>' }
+                        );
+                        model.set('toolbar', toolbar);
+                    });
+
+                    // --- LISTENERS: RESIZER ---
+                    window.editor.on('component:add', (m) => {
+                        const types = ['image', 'video', 'button', 'text'];
+                        if (types.includes(m.get('type')) || ['IMG', 'BUTTON'].includes(m.get('tagName'))) m.set('resizable', { cr: 1, cb: 1, br: 1 });
+                    });
+
+                    // --- BLOCK MANAGER: ALL BLOCKS ---
+                    bm.add('text-heading', { label: 'Judul', category: 'Basic', content: '<h2 class="text-3xl font-black mb-4">Tulis Judul</h2>' });
+                    bm.add('text-paragraph', { label: 'Teks', category: 'Basic', content: '<p class="text-gray-600 mb-4">Teks paragraf.</p>' });
+                    bm.add('ui-button', { label: 'Tombol', category: 'Basic', content: '<a href="#" class="btn btn-primary px-6 py-3 rounded-lg font-bold">Button</a>' });
+                    bm.add('ui-image', { label: 'Gambar', category: 'Basic', content: { type: 'image' } });
+                    bm.add('iconify-blk', { label: 'Icon', category: 'Basic', content: { type: 'iconify-icon' } });
+                    bm.add('ui-divider', { label: 'Garis', category: 'Basic', content: '<div class="divider py-4"></div>' });
+
+                    bm.add('gallery-carousel-1', { label: 'Slider', category: '2. Media', content: '<div class="product-gallery" data-gjs-type="product-gallery"><div class="gallery-main"><img src="https://via.placeholder.com/800x600/2563eb/fff?text=Slide+1"><img src="https://via.placeholder.com/800x600/10b981/fff?text=Slide+2"></div><div class="gallery-thumbs"><img src="https://via.placeholder.com/150/2563eb/fff" class="thumb-item active"><img src="https://via.placeholder.com/150/10b981/fff" class="thumb-item"></div></div>' });
+                    bm.add('video-yt', { label: 'Youtube', category: '2. Media', content: `<div class="aspect-video bg-black"><iframe width="100%" height="100%" src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0"></iframe></div>` });
+
+                    bm.add('feature-grid', { label: 'Fitur', category: '3. Content', content: `<section class="py-8"><div class="grid grid-cols-3 gap-4 text-center"><div><iconify-icon icon="ph:rocket" class="text-2xl"></iconify-icon><h3>Fast</h3></div></div></section>` });
+                    bm.add('testimonials', { label: 'Testi', category: '3. Content', content: `<section class="py-8 bg-gray-50 p-4 border rounded-lg">"Layanan Mantap!"</section>` });
+                    bm.add('faq-pro', { label: 'FAQ', category: '3. Content', content: `<section class="py-8 px-4"><div class="p-4 border rounded-xl mb-2"><h3>Pertanyaan?</h3><p>Isi jawaban.</p></div></section>` });
+                    bm.add('trust-badges', { label: 'Badges', category: '3. Content', content: `<div class="flex justify-center gap-4 py-8 opacity-50"><iconify-icon icon="logos:visa" width="48"></iconify-icon><iconify-icon icon="logos:mastercard" width="48"></iconify-icon></div>` });
+                    bm.add('countdown-smart', { label: 'Countdown Pro', category: '3. Content', content: { type: 'countdown-smart', content: `<div class="py-6 bg-indigo-900 text-white text-center rounded-xl js-wrap"><span class="js-d">00</span> Hari <span class="js-h">00</span> Jam <span class="js-m">00</span> Menit <span class="js-s">00</span> Detik</div>` } });
+                    bm.add('countdown-dynamic', { label: 'Evergreen Timer', category: '3. Content', content: { type: 'countdown-dynamic', content: `<div class="py-4 bg-red-600 text-white text-center rounded-lg"><span class="js-h">00</span>:<span class="js-m">00</span>:<span class="js-s">00</span></div>` } });
+                    
+                    
+                    bm.add('pricing-table', { label: 'Harga', category: '4. Commerce', content: `<div class="p-6 border-2 border-indigo-600 rounded-2xl text-center"><h3>PRO</h3><div class="text-2xl font-black">Rp 99k</div><button class="btn btn-primary w-full mt-4">Pilih</button></div>` });
+                    bm.add('pricing-2col', { label: 'Pricing 2-Col', category: '4. Commerce', content: '<section class="py-12 bg-white"><div class="max-w-4xl mx-auto px-4"><div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center"><div class="bg-gray-50 p-8 rounded-3xl border border-gray-100 flex flex-col text-center"><h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">STARTER</h3><div class="text-4xl font-black text-gray-900 my-6">Free</div><ul class="space-y-4 mb-8 text-sm text-gray-600 flex-1"><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:check-circle-fill" class="text-green-500"></iconify-icon><span>Fitur Aktif</span></li><li class="flex items-center gap-2 justify-center text-gray-400"><iconify-icon icon="ph:x-circle-fill" class="text-red-400"></iconify-icon><span>Template Silang</span></li></ul><button class="btn btn-outline w-full rounded-xl">Pilih Starter</button></div><div class="bg-white p-8 rounded-3xl border-4 border-indigo-600 shadow-2xl flex flex-col text-center relative scale-105 z-10"><div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-indigo-600 text-white px-4 py-1 rounded-full text-[10px] font-bold uppercase">Best Value</div><h3 class="text-xs font-bold text-indigo-600 uppercase tracking-widest">BUSINESS</h3><div class="text-4xl font-black text-gray-900 my-6">Rp 150k</div><ul class="space-y-4 mb-8 text-sm text-gray-700 font-medium flex-1"><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:check-circle-fill" class="text-indigo-600"></iconify-icon><span>Fitur Pro 1</span></li><li class="flex items-center gap-2 justify-center text-gray-400"><iconify-icon icon="ph:x-circle-fill" class="text-red-400"></iconify-icon><span>Template Silang</span></li></ul><button class="btn btn-primary w-full rounded-xl shadow-lg">Pilih Business</button></div></div></div></section>' });
+                    bm.add('pricing-pro-3col', { label: 'Pricing 3-Col', category: '4. Commerce', content: '<section class="py-16 bg-white"><div class="max-w-6xl mx-auto px-4"><div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center"><div class="bg-gray-50 p-8 rounded-3xl border border-gray-100 flex flex-col text-center"><h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest">BASIC</h3><div class="text-4xl font-black text-gray-900 my-6">Gratis</div><ul class="space-y-4 mb-8 text-sm text-gray-600 flex-1"><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:check-circle-fill" class="text-green-500"></iconify-icon><span>Fitur Aktif</span></li><li class="flex items-center gap-2 justify-center text-gray-400"><iconify-icon icon="ph:x-circle-fill" class="text-red-400"></iconify-icon><span>Fitur Tidak Aktif</span></li><li class="flex items-center gap-2 justify-center text-gray-400"><iconify-icon icon="ph:x-circle-fill" class="text-red-400"></iconify-icon><span>Fitur Tidak Aktif</span></li></ul><button class="btn btn-outline w-full rounded-xl border-gray-200">Pilih Basic</button></div><div class="bg-white p-8 rounded-3xl border-4 border-indigo-600 shadow-2xl flex flex-col text-center relative scale-105 z-10"><div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-indigo-600 text-white px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter">Terpopuler</div><h3 class="text-sm font-bold text-indigo-600 uppercase tracking-widest">PRO</h3><div class="text-4xl font-black text-gray-900 my-6">Rp 99k</div><ul class="space-y-4 mb-8 text-sm text-gray-700 font-medium flex-1"><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:check-circle-fill" class="text-indigo-600"></iconify-icon><span>Fitur Aktif 1</span></li><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:check-circle-fill" class="text-indigo-600"></iconify-icon><span>Fitur Aktif 2</span></li><li class="flex items-center gap-2 justify-center text-gray-400"><iconify-icon icon="ph:x-circle-fill" class="text-red-400"></iconify-icon><span>Fitur Tidak Aktif</span></li></ul><button class="btn btn-primary w-full rounded-xl shadow-lg shadow-indigo-200">Pilih Pro</button></div><div class="bg-gray-900 p-8 rounded-3xl flex flex-col text-center text-white"><h3 class="text-sm font-bold text-indigo-300 uppercase tracking-widest">ADVANCE</h3><div class="text-4xl font-black my-6">Rp 299k</div><ul class="space-y-4 mb-8 text-sm text-indigo-100/70 flex-1"><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:check-circle-fill" class="text-indigo-400"></iconify-icon><span>Fitur Aktif 1</span></li><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:check-circle-fill" class="text-indigo-400"></iconify-icon><span>Fitur Aktif 2</span></li><li class="flex items-center gap-2 justify-center text-white/30"><iconify-icon icon="ph:x-circle-fill" class="text-red-400"></iconify-icon><span>Template Silang 1</span></li><li class="flex items-center gap-2 justify-center text-white/30"><iconify-icon icon="ph:x-circle-fill" class="text-red-400"></iconify-icon><span>Template Silang 2</span></li></ul><button class="btn bg-white text-gray-900 border-none hover:bg-indigo-50 w-full rounded-xl font-bold">Pilih Advance</button></div></div></div></section>' });
+                    bm.add('pricing-4col', { label: 'Pricing 4-Col', category: '4. Commerce', content: '<section class="py-12 bg-white"><div class="max-w-7xl mx-auto px-4"><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-center"><div class="bg-gray-50 p-6 rounded-3xl border border-gray-100 flex flex-col text-center"><h3 class="text-xs font-bold text-gray-400 uppercase">PLAN 1</h3><div class="text-3xl font-black my-4">Free</div><ul class="space-y-3 mb-6 text-xs flex-1"><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:check-circle-fill" class="text-green-500"></iconify-icon><span>Aktif</span></li><li class="flex items-center gap-2 justify-center text-gray-400"><iconify-icon icon="ph:x-circle-fill" class="text-red-400"></iconify-icon><span>Silang</span></li></ul><button class="btn btn-sm btn-outline w-full rounded-lg">Pilih</button></div><div class="bg-gray-50 p-6 rounded-3xl border border-gray-100 flex flex-col text-center"><h3 class="text-xs font-bold text-gray-400 uppercase">PLAN 2</h3><div class="text-3xl font-black my-4">50k</div><ul class="space-y-3 mb-6 text-xs flex-1"><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:check-circle-fill" class="text-green-500"></iconify-icon><span>Aktif</span></li><li class="flex items-center gap-2 justify-center text-gray-400"><iconify-icon icon="ph:x-circle-fill" class="text-red-400"></iconify-icon><span>Silang</span></li></ul><button class="btn btn-sm btn-outline w-full rounded-lg">Pilih</button></div><div class="bg-white p-6 rounded-3xl border-2 border-indigo-600 shadow-xl flex flex-col text-center scale-105 z-10"><h3 class="text-xs font-bold text-indigo-600 uppercase">PLAN 3</h3><div class="text-3xl font-black my-4">150k</div><ul class="space-y-3 mb-6 text-xs flex-1"><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:check-circle-fill" class="text-indigo-600"></iconify-icon><span>Aktif</span></li><li class="flex items-center gap-2 justify-center text-gray-400"><iconify-icon icon="ph:x-circle-fill" class="text-red-400"></iconify-icon><span>Silang</span></li></ul><button class="btn btn-sm btn-primary w-full rounded-lg">Pilih</button></div><div class="bg-gray-50 p-6 rounded-3xl border border-gray-100 flex flex-col text-center"><h3 class="text-xs font-bold text-gray-400 uppercase">PLAN 4</h3><div class="text-3xl font-black my-4">300k</div><ul class="space-y-3 mb-6 text-xs flex-1"><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:check-circle-fill" class="text-green-500"></iconify-icon><span>Aktif</span></li><li class="flex items-center gap-2 justify-center text-gray-400"><iconify-icon icon="ph:x-circle-fill" class="text-red-400"></iconify-icon><span>Silang</span></li></ul><button class="btn btn-sm btn-outline w-full rounded-lg">Pilih</button></div></div></div></section>' });
+                    bm.add('pricing-5col', { label: 'Pricing 5-Col', category: '4. Commerce', content: '<section class="py-12 bg-white"><div class="max-w-[1400px] mx-auto px-4"><div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 items-center"><div class="bg-white p-5 rounded-2xl border flex flex-col text-center shadow-sm"><h3 class="text-[10px] font-bold uppercase">Basic</h3><div class="text-2xl font-black my-3 text-gray-800">10k</div><ul class="space-y-2 mb-4 text-[10px] flex-1 text-gray-500"><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:check-circle-fill" class="text-green-500"></iconify-icon><span>Point</span></li><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:x-circle-fill" class="text-red-400"></iconify-icon><span>Silang</span></li></ul><button class="btn btn-xs btn-outline w-full">Pilih</button></div><div class="bg-white p-5 rounded-2xl border flex flex-col text-center shadow-sm"><h3 class="text-[10px] font-bold uppercase">Plus</h3><div class="text-2xl font-black my-3 text-gray-800">25k</div><ul class="space-y-2 mb-4 text-[10px] flex-1 text-gray-500"><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:check-circle-fill" class="text-green-500"></iconify-icon><span>Point</span></li><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:x-circle-fill" class="text-red-400"></iconify-icon><span>Silang</span></li></ul><button class="btn btn-xs btn-outline w-full">Pilih</button></div><div class="bg-indigo-600 p-5 rounded-2xl border border-indigo-700 flex flex-col text-center shadow-lg scale-105 z-10 text-white"><h3 class="text-[10px] font-bold uppercase text-indigo-200">PRO</h3><div class="text-2xl font-black my-3">50k</div><ul class="space-y-2 mb-4 text-[10px] flex-1"><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:check-circle-fill" class="text-white"></iconify-icon><span>Point</span></li><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:x-circle-fill" class="text-red-300"></iconify-icon><span>Silang</span></li></ul><button class="btn btn-xs bg-white text-indigo-600 border-none w-full">Pilih</button></div><div class="bg-white p-5 rounded-2xl border flex flex-col text-center shadow-sm"><h3 class="text-[10px] font-bold uppercase">Max</h3><div class="text-2xl font-black my-3 text-gray-800">100k</div><ul class="space-y-2 mb-4 text-[10px] flex-1 text-gray-500"><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:check-circle-fill" class="text-green-500"></iconify-icon><span>Point</span></li><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:x-circle-fill" class="text-red-400"></iconify-icon><span>Silang</span></li></ul><button class="btn btn-xs btn-outline w-full">Pilih</button></div><div class="bg-white p-5 rounded-2xl border flex flex-col text-center shadow-sm"><h3 class="text-[10px] font-bold uppercase">Ultra</h3><div class="text-2xl font-black my-3 text-gray-800">200k</div><ul class="space-y-2 mb-4 text-[10px] flex-1 text-gray-500"><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:check-circle-fill" class="text-green-500"></iconify-icon><span>Point</span></li><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:x-circle-fill" class="text-red-400"></iconify-icon><span>Silang</span></li></ul><button class="btn btn-xs btn-outline w-full">Pilih</button></div></div></div></section>' });
+                    bm.add('pricing-6col', { label: 'Pricing 6-Col', category: '4. Commerce', content: '<section class="py-12 bg-white"><div class="max-w-[1600px] mx-auto px-2"><div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 items-center"><div class="bg-gray-50 p-4 rounded-xl border flex flex-col text-center"><h3 class="text-[9px] font-bold uppercase">P1</h3><div class="text-xl font-black my-2 text-gray-800">10k</div><ul class="space-y-1 mb-3 text-[9px] flex-1 text-gray-500"><li class="flex items-center gap-1 justify-center"><iconify-icon icon="ph:check-circle-fill" class="text-green-500"></iconify-icon><span>Ok</span></li><li class="flex items-center gap-1 justify-center"><iconify-icon icon="ph:x-circle-fill" class="text-red-400"></iconify-icon><span>No</span></li></ul><button class="btn btn-xs btn-ghost w-full scale-90 border-gray-200">Pilih</button></div><div class="bg-gray-50 p-4 rounded-xl border flex flex-col text-center"><h3 class="text-[9px] font-bold uppercase">P2</h3><div class="text-xl font-black my-2 text-gray-800">20k</div><ul class="space-y-1 mb-3 text-[9px] flex-1 text-gray-500"><li class="flex items-center gap-1 justify-center"><iconify-icon icon="ph:check-circle-fill" class="text-green-500"></iconify-icon><span>Ok</span></li><li class="flex items-center gap-1 justify-center"><iconify-icon icon="ph:x-circle-fill" class="text-red-400"></iconify-icon><span>No</span></li></ul><button class="btn btn-xs btn-ghost w-full scale-90 border-gray-200">Pilih</button></div><div class="bg-gray-50 p-4 rounded-xl border flex flex-col text-center"><h3 class="text-[9px] font-bold uppercase">P3</h3><div class="text-xl font-black my-2 text-gray-800">30k</div><ul class="space-y-1 mb-3 text-[9px] flex-1 text-gray-500"><li class="flex items-center gap-1 justify-center"><iconify-icon icon="ph:check-circle-fill" class="text-green-500"></iconify-icon><span>Ok</span></li><li class="flex items-center gap-1 justify-center"><iconify-icon icon="ph:x-circle-fill" class="text-red-400"></iconify-icon><span>No</span></li></ul><button class="btn btn-xs btn-ghost w-full scale-90 border-gray-200">Pilih</button></div><div class="bg-white p-4 rounded-xl border-2 border-indigo-600 shadow-lg flex flex-col text-center scale-105 z-10"><h3 class="text-[9px] font-bold uppercase text-indigo-600">PRO</h3><div class="text-xl font-black my-2 text-gray-900">50k</div><ul class="space-y-1 mb-3 text-[9px] flex-1 text-gray-700 font-bold"><li class="flex items-center gap-1 justify-center"><iconify-icon icon="ph:check-circle-fill" class="text-indigo-600"></iconify-icon><span>Best</span></li><li class="flex items-center gap-1 justify-center"><iconify-icon icon="ph:x-circle-fill" class="text-red-400"></iconify-icon><span>No</span></li></ul><button class="btn btn-xs btn-primary w-full scale-90">Pilih</button></div><div class="bg-gray-50 p-4 rounded-xl border flex flex-col text-center"><h3 class="text-[9px] font-bold uppercase">P5</h3><div class="text-xl font-black my-2 text-gray-800">80k</div><ul class="space-y-1 mb-3 text-[9px] flex-1 text-gray-500"><li class="flex items-center gap-1 justify-center"><iconify-icon icon="ph:check-circle-fill" class="text-green-500"></iconify-icon><span>Ok</span></li><li class="flex items-center gap-1 justify-center"><iconify-icon icon="ph:x-circle-fill" class="text-red-400"></iconify-icon><span>No</span></li></ul><button class="btn btn-xs btn-ghost w-full scale-90 border-gray-200">Pilih</button></div><div class="bg-gray-50 p-4 rounded-xl border flex flex-col text-center"><h3 class="text-[9px] font-bold uppercase">P6</h3><div class="text-xl font-black my-2 text-gray-800">100k</div><ul class="space-y-1 mb-3 text-[9px] flex-1 text-gray-500"><li class="flex items-center gap-1 justify-center"><iconify-icon icon="ph:check-circle-fill" class="text-green-500"></iconify-icon><span>Ok</span></li><li class="flex items-center gap-1 justify-center"><iconify-icon icon="ph:x-circle-fill" class="text-red-400"></iconify-icon><span>No</span></li></ul><button class="btn btn-xs btn-ghost w-full scale-90 border-gray-200">Pilih</button></div></div></div></section>' });
+                    // --- PRICING NEW STYLE: GRADIENT & MODERN (1 BARIS PER WIDGET) ---
+                    bm.add('pricing-v2-2col', { label: 'Pricing V2 2-Col', category: '4. Commerce', content: '<section class="py-16 bg-slate-50"><div class="max-w-4xl mx-auto px-4"><div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div class="bg-white p-8 rounded-2xl shadow-sm border-t-8 border-teal-500 text-center"><h3 class="font-bold text-teal-600 uppercase">Personal</h3><div class="text-4xl font-black my-4">Rp 49k</div><ul class="space-y-4 mb-8 text-sm"><li class="flex items-center gap-2 justify-center"><iconify-icon icon="solar:check-circle-bold" class="text-teal-500"></iconify-icon><span>Fitur Aktif</span></li><li class="flex items-center gap-2 justify-center text-gray-300"><iconify-icon icon="solar:close-circle-bold" class="text-red-300"></iconify-icon><span>Fitur Off</span></li></ul><button class="btn bg-teal-500 hover:bg-teal-600 text-white border-none w-full">Pilih Paket</button></div><div class="bg-white p-8 rounded-2xl shadow-xl border-t-8 border-rose-500 text-center scale-105"><h3 class="font-bold text-rose-600 uppercase">Business</h3><div class="text-4xl font-black my-4">Rp 149k</div><ul class="space-y-4 mb-8 text-sm"><li class="flex items-center gap-2 justify-center"><iconify-icon icon="solar:check-circle-bold" class="text-rose-500"></iconify-icon><span>Fitur Aktif 1</span></li><li class="flex items-center gap-2 justify-center"><iconify-icon icon="solar:check-circle-bold" class="text-rose-500"></iconify-icon><span>Fitur Aktif 2</span></li></ul><button class="btn bg-rose-500 hover:bg-rose-600 text-white border-none w-full shadow-lg shadow-rose-200">Pilih Paket</button></div></div></div></section>' });
+                    bm.add('pricing-v2-3col', { label: 'Pricing V2 3-Col', category: '4. Commerce', content: '<section class="py-16 bg-white"><div class="max-w-6xl mx-auto px-4"><div class="grid grid-cols-1 md:grid-cols-3 gap-6"><div class="p-8 rounded-3xl bg-white border border-gray-100 shadow-lg text-center"><h3 class="text-gray-400 font-bold">LITE</h3><div class="text-3xl font-black my-4">Rp 0</div><ul class="mb-8 space-y-3 text-sm text-gray-500"><li class="flex items-center justify-center gap-2"><iconify-icon icon="solar:check-circle-bold" class="text-emerald-500"></iconify-icon><span>Free Access</span></li><li class="flex items-center justify-center gap-2"><iconify-icon icon="solar:close-circle-bold" class="text-rose-400"></iconify-icon><span>No Ads</span></li></ul><button class="btn btn-ghost border-gray-200 w-full">Start</button></div><div class="p-8 rounded-3xl bg-gradient-to-br from-violet-600 to-indigo-700 text-white shadow-2xl text-center scale-110 z-10"><h3 class="text-violet-200 font-bold uppercase">Pro Expert</h3><div class="text-4xl font-black my-4">Rp 199k</div><ul class="mb-8 space-y-3 text-sm"><li class="flex items-center justify-center gap-2"><iconify-icon icon="solar:check-circle-bold" class="text-violet-200"></iconify-icon><span>Full Custom</span></li><li class="flex items-center justify-center gap-2"><iconify-icon icon="solar:close-circle-bold" class="text-violet-400"></iconify-icon><span>No Limit</span></li></ul><button class="btn bg-white text-violet-700 border-none w-full hover:bg-gray-100">Upgrade Now</button></div><div class="p-8 rounded-3xl bg-white border border-gray-100 shadow-lg text-center"><h3 class="text-gray-400 font-bold">TEAM</h3><div class="text-3xl font-black my-4">Rp 499k</div><ul class="mb-8 space-y-3 text-sm text-gray-500"><li class="flex items-center justify-center gap-2"><iconify-icon icon="solar:check-circle-bold" class="text-emerald-500"></iconify-icon><span>All Access</span></li><li class="flex items-center justify-center gap-2"><iconify-icon icon="solar:close-circle-bold" class="text-rose-400"></iconify-icon><span>Support</span></li></ul><button class="btn btn-ghost border-gray-200 w-full">Contact Us</button></div></div></div></section>' });
+                    bm.add('pricing-v2-4col', { label: 'Pricing V2 4-Col', category: '4. Commerce', content: '<section class="py-12 bg-slate-900"><div class="max-w-7xl mx-auto px-4"><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"><div class="bg-slate-800 p-6 rounded-2xl text-center text-white border border-slate-700"><h3 class="text-amber-400 font-bold text-xs uppercase">Starter</h3><div class="text-3xl font-black my-4">50k</div><ul class="mb-6 space-y-3 text-xs opacity-70"><li class="flex items-center justify-center gap-2"><iconify-icon icon="solar:check-circle-bold" class="text-amber-400"></iconify-icon><span>Feature 1</span></li><li class="flex items-center justify-center gap-2"><iconify-icon icon="solar:close-circle-bold" class="text-slate-500"></iconify-icon><span>Disabled</span></li></ul><button class="btn btn-sm bg-amber-500 border-none w-full text-slate-900">Buy Now</button></div><div class="bg-slate-800 p-6 rounded-2xl text-center text-white border border-slate-700"><h3 class="text-amber-400 font-bold text-xs uppercase">Bronze</h3><div class="text-3xl font-black my-4">100k</div><ul class="mb-6 space-y-3 text-xs opacity-70"><li class="flex items-center justify-center gap-2"><iconify-icon icon="solar:check-circle-bold" class="text-amber-400"></iconify-icon><span>Feature 1</span></li><li class="flex items-center justify-center gap-2"><iconify-icon icon="solar:close-circle-bold" class="text-slate-500"></iconify-icon><span>Disabled</span></li></ul><button class="btn btn-sm bg-amber-500 border-none w-full text-slate-900">Buy Now</button></div><div class="bg-slate-800 p-6 rounded-2xl text-center text-white border-2 border-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.3)] scale-105"><h3 class="text-amber-400 font-bold text-xs uppercase">Silver</h3><div class="text-3xl font-black my-4">250k</div><ul class="mb-6 space-y-3 text-xs"><li class="flex items-center justify-center gap-2"><iconify-icon icon="solar:check-circle-bold" class="text-amber-400"></iconify-icon><span>Feature 1</span></li><li class="flex items-center justify-center gap-2"><iconify-icon icon="solar:check-circle-bold" class="text-amber-400"></iconify-icon><span>Feature 2</span></li></ul><button class="btn btn-sm bg-amber-400 border-none w-full text-slate-900">Most Wanted</button></div><div class="bg-slate-800 p-6 rounded-2xl text-center text-white border border-slate-700"><h3 class="text-amber-400 font-bold text-xs uppercase">Gold</h3><div class="text-3xl font-black my-4">500k</div><ul class="mb-6 space-y-3 text-xs opacity-70"><li class="flex items-center justify-center gap-2"><iconify-icon icon="solar:check-circle-bold" class="text-amber-400"></iconify-icon><span>All Feature</span></li><li class="flex items-center justify-center gap-2"><iconify-icon icon="solar:close-circle-bold" class="text-slate-500"></iconify-icon><span>Max</span></li></ul><button class="btn btn-sm bg-amber-500 border-none w-full text-slate-900">Buy Now</button></div></div></div></section>' });
+                    bm.add('pricing-v2-5col', { label: 'Pricing V2 5-Col', category: '4. Commerce', content: '<section class="py-12 bg-white"><div class="max-w-[1400px] mx-auto px-4"><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4"><div class="p-6 bg-rose-50 rounded-2xl border border-rose-100 text-center"><h3 class="text-[10px] font-black text-rose-600 tracking-widest">MINI</h3><div class="text-2xl font-black my-2">15k</div><ul class="text-[10px] space-y-2 mb-4"><li class="flex items-center justify-center gap-1"><iconify-icon icon="solar:check-circle-bold" class="text-rose-500"></iconify-icon><span>Point 1</span></li><li class="flex items-center justify-center gap-1 text-rose-200"><iconify-icon icon="solar:close-circle-bold"></iconify-icon><span>Off</span></li></ul><button class="btn btn-xs bg-rose-500 border-none text-white w-full">Sikat</button></div><div class="p-6 bg-orange-50 rounded-2xl border border-orange-100 text-center"><h3 class="text-[10px] font-black text-orange-600 tracking-widest">SMALL</h3><div class="text-2xl font-black my-2">35k</div><ul class="text-[10px] space-y-2 mb-4"><li class="flex items-center justify-center gap-1"><iconify-icon icon="solar:check-circle-bold" class="text-orange-500"></iconify-icon><span>Point 1</span></li><li class="flex items-center justify-center gap-1 text-orange-200"><iconify-icon icon="solar:close-circle-bold"></iconify-icon><span>Off</span></li></ul><button class="btn btn-xs bg-orange-500 border-none text-white w-full">Sikat</button></div><div class="p-6 bg-yellow-50 rounded-2xl border-4 border-yellow-400 text-center scale-110 shadow-lg"><h3 class="text-[10px] font-black text-yellow-700 tracking-widest">BEST</h3><div class="text-2xl font-black my-2">75k</div><ul class="text-[10px] space-y-2 mb-4"><li class="flex items-center justify-center gap-1"><iconify-icon icon="solar:check-circle-bold" class="text-yellow-600"></iconify-icon><span>Point 1</span></li><li class="flex items-center justify-center gap-1"><iconify-icon icon="solar:check-circle-bold" class="text-yellow-600"></iconify-icon><span>Point 2</span></li></ul><button class="btn btn-xs bg-yellow-500 border-none text-white w-full">Sikat</button></div><div class="p-6 bg-green-50 rounded-2xl border border-green-100 text-center"><h3 class="text-[10px] font-black text-green-600 tracking-widest">LARGE</h3><div class="text-2xl font-black my-2">150k</div><ul class="text-[10px] space-y-2 mb-4"><li class="flex items-center justify-center gap-1"><iconify-icon icon="solar:check-circle-bold" class="text-green-500"></iconify-icon><span>Point 1</span></li><li class="flex items-center justify-center gap-1 text-green-200"><iconify-icon icon="solar:close-circle-bold"></iconify-icon><span>Off</span></li></ul><button class="btn btn-xs bg-green-500 border-none text-white w-full">Sikat</button></div><div class="p-6 bg-blue-50 rounded-2xl border border-blue-100 text-center"><h3 class="text-[10px] font-black text-blue-600 tracking-widest">GIANT</h3><div class="text-2xl font-black my-2">300k</div><ul class="text-[10px] space-y-2 mb-4"><li class="flex items-center justify-center gap-1"><iconify-icon icon="solar:check-circle-bold" class="text-blue-500"></iconify-icon><span>All Access</span></li><li class="flex items-center justify-center gap-1"><iconify-icon icon="solar:check-circle-bold" class="text-blue-500"></iconify-icon><span>VIP</span></li></ul><button class="btn btn-xs bg-blue-500 border-none text-white w-full">Sikat</button></div></div></div></section>' });
+                    bm.add('pricing-v2-6col', { label: 'Pricing V2 6-Col', category: '4. Commerce', content: '<section class="py-12 bg-gray-50"><div class="max-w-[1600px] mx-auto px-4"><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3"><div class="bg-white p-4 rounded-xl shadow-sm border text-center"><div class="text-lg font-black text-indigo-600">P-1</div><div class="text-xs text-gray-400">Rp 10k</div><div class="my-4 border-t pt-4"><ul class="text-[8px] space-y-2 mb-4"><li class="flex items-center gap-1 justify-center"><iconify-icon icon="solar:check-circle-bold" class="text-green-500"></iconify-icon><span>Akses</span></li><li class="flex items-center gap-1 justify-center text-gray-200"><iconify-icon icon="solar:close-circle-bold"></iconify-icon><span>Fitur</span></li></ul><button class="btn btn-xs w-full">Go</button></div></div><div class="bg-white p-4 rounded-xl shadow-sm border text-center"><div class="text-lg font-black text-indigo-600">P-2</div><div class="text-xs text-gray-400">Rp 20k</div><div class="my-4 border-t pt-4"><ul class="text-[8px] space-y-2 mb-4"><li class="flex items-center gap-1 justify-center"><iconify-icon icon="solar:check-circle-bold" class="text-green-500"></iconify-icon><span>Akses</span></li><li class="flex items-center gap-1 justify-center text-gray-200"><iconify-icon icon="solar:close-circle-bold"></iconify-icon><span>Fitur</span></li></ul><button class="btn btn-xs w-full">Go</button></div></div><div class="bg-white p-4 rounded-xl shadow-sm border text-center"><div class="text-lg font-black text-indigo-600">P-3</div><div class="text-xs text-gray-400">Rp 30k</div><div class="my-4 border-t pt-4"><ul class="text-[8px] space-y-2 mb-4"><li class="flex items-center gap-1 justify-center"><iconify-icon icon="solar:check-circle-bold" class="text-green-500"></iconify-icon><span>Akses</span></li><li class="flex items-center gap-1 justify-center text-gray-200"><iconify-icon icon="solar:close-circle-bold"></iconify-icon><span>Fitur</span></li></ul><button class="btn btn-xs w-full">Go</button></div></div><div class="bg-indigo-600 p-4 rounded-xl shadow-xl border-none text-center text-white scale-105 z-10"><div class="text-lg font-black">P-PRO</div><div class="text-xs opacity-70">Rp 99k</div><div class="my-4 border-t border-indigo-400 pt-4"><ul class="text-[8px] space-y-2 mb-4"><li class="flex items-center gap-1 justify-center"><iconify-icon icon="solar:check-circle-bold" class="text-white"></iconify-icon><span>All Feature</span></li><li class="flex items-center gap-1 justify-center"><iconify-icon icon="solar:check-circle-bold" class="text-white"></iconify-icon><span>Unlimited</span></li></ul><button class="btn btn-xs w-full bg-white text-indigo-600 border-none">Go</button></div></div><div class="bg-white p-4 rounded-xl shadow-sm border text-center"><div class="text-lg font-black text-indigo-600">P-5</div><div class="text-xs text-gray-400">Rp 150k</div><div class="my-4 border-t pt-4"><ul class="text-[8px] space-y-2 mb-4"><li class="flex items-center gap-1 justify-center"><iconify-icon icon="solar:check-circle-bold" class="text-green-500"></iconify-icon><span>Akses</span></li><li class="flex items-center gap-1 justify-center text-gray-200"><iconify-icon icon="solar:close-circle-bold"></iconify-icon><span>Fitur</span></li></ul><button class="btn btn-xs w-full">Go</button></div></div><div class="bg-white p-4 rounded-xl shadow-sm border text-center"><div class="text-lg font-black text-indigo-600">P-6</div><div class="text-xs text-gray-400">Rp 200k</div><div class="my-4 border-t pt-4"><ul class="text-[8px] space-y-2 mb-4"><li class="flex items-center gap-1 justify-center"><iconify-icon icon="solar:check-circle-bold" class="text-green-500"></iconify-icon><span>Akses</span></li><li class="flex items-center gap-1 justify-center text-gray-200"><iconify-icon icon="solar:close-circle-bold"></iconify-icon><span>Fitur</span></li></ul><button class="btn btn-xs w-full">Go</button></div></div></div></div></section>' });
+                    bm.add('contact-form-pro', { label: 'Kontak Pro', category: '4. Commerce', content: '<section class="py-12 px-4"><div class="max-w-lg mx-auto bg-white p-8 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-gray-100"><form action="/api/public/contact" method="POST" class="space-y-4"><input type="hidden" name="page_id" :value="window.PAGE_ID || 0"><div class="text-center mb-6"><h2 class="text-2xl font-black text-gray-800 tracking-tight"><span>Hubungi Kami</span></h2><p class="text-gray-400 text-xs mt-1 font-medium uppercase tracking-widest"><span>Respon Cepat & Profesional</span></p></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><input type="text" name="name" placeholder="Nama Lengkap" required class="w-full px-5 py-5 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all"><input type="tel" name="phone" placeholder="No. WhatsApp" required class="w-full px-5 py-5 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all"></div><input type="email" name="email" placeholder="Alamat Email" class="w-full px-5 py-5 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all"><select name="subject" required class="w-full px-5 py-5 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all cursor-pointer"><option value="Pertanyaan">Pertanyaan</option><option value="Kerjasama">Kerjasama</option><option value="Info Produk">Info Produk</option><option value="Komplain">Komplain</option><option value="Saran">Saran</option></select><textarea name="message" placeholder="Tuliskan pesan Anda..." rows="4" required class="w-full px-5 py-5 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all resize-none"></textarea><button type="submit" class="w-full py-6 bg-blue-600 text-white font-black rounded-2xl shadow-[0_10px_20_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:-translate-y-1 active:scale-95 transition-all"><span>KIRIM SEKARANG</span></button></form></div></section>' });                   
+                    bm.add('container', { label: 'Container', category: 'Custom', content: `<div class="container mx-auto p-4 border-2 border-dashed border-gray-300 min-h-[100px] flex items-center justify-center text-gray-400">Drop Content Here</div>` });
+                    bm.add('container-800', { label: 'Cont-800px', category: 'Custom', content: `<div class="py-2 bg-gray-100"><div class="mx-auto max-w-[800px] w-full min-h-[150px] bg-white border-x-2 border-dashed border-blue-400 flex items-center justify-center text-blue-500 font-bold text-xs uppercase tracking-widest">Batas Kiri | 800px | Batas Kanan</div></div>` });
+                    bm.add('container-1000', { label: 'Cont-1000px', category: 'Custom', content: `<div class="py-2 bg-gray-100"><div class="mx-auto max-w-[1000px] w-full min-h-[150px] bg-white border-x-2 border-dashed border-blue-400 flex items-center justify-center text-blue-500 font-bold text-xs uppercase tracking-widest">Batas Kiri | 1000px | Batas Kanan</div></div>` });
+                    bm.add('container-1140', { label: 'Cont-1140px', category: 'Custom', content: `<div class="py-2 bg-gray-100"><div class="mx-auto max-w-[1140px] w-full min-h-[150px] bg-white border-x-2 border-dashed border-blue-400 flex items-center justify-center text-blue-500 font-bold text-xs uppercase tracking-widest">Batas Kiri | 1140px | Batas Kanan</div></div>` });
+                    bm.add('container-1200', { label: 'Cont-1200px', category: 'Custom', content: `<div class="py-2 bg-gray-100"><div class="mx-auto max-w-[1200px] w-full min-h-[150px] bg-white border-x-2 border-dashed border-blue-400 flex items-center justify-center text-blue-500 font-bold text-xs uppercase tracking-widest">Batas Kiri | 1200px | Batas Kanan</div></div>` });
+                    
+                    // --- CLICK TO ADD ---
+                    setTimeout(() => {
+                        const container = document.getElementById('blocks-container');
+                        if (container) {
+                            container.addEventListener('click', (e) => {
+                                const blockEl = e.target.closest('.gjs-block');
+                                if (blockEl) {
+                                    const id = blockEl.getAttribute('title') || blockEl.innerText.trim();
+                                    const block = window.editor.BlockManager.get(id);
+                                    if (block) {
+                                        window.editor.addComponents(block.get('content'));
+                                        if(window.innerWidth < 768) this.mobileMenuOpen = false;
+                                    }
+                                }
+                            });
+                        }
+                    }, 1500); 
+                }
+            }; 
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pages Management - BlinkSite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-200" x-data="pagesList()" x-init="init()" :class="darkMode ? 'dark' : ''">
+
+    <div class="flex h-screen overflow-hidden" x-cloak>
+        
+        <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'" 
+               class="fixed inset-y-0 left-0 z-30 w-64 bg-white dark:bg-gray-800 border-r dark:border-gray-700 transition-transform duration-300 ease-in-out md:relative md:flex md:flex-col shadow-xl md:shadow-none">
+            
+            <div class="h-16 flex items-center justify-center border-b dark:border-gray-700 shrink-0">
+                <span class="text-xl font-black text-blue-600 tracking-tighter">BlinkSite</span>
+            </div>
+
+            <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+                <a href="/admin/dashboard" class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group">
+                    <i class="ph ph-squares-four text-xl shrink-0"></i>
+                    <span class="font-medium whitespace-nowrap">Dashboard</span>
+                </a>
+
+                <a href="/admin/pages" class="flex items-center gap-3 px-3 py-3 rounded-lg bg-blue-600 text-white shadow-md group">
+                    <i class="ph ph-files text-xl shrink-0"></i>
+                    <span class="font-medium whitespace-nowrap">Halaman</span>
+                </a>
+
+                <a href="/admin/reports" class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group">
+                    <i class="ph ph-chart-line-up text-xl shrink-0"></i>
+                    <span class="font-medium whitespace-nowrap">Laporan</span>
+                </a>
+
+                <a href="/admin/analytics" class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group">
+                    <i class="ph ph-trend-up text-xl shrink-0"></i>
+                    <span class="font-medium whitespace-nowrap">Traffic</span>
+                </a>
+
+                <a href="/admin/messages" class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group">
+                    <i class="ph ph-envelope-simple text-xl shrink-0"></i>
+                    <span class="font-medium whitespace-nowrap">Pesan Masuk</span>
+                </a>
+
+                <a href="/admin/settings" class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group">
+                    <i class="ph ph-gear text-xl shrink-0"></i>
+                    <span class="font-medium whitespace-nowrap">Settings</span>
+                </a>
+            </nav>
+
+            <div class="p-4 border-t dark:border-gray-700 shrink-0">
+                <button @click="logout()" class="flex items-center gap-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 w-full p-2 rounded-lg transition-colors group">
+                    <i class="ph ph-sign-out text-xl shrink-0"></i>
+                    <span class="font-medium whitespace-nowrap">Keluar</span>
+                </button>
+            </div>
+        </aside>
+
+        <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+            <header class="h-16 bg-white dark:bg-gray-800 border-b dark:border-gray-700 flex justify-between items-center px-4 shadow-sm z-20 shrink-0">
+                <div class="flex items-center gap-4">
+                    <button @click="sidebarOpen = !sidebarOpen" class="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                        <i class="ph ph-list text-2xl dark:text-white"></i>
+                    </button>
+                    <h1 class="font-bold text-lg truncate dark:text-white">Daftar Halaman</h1>
+                </div>
+                <button @click="toggleTheme()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 border dark:border-gray-600 transition-colors">
+                    <i x-show="!darkMode" class="ph ph-moon text-xl text-gray-600"></i>
+                    <i x-show="darkMode" class="ph ph-sun text-xl text-yellow-400"></i>
+                </button>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-4 md:p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Kelola Landing Page</h2>
+                    <button @click="openCreate = true" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 shadow-lg transition">
+                        <i class="ph ph-plus-bold"></i> <span class="hidden md:inline">Halaman Baru</span><span class="md:hidden">Baru</span>
+                    </button>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow border dark:border-gray-700 relative min-h-[200px] flex flex-col">
+                    <div x-show="loading" class="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-gray-900/50 z-10 rounded-xl">
+                        <div class="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+                    </div>
+
+                    <div class="overflow-x-auto w-full rounded-xl">
+                        
+                        <table x-show="!loading && pages.length > 0" class="w-full text-left min-w-[800px]">
+                            <thead class="bg-gray-50 dark:bg-gray-700 border-b dark:border-gray-600 text-gray-500 dark:text-gray-300 text-xs uppercase font-bold tracking-wider">
+                                <tr>
+                                    <th class="p-4 w-24 text-center">Status</th>
+                                    <th class="p-4">Judul / Slug</th>
+                                    <th class="p-4 w-32">Tipe Produk</th>
+                                    <th class="p-4 w-32">Tanggal Dibuat</th>
+                                    <th class="p-4 text-right w-24">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y dark:divide-gray-700 text-sm">
+                                <template x-for="p in pages" :key="p.id">
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition group">
+                                        
+                                        <td class="p-4 text-center">
+                                            <template x-if="homepageSlug === p.slug">
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-green-100 text-green-700 border border-green-200 text-[10px] font-bold uppercase tracking-wide whitespace-nowrap">
+                                                    <i class="ph-fill ph-house"></i> Home
+                                                </span>
+                                            </template>
+                                            <template x-if="homepageSlug !== p.slug">
+                                                <button @click="setHomepage(p.slug)" class="px-3 py-1.5 rounded-md bg-white border border-gray-300 text-gray-600 text-[10px] font-bold hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition shadow-sm flex items-center justify-center mx-auto gap-1 whitespace-nowrap">
+                                                    Set Home
+                                                </button>
+                                            </template>
+                                        </td>
+
+                                        <td class="p-4">
+                                            <div class="font-bold text-gray-800 dark:text-white text-base truncate max-w-[200px]" x-text="p.title"></div>
+                                            <a :href="'/' + p.slug" target="_blank" class="text-blue-500 hover:underline flex items-center gap-1 mt-1 font-mono text-xs truncate max-w-[200px]">
+                                                <span x-text="'/' + p.slug"></span>
+                                                <i class="ph ph-arrow-square-out"></i>
+                                            </a>
+                                        </td>
+                                        <td class="p-4">
+                                            <span class="px-2 py-1 rounded text-[10px] font-bold uppercase border whitespace-nowrap" 
+                                                  :class="p.product_type === 'digital' ? 'bg-purple-100 text-purple-700 border-purple-200' : 'bg-green-100 text-green-700 border-green-200'"
+                                                  x-text="p.product_type"></span>
+                                        </td>
+                                        <td class="p-4 text-gray-500 whitespace-nowrap" x-text="new Date(p.created_at).toLocaleDateString('id-ID')"></td>
+                                        <td class="p-4 text-right">
+                                            <a :href="'/admin/editor?slug=' + p.slug" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-bold text-xs inline-flex items-center gap-2 shadow-sm transition whitespace-nowrap">
+                                                <i class="ph ph-pencil-simple"></i> Edit
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div x-show="!loading && pages.length === 0" class="p-10 text-center text-gray-500">
+                        Belum ada halaman. Buat halaman baru sekarang!
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <div x-show="openCreate" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" x-cloak x-transition>
+            <div @click.outside="openCreate = false" class="bg-white dark:bg-gray-800 p-6 rounded-xl w-full max-w-md shadow-2xl border dark:border-gray-700">
+                <h3 class="font-bold text-xl mb-4 dark:text-white">Buat Halaman Baru</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Judul Halaman</label>
+                        <input x-model="newPage.title" @input="generateSlug" placeholder="Promo Spesial" class="w-full border p-2.5 rounded-lg bg-gray-50 dark:bg-gray-900 dark:border-gray-600 dark:text-white outline-none focus:border-blue-500 transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">URL Slug</label>
+                        <input x-model="newPage.slug" class="w-full border p-2.5 rounded-lg bg-gray-50 dark:bg-gray-900 dark:border-gray-600 dark:text-white font-mono text-sm outline-none focus:border-blue-500 transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Tipe Produk</label>
+                        <select x-model="newPage.type" class="w-full border p-2.5 rounded-lg bg-gray-50 dark:bg-gray-900 dark:border-gray-600 dark:text-white outline-none">
+                            <option value="physical">Produk Fisik</option>
+                            <option value="digital">Produk Digital</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 mt-6">
+                    <button @click="openCreate = false" class="px-4 py-2 text-gray-400 font-bold hover:text-gray-600 dark:hover:text-gray-200">Batal</button>
+                    <button @click="createPage" :disabled="creating" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 transition shadow-lg">
+                        <span x-text="creating ? 'Loading...' : 'Buat Halaman'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 bg-black/50 z-20 md:hidden" x-transition.opacity></div>
+    </div>
+
+    <script>
+        function pagesList() {
+            return {
+                sidebarOpen: window.innerWidth > 768,
+                darkMode: localStorage.getItem('theme') === 'dark',
+                pages: [],
+                homepageSlug: null,
+                loading: true,
+                creating: false,
+                openCreate: false,
+                newPage: { slug: '', title: '', type: 'physical' },
+
+                async init() {
+                    const token = localStorage.getItem('admin_pass');
+                    if (!token) return window.location.href = '/login';
+                    if (this.darkMode) document.documentElement.classList.add('dark');
+
+                    const headers = { 'Authorization': `Bearer ${token}` };
+                    try {
+                        const [resPages, resHome] = await Promise.all([
+                            fetch('/api/admin/pages', { headers }),
+                            fetch('/api/admin/homepage-slug', { headers })
+                        ]);
+                        
+                        if(resPages.ok) this.pages = await resPages.json();
+                        if(resHome.ok) {
+                            const data = await resHome.json();
+                            this.homepageSlug = data.slug;
+                        }
+                    } catch(e) { console.error(e); }
+                    this.loading = false;
+                },
+
+                generateSlug() {
+                    this.newPage.slug = this.newPage.title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-');
+                },
+
+                async setHomepage(slug) {
+                    if(!confirm('Set sebagai homepage?')) return;
+                    const token = localStorage.getItem('admin_pass');
+                    const res = await fetch('/api/admin/set-homepage', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ slug })
+                    });
+                    if(res.ok) this.homepageSlug = slug;
+                },
+
+                async createPage() {
+                    if(!this.newPage.title) return;
+                    this.creating = true;
+                    const token = localStorage.getItem('admin_pass');
+                    const res = await fetch('/api/admin/pages', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({
+                            ...this.newPage,
+                            html: '<section style="padding:50px; text-align:center"><h1>' + this.newPage.title + '</h1></section>',
+                            css: '',
+                            product_config: { variants: [] }
+                        })
+                    });
+                    if(res.ok) window.location.href = '/admin/editor?slug=' + this.newPage.slug;
+                    this.creating = false;
+                },
+
+                toggleTheme() {
+                    this.darkMode = !this.darkMode;
+                    localStorage.setItem('theme', this.darkMode ? 'dark' : 'light');
+                    document.documentElement.classList.toggle('dark');
+                },
+
+                logout() {
+                    localStorage.removeItem('admin_pass');
+                    window.location.href = '/login';
+                }
+            }
+        }
+    </script>
+</body>
+</html>
