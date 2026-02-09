@@ -104,49 +104,49 @@
         .gjs-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px; }
 
         /* TOOLBAR & RESIZER */
-        .gjs-toolbar { background-color: #4f46e5 !important; border-radius: 6px !important; display: flex !important; }
-        .gjs-toolbar-item { padding: 6px 8px !important; color: white !important; }
-        .gjs-resizer-h { width: 22px !important; height: 22px !important; background: #4f46e5 !important; border: 3px solid #fff !important; border-radius: 50% !important; z-index: 10 !important; }
+        .gjs-toolbar { background-color: #1f2937 !important; border-radius: 8px !important; border: 1px solid #374151 !important; box-shadow: 4px 4px 15px rgba(0,0,0,0.2) !important; display: flex !important; flex-direction: column !important; gap: 6px !important; padding: 8px 0 !important; position: absolute !important; top: 0 !important; left: auto !important; right: -50px !important; width: 40px !important; height: auto !important; z-index: 100 !important; }
+        .gjs-toolbar-item { color: white !important; width: 100% !important; height: 28px !important; display: flex !important; align-items: center; justify-content: center !important; cursor: pointer !important; transition: 0.2s !important; }
+        .gjs-toolbar-item:hover { color: #818cf8 !important; transform: scale(1.1); }
         /* Paksa Color Picker GrapesJS muncul di lapisan paling depan */
         /* 1. Kotak warna di panel Styles (biar tetap kotak mungil, tidak memanjang) */
-.gjs-field-color-picker {
-    width: 25px !important;
-    height: 25px !important;
-    flex-shrink: 0 !important; /* Kunci biar tidak gepeng/panjang */
-    border: 1px solid #ccc !important;
-    border-radius: 4px !important;
-    cursor: pointer !important;
-    display: inline-block !important;
-}
-
-/* 2. Container input warna */
-.gjs-field-color {
-    display: flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-    overflow: visible !important; /* WAJIB: biar popup tidak terpotong container sidebar */
-}
-
-/* 3. POPUP PALET WARNA (Spectrum) - Geser ke kiri */
-.sp-container {
-    z-index: 999999 !important; /* Jauh di atas sidebar 9999 */
-    position: fixed !important; /* Biar posisinya konsisten di layar HP */
-    /* Geser ke kiri sebesar 230px (lebar standar palet) agar tidak tertutup sidebar */
-    transform: translateX(-235px) !important; 
-    background: #ffffff !important;
-    border: 1px solid #ddd !important;
-    box-shadow: -5px 5px 20px rgba(0,0,0,0.3) !important;
-    padding: 8px !important;
-}
-
-/* 4. Memastikan input teks kode warna rapi */
-.gjs-field-color-input {
-    flex-grow: 1 !important;
-    height: 28px !important;
-}
-</style>
-</head>
-<body x-data="editorApp()">
+    .gjs-field-color-picker {
+        width: 25px !important;
+        height: 25px !important;
+        flex-shrink: 0 !important; /* Kunci biar tidak gepeng/panjang */
+        border: 1px solid #ccc !important;
+        border-radius: 4px !important;
+        cursor: pointer !important;
+        display: inline-block !important;
+    }
+    
+    /* 2. Container input warna */
+    .gjs-field-color {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        overflow: visible !important; /* WAJIB: biar popup tidak terpotong container sidebar */
+    }
+    
+    /* 3. POPUP PALET WARNA (Spectrum) - Geser ke kiri */
+    .sp-container {
+        z-index: 999999 !important; /* Jauh di atas sidebar 9999 */
+        position: fixed !important; /* Biar posisinya konsisten di layar HP */
+        /* Geser ke kiri sebesar 230px (lebar standar palet) agar tidak tertutup sidebar */
+        transform: translateX(-235px) !important; 
+        background: #ffffff !important;
+        border: 1px solid #ddd !important;
+        box-shadow: -5px 5px 20px rgba(0,0,0,0.3) !important;
+        padding: 8px !important;
+    }
+    
+    /* 4. Memastikan input teks kode warna rapi */
+    .gjs-field-color-input {
+        flex-grow: 1 !important;
+        height: 28px !important;
+    }
+    </style>
+    </head>
+    <body x-data="editorApp()">
 
     <header>
         <div class="flex items-center gap-3 overflow-hidden w-full max-w-[250px]">
@@ -940,6 +940,20 @@
                 bm.add('feat-3-left', { label: 'Features 3-Col (Left)', category: '2. Features', content: `<section class="py-16 bg-gray-50"><div class="max-w-7xl mx-auto px-6"><div class="mb-12"><h2 class="text-3xl font-black text-gray-900">Fitur Unggulan</h2><div class="w-20 h-1 bg-indigo-600 mt-4"></div></div><div class="grid grid-cols-1 md:grid-cols-3 gap-10"><div class="flex flex-col items-start text-left group"><div class="mb-5 p-3 bg-indigo-100 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition"><iconify-icon icon="ph:chart-bar-duotone" width="32"></iconify-icon></div><h3 class="text-xl font-bold text-gray-800 mb-3">Analitik Lengkap</h3><p class="text-gray-500 text-sm leading-relaxed">Dapatkan wawasan mendalam tentang pengunjung Anda dengan dashboard analitik yang mudah dipahami.</p><a href="#" class="mt-4 text-indigo-600 font-bold text-sm hover:underline">Pelajari &rarr;</a></div><div class="flex flex-col items-start text-left group"><div class="mb-5 p-3 bg-orange-100 text-orange-600 rounded-lg group-hover:bg-orange-600 group-hover:text-white transition"><iconify-icon icon="ph:users-three-duotone" width="32"></iconify-icon></div><h3 class="text-xl font-bold text-gray-800 mb-3">Manajemen User</h3><p class="text-gray-500 text-sm leading-relaxed">Kelola hak akses tim Anda dengan mudah dan aman tanpa batasan jumlah pengguna.</p><a href="#" class="mt-4 text-orange-600 font-bold text-sm hover:underline">Pelajari &rarr;</a></div><div class="flex flex-col items-start text-left group"><div class="mb-5 p-3 bg-teal-100 text-teal-600 rounded-lg group-hover:bg-teal-600 group-hover:text-white transition"><iconify-icon icon="ph:globe-duotone" width="32"></iconify-icon></div><h3 class="text-xl font-bold text-gray-800 mb-3">Global Access</h3><p class="text-gray-500 text-sm leading-relaxed">Akses platform dari mana saja di seluruh dunia dengan jaminan uptime 99.9%.</p><a href="#" class="mt-4 text-teal-600 font-bold text-sm hover:underline">Pelajari &rarr;</a></div></div></div></section>` });
 
                 bm.add('feat-3-right', { label: 'Features 3-Col (Right)', category: '2. Features', content: `<section class="py-16 bg-white border-t border-b border-gray-100"><div class="max-w-7xl mx-auto px-6"><div class="grid grid-cols-1 md:grid-cols-3 gap-8"><div class="flex flex-col items-end text-right p-6 hover:bg-gray-50 rounded-xl transition duration-300"><div class="mb-4 text-red-500"><iconify-icon icon="ph:pencil-circle-duotone" width="48"></iconify-icon></div><h3 class="text-lg font-bold text-gray-900 mb-2">Desain Kustom</h3><p class="text-gray-500 text-sm">Sesuaikan tampilan halaman checkout Anda agar sesuai dengan identitas brand.</p></div><div class="flex flex-col items-end text-right p-6 hover:bg-gray-50 rounded-xl transition duration-300"><div class="mb-4 text-blue-500"><iconify-icon icon="ph:device-mobile-camera-duotone" width="48"></iconify-icon></div><h3 class="text-lg font-bold text-gray-900 mb-2">Mobile Friendly</h3><p class="text-gray-500 text-sm">Tampilan yang responsif dan sempurna di semua perangkat mobile pelanggan.</p></div><div class="flex flex-col items-end text-right p-6 hover:bg-gray-50 rounded-xl transition duration-300"><div class="mb-4 text-green-500"><iconify-icon icon="ph:money-duotone" width="48"></iconify-icon></div><h3 class="text-lg font-bold text-gray-900 mb-2">Biaya Rendah</h3><p class="text-gray-500 text-sm">Nikmati fitur premium dengan biaya yang sangat terjangkau untuk bisnis UMKM.</p></div></div></div></section>` });
+
+                // --- 4. CONFIG TOOLBAR (VERTICAL COMPLETE) ---
+                editor.on('component:selected', (c) => {
+                    c.set('toolbar', [
+                        { attributes: { class: 'fa fa-arrows', title: 'Geser' }, command: 'tlb-move', label: '<iconify-icon icon="ph:arrows-out-cardinal-bold" style="font-size:20px;"></iconify-icon>' },
+                        { attributes: { class: 'fa fa-arrow-up', title: 'Parent' }, command: (e) => e.runCommand('core:component-exit'), label: '<iconify-icon icon="ph:arrow-fat-up-bold" style="font-size:20px;"></iconify-icon>' },
+                        { attributes: { class: 'fa fa-scissors', title: 'Cut' }, command: (e) => { e.runCommand('core:copy'); e.getSelected().remove(); }, label: '<iconify-icon icon="ph:scissors-bold" style="font-size:18px; color:#fbbf24;"></iconify-icon>' },
+                        { attributes: { class: 'fa fa-copy', title: 'Copy' }, command: (e) => e.runCommand('core:copy'), label: '<iconify-icon icon="ph:copy-bold" style="font-size:18px; color:#38bdf8;"></iconify-icon>' },
+                        { attributes: { class: 'fa fa-paste', title: 'Paste' }, command: (e) => e.runCommand('core:paste'), label: '<iconify-icon icon="ph:clipboard-text-bold" style="font-size:18px; color:#4ade80;"></iconify-icon>' },
+                        { attributes: { class: 'fa fa-paste-inside', title: 'Paste Inside' }, command: (e) => { const s = e.getSelected(); const cl = e.Models.Clipboard && e.Models.Clipboard.get ? e.Models.Clipboard.get() : null; if(cl) s.append(cl); }, label: '<iconify-icon icon="ph:arrow-elbow-down-right-bold" style="font-size:18px; color:#c084fc;"></iconify-icon>' },
+                        { attributes: { class: 'fa fa-trash', title: 'Delete' }, command: 'tlb-delete', label: '<iconify-icon icon="ph:trash-bold" style="font-size:18px; color:#ef4444;"></iconify-icon>' }
+                    ]);
+                });
+                
                 // --- ADD CLICK EVENT ---
                 setTimeout(() => {
                     const container = document.getElementById('blocks-container');
