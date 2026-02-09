@@ -7,6 +7,10 @@ binding = "DB" # PENTING: Nama binding harus "DB" agar cocok dengan kode (c.env.
 database_name = "serverless"
 database_id = "5d901eee-4b95-42be-a50d-ca85aec07ee8"
 
+[[kv_namespaces]]
+binding = "WIDGET_CACHE"
+id = "5d6d5ef1775c4d6eb6d40e57cb9142b0"
+
 [[analytics_engine_datasets]]
 binding = "ANALYTICS_ENGINE"
 dataset = "serverless_events"
