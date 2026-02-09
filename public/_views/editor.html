@@ -344,426 +344,382 @@
     </div>
 
     <script>
-        // --- LOGIKA ICONIFY PICKER ---
-        (function(){
-            let activeModel = null; const modal = document.getElementById('iconify-picker-modal'); const input = document.getElementById('iconify-picker-search'); const results = document.getElementById('iconify-picker-results');
-            window.openIconifyPicker = function(model) { activeModel = model; modal.classList.remove('hidden'); input.value = ''; input.focus(); searchIcons('star'); };
-            document.getElementById('iconify-picker-close').onclick = () => modal.classList.add('hidden'); input.oninput = (e) => searchIcons(e.target.value);
-            async function searchIcons(q) { if(!q) return; try { const res = await fetch(`https://api.iconify.design/search?query=${q}&limit=18`); const data = await res.json(); results.innerHTML = ''; if(data.icons) { data.icons.forEach(icon => { const btn = document.createElement('button'); btn.className = 'p-2 hover:bg-indigo-50 rounded flex flex-col items-center gap-1'; btn.innerHTML = `<iconify-icon icon="${icon}" width="24"></iconify-icon><span class="text-[9px] text-gray-400 truncate w-full text-center">${icon.split(':')[1]}</span>`; btn.onclick = () => { if(activeModel) activeModel.setAttributes({ icon: icon }); modal.classList.add('hidden'); }; results.appendChild(btn); }); } } catch(e) {} }
-        })();
+    // --- 1. ICONIFY PICKER LOGIC ---
+    (function(){
+        let activeModel = null; 
+        const modal = document.getElementById('iconify-picker-modal'); 
+        const input = document.getElementById('iconify-picker-search'); 
+        const results = document.getElementById('iconify-picker-results');
+        
+        window.openIconifyPicker = function(model) { 
+            activeModel = model; 
+            modal.classList.remove('hidden'); 
+            input.value = ''; 
+            input.focus(); 
+            searchIcons('star'); 
+        };
+        
+        document.getElementById('iconify-picker-close').onclick = () => modal.classList.add('hidden'); 
+        input.oninput = (e) => searchIcons(e.target.value);
+        
+        async function searchIcons(q) { 
+            if(!q) return; 
+            try { 
+                const res = await fetch(`https://api.iconify.design/search?query=${q}&limit=30`); 
+                const data = await res.json(); 
+                results.innerHTML = ''; 
+                if(data.icons) { 
+                    data.icons.forEach(icon => { 
+                        const btn = document.createElement('button'); 
+                        btn.className = 'p-2 hover:bg-indigo-50 rounded flex flex-col items-center gap-1 transition'; 
+                        btn.innerHTML = `<iconify-icon icon="${icon}" width="24"></iconify-icon><span class="text-[9px] text-gray-400 truncate w-full text-center">${icon.split(':')[1]}</span>`; 
+                        btn.onclick = () => { 
+                            if(activeModel) activeModel.setAttributes({ icon: icon }); 
+                            modal.classList.add('hidden'); 
+                        }; 
+                        results.appendChild(btn); 
+                    }); 
+                } 
+            } catch(e) { console.error(e); } 
+        }
+    })();
 
-        // --- APP LOGIC (ALPINE JS) ---
-        function editorApp() {
-            return {
-                device: 'desktop', tab: 'blocks', settingsTab: 'commerce', clipboard: null, mobileMenuOpen: false, showSettings: false, loading: false, notifications: [], paymentProviders: [],
-                page: { 
+    // --- 2. MAIN EDITOR APP (ALPINE JS) ---
+    function editorApp() {
+        return {
+            // STATE VARIABLES
+            device: 'desktop', 
+            tab: 'blocks', 
+            settingsTab: 'commerce', 
+            clipboard: null, 
+            mobileMenuOpen: false, 
+            showSettings: false, 
+            loading: false, 
+            notifications: [], 
+            paymentProviders: [],
+            
+            // PAGE DATA
+            page: { 
                 id: 0, 
                 slug: '', 
                 title: '', 
                 product_type: 'physical', 
                 slug_payment: 'whatsapp',
-                meta: { 
-                    description: '', 
-                    keywords: '', 
-                    og_image: '', 
-                    favicon: '' 
-                },
-                analytics: { 
-                    fb_pixel: '', 
-                    ga_id: '', 
-                    tiktok_pixel: '' 
-                },
-                scripts: { 
-                    header: '', 
-                    footer: '' 
-                },
+                meta: { description: '', keywords: '', og_image: '', favicon: '' },
+                analytics: { fb_pixel: '', ga_id: '', tiktok_pixel: '' },
+                scripts: { header: '', footer: '' },
                 config: { 
                     price: 0, 
-                    active_payments: [], // Ini wajib array untuk checklist pembayaran
+                    active_payments: [], 
                     variants: [], 
-                    shipping: { 
-                        weight: 1000, 
-                        cod: false 
-                    }, 
-                    order_bump: { 
-                        active: false 
-                    }, 
+                    shipping: { weight: 1000, cod: false }, 
+                    order_bump: { active: false }, 
                     coupons: [], 
                     settings: {} 
                 } 
             },
-            settingsTab: 'commerce', // Inisialisasi tab default
 
-                async init() {
-                    this.initGrapes();
-                    const slug = new URLSearchParams(window.location.search).get('slug');
-                    if (slug) await this.loadPageData(slug);
-                    else { this.page.slug = 'halaman-' + Date.now(); this.page.title = 'Halaman Baru'; }
-                },
+            // --- INITIALIZATION ---
+            async init() {
+                this.initGrapes();
+                const slug = new URLSearchParams(window.location.search).get('slug');
+                if (slug) await this.loadPageData(slug);
+                else { 
+                    this.page.slug = 'halaman-' + Date.now(); 
+                    this.page.title = 'Halaman Baru'; 
+                }
+            },
 
-                async loadPageData(slug) {
-                    this.loading = true;
-                    try {
-                        const res = await fetch(`/api/admin/pages/${slug}`, { credentials: 'same-origin' });
+            // --- LOAD DATA ---
+            async loadPageData(slug) {
+                this.loading = true;
+                try {
+                    const res = await fetch(`/api/admin/pages/${slug}`, { credentials: 'same-origin' });
+                    if(res.ok) {
                         const data = await res.json();
                         if (data) {
-                            this.page.id = data.id || 0; this.page.slug = data.slug || slug; this.page.title = data.title || '';
+                            this.page.id = data.id || 0; 
+                            this.page.slug = data.slug || slug; 
+                            this.page.title = data.title || '';
                             if (data.meta) this.page.meta = typeof data.meta === 'string' ? JSON.parse(data.meta) : data.meta;
+                            
+                            // Load Config
+                            try {
+                                const c = JSON.parse(data.product_config_json || '{}');
+                                this.page.config = { ...this.page.config, ...c };
+                            } catch(e) {}
+
+                            // Load Content to Editor
                             if (window.editor) {
                                 if (data.html_content) window.editor.setComponents(data.html_content);
                                 if (data.css_content) window.editor.setStyle(data.css_content);
                             }
                         }
-                    } catch (e) {}
-                    this.loading = false;
-                },
-
-                async savePage() {
-                    this.loading = true;
-                    try {
-                        const payload = {
-                            id: this.page.id, slug: this.page.slug, title: this.page.title,
-                            html: `${window.editor.getHtml()}<script>${window.editor.getJs()}<\/script>`,
-                            css: window.editor.getCss(), meta: this.page.meta, product_config: this.page.config
-                        };
-                        const res = await fetch('/api/admin/pages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                        this.notify(res.ok ? 'Sukses' : 'Error', res.ok ? 'Published!' : 'Gagal', res.ok ? 'success' : 'error');
-                    } catch (e) { this.notify('Error', 'Masalah koneksi', 'error'); }
-                    this.loading = false;
-                },
-
-                notify(title, msg, type = 'success') { 
-                    const id = Date.now(); this.notifications.push({ id, title, msg, type, show: true }); 
-                    setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); 
-                },
-
-                setDevice(d) { this.device = d; if (window.editor) window.editor.setDevice(d); },
-                cmd(c) { window.editor.runCommand(c); },
-
-                initGrapes() {
-    const bridgeCSS = `
-        body { min-height: 100vh; background: #fff; overflow-x: hidden; font-family: 'Inter', sans-serif; }
-        
-        /* UTILITAS */
-        [x-cloak] { display: none !important; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        
-        /* ANIMASI NEWS FLASH */
-        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-        .animate-marquee { display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite; }
-
-        /* COUNTDOWN FIX */
-        .countdown-item { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 60px; }
-        .countdown-number { font-weight: 900; font-size: 2rem; line-height: 1; font-variant-numeric: tabular-nums; }
-        .countdown-label { font-size: 0.65rem; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; margin-top: 4px; opacity: 0.8; }
-        
-        /* GALLERY */
-        .product-gallery { display: flex; flex-direction: column; gap: 12px; width: 100%; overflow: hidden; }
-        .gallery-main img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 12px; }
-        .gallery-thumbs { display: flex; gap: 10px; overflow-x: auto; padding: 5px 0; }
-        .thumb-item { width: 60px; height: 60px; border-radius: 8px; cursor: pointer; opacity: 0.6; object-fit: cover; }
-        .thumb-item.active { border: 2px solid #4f46e5; opacity: 1; }
-
-        /* CAROUSEL */
-        .editable-carousel { position: relative; width: 100%; overflow: hidden; }
-        .editable-carousel .slides { display: flex; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-        .editable-carousel .slide { min-width: 100%; position: relative; }
-        .editable-carousel .slide img { width: 100%; height: 100%; object-fit: cover; }
-        .editable-carousel .carousel-controls button { background: rgba(0,0,0,0.3); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); transition: 0.2s; }
-        .editable-carousel .carousel-controls button:hover { background: rgba(0,0,0,0.6); transform: scale(1.1); }
-    `;
-
-    window.editor = grapesjs.init({
-        container: '#gjs', height: '100%', storageManager: false, panels: { defaults: [] },
-        canvas: {
-            scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
-            styles: ['https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap', 'https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
-            content: `<style>${bridgeCSS}</style>`
-        },
-        plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-tabs', 'grapesjs-custom-code', 'grapesjs-tooltip', 'grapesjs-blocks-flexbox', 'grapesjs-typed', 'grapesjs-style-bg'],
-        deviceManager: { devices: [{ id: 'desktop', width: '' }, { id: 'tablet', width: '768px' }, { id: 'mobile', width: '375px' }] },
-        blockManager: { appendTo: '#blocks-container' },
-        layerManager: { appendTo: '#layers-container' },
-        selectorManager: { appendTo: '#selectors-container' },
-        traitManager: { appendTo: '#traits-container' },
-        styleManager: { appendTo: '#styles-container', sectors: [{ name: 'Typography', open:true, buildProps:['font-family','font-size','font-weight','color','text-align'] }, { name: 'Decorations', buildProps:['background-color','border','border-radius','box-shadow'] }, { name: 'Dimensions', buildProps:['width','padding','margin'] }] }
-    });
-
-    const domc = window.editor.DomComponents;
-    const bm = window.editor.BlockManager;
-
-    // --- COMPONENT LOGIC ---
-    
-    // 1. COUNTDOWN SMART (FIXED LOGIC & DISPLAY)
-    domc.addType('countdown-smart', {
-        model: {
-            defaults: {
-                traits: [{ type: 'datetime-local', name: 'data-expire', label: 'Waktu Berakhir' }],
-                attributes: { 'data-expire': '2026-12-31T23:59' },
-                script: function() {
-                    const el = this;
-                    const display = el.querySelector('.js-countdown-display');
-                    const expiredMsg = el.querySelector('.js-expired-msg');
-                    const expireStr = el.getAttribute('data-expire');
-                    
-                    if(!expireStr) return;
-
-                    const update = () => {
-                        const now = new Date().getTime();
-                        const distance = new Date(expireStr).getTime() - now;
-
-                        if (distance < 0) {
-                            if(display) display.style.display = 'none';
-                            if(expiredMsg) expiredMsg.style.display = 'block';
-                            return;
-                        }
-
-                        const d = Math.floor(distance / (1000 * 60 * 60 * 24));
-                        const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                        const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                        const s = Math.floor((distance % (1000 * 60)) / 1000);
-
-                        if(el.querySelector('.js-d')) el.querySelector('.js-d').innerText = d < 10 ? '0'+d : d;
-                        if(el.querySelector('.js-h')) el.querySelector('.js-h').innerText = h < 10 ? '0'+h : h;
-                        if(el.querySelector('.js-m')) el.querySelector('.js-m').innerText = m < 10 ? '0'+m : m;
-                        if(el.querySelector('.js-s')) el.querySelector('.js-s').innerText = s < 10 ? '0'+s : s;
-                        
-                        requestAnimationFrame(update);
-                    };
-                    update();
-                }
-            }
-        }
-    });
-
-    // 2. ICONIFY
-    domc.addType('iconify-icon', { model: { defaults: { tagName: 'iconify-icon', attributes: { icon: 'ph:star-fill', width: '24' }, traits: [{ type: 'button', text: 'Ganti Icon', command: (ed, t) => window.openIconifyPicker(t.target) }] } } });
-
-    // 3. CAROUSEL & GALLERY (Logic Standard)
-    domc.addType('editable-carousel', { model: { defaults: { script: function() { const el = this; const s=el.querySelector('.slides'); const i=el.querySelectorAll('.slide'); if(!s||!i.length)return; let idx=0; const show=(n)=>{idx=(n+i.length)%i.length;s.style.transform='translateX(-'+(idx*100)+'%)'}; const n=el.querySelector('.next');if(n)n.onclick=(e)=>{e.preventDefault();show(idx+1)}; const p=el.querySelector('.prev');if(p)p.onclick=(e)=>{e.preventDefault();show(idx-1)}; let t=setInterval(()=>show(idx+1),5000); el.onmouseenter=()=>clearInterval(t); el.onmouseleave=()=>t=setInterval(()=>show(idx+1),5000); } } } });
-    domc.addType('product-gallery', { model: { defaults: { script: function() { const m=this.querySelector('.main-img img'); const t=this.querySelectorAll('.thumb'); if(!m||!t.length)return; t.forEach(x=>{x.onclick=function(){m.src=this.src;t.forEach(k=>k.classList.remove('active'));this.classList.add('active')}}) } } } });
-
-
-    // --- BLOCK MANAGER (WIDGETS) ---
-
-    // === 1. PRICING TABLES (PROFESSIONAL 2-COL ROW STYLE) ===
-    
-    // PRICING 3 COL (POPULAR)
-    bm.add('pricing-pro-3col', { 
-        label: 'Pricing 3-Col', category: '4. Commerce', 
-        content: `
-        <section class="py-16 bg-gray-50">
-            <div class="max-w-7xl mx-auto px-4">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div class="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm hover:shadow-xl transition duration-300 flex flex-col">
-                        <div class="mb-6">
-                            <h3 class="text-indigo-600 font-bold uppercase tracking-wider text-sm mb-2">Basic</h3>
-                            <div class="flex items-baseline gap-1"><span class="text-4xl font-black text-gray-900">Rp 0</span><span class="text-gray-400">/bln</span></div>
-                            <p class="text-gray-500 text-sm mt-3">Cocok untuk pemula belajar.</p>
-                        </div>
-                        <ul class="space-y-4 mb-8 flex-1">
-                            <li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-green-500 text-xl shrink-0 mt-0.5"></iconify-icon><span class="text-gray-600 font-medium">Akses Materi Dasar</span></li>
-                            <li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-green-500 text-xl shrink-0 mt-0.5"></iconify-icon><span class="text-gray-600 font-medium">1x Webinar Gratis</span></li>
-                            <li class="flex items-start gap-3 opacity-50"><iconify-icon icon="ph:x-circle-fill" class="text-gray-400 text-xl shrink-0 mt-0.5"></iconify-icon><span class="text-gray-400">Grup Support VIP</span></li>
-                        </ul>
-                        <button class="w-full py-4 rounded-xl border-2 border-indigo-100 text-indigo-600 font-bold hover:bg-indigo-50 transition">DAFTAR GRATIS</button>
-                    </div>
-
-                    <div class="bg-indigo-600 rounded-2xl p-8 shadow-2xl scale-105 z-10 text-white flex flex-col relative overflow-hidden">
-                        <div class="absolute top-0 right-0 bg-yellow-400 text-indigo-900 text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest">Best Value</div>
-                        <div class="mb-6">
-                            <h3 class="text-indigo-200 font-bold uppercase tracking-wider text-sm mb-2">Professional</h3>
-                            <div class="flex items-baseline gap-1"><span class="text-5xl font-black">Rp 99k</span><span class="text-indigo-200">/bln</span></div>
-                            <p class="text-indigo-100 text-sm mt-3">Paling pas untuk bisnis berkembang.</p>
-                        </div>
-                        <ul class="space-y-4 mb-8 flex-1">
-                            <li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-yellow-400 text-xl shrink-0 mt-0.5"></iconify-icon><span class="font-medium text-white">Semua Fitur Basic</span></li>
-                            <li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-yellow-400 text-xl shrink-0 mt-0.5"></iconify-icon><span class="font-medium text-white">Akses Grup VIP Support</span></li>
-                            <li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-yellow-400 text-xl shrink-0 mt-0.5"></iconify-icon><span class="font-medium text-white">Konsultasi 1-on-1 (1 Jam)</span></li>
-                            <li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-yellow-400 text-xl shrink-0 mt-0.5"></iconify-icon><span class="font-medium text-white">Sertifikat Kelulusan</span></li>
-                        </ul>
-                        <button class="w-full py-4 rounded-xl bg-white text-indigo-700 font-black hover:bg-gray-100 shadow-lg transition transform hover:-translate-y-1">AMBIL PAKET INI</button>
-                    </div>
-
-                    <div class="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm hover:shadow-xl transition duration-300 flex flex-col">
-                        <div class="mb-6">
-                            <h3 class="text-indigo-600 font-bold uppercase tracking-wider text-sm mb-2">Enterprise</h3>
-                            <div class="flex items-baseline gap-1"><span class="text-4xl font-black text-gray-900">Rp 299k</span><span class="text-gray-400">/bln</span></div>
-                            <p class="text-gray-500 text-sm mt-3">Untuk skala korporasi besar.</p>
-                        </div>
-                        <ul class="space-y-4 mb-8 flex-1">
-                            <li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-green-500 text-xl shrink-0 mt-0.5"></iconify-icon><span class="text-gray-600 font-medium">Unlimited Access</span></li>
-                            <li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-green-500 text-xl shrink-0 mt-0.5"></iconify-icon><span class="text-gray-600 font-medium">Dedicated Manager</span></li>
-                            <li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-green-500 text-xl shrink-0 mt-0.5"></iconify-icon><span class="text-gray-600 font-medium">API Integration</span></li>
-                        </ul>
-                        <button class="w-full py-4 rounded-xl border-2 border-indigo-100 text-indigo-600 font-bold hover:bg-indigo-50 transition">HUBUNGI SALES</button>
-                    </div>
-                </div>
-            </div>
-        </section>` 
-    });
-
-    // PRICING 6 COL (SPLIT 2 ROWS - 3 COLS EACH)
-    bm.add('pricing-pro-6col', { 
-        label: 'Pricing 6-Item', category: '4. Commerce', 
-        content: `
-        <section class="py-16 bg-white">
-            <div class="max-w-6xl mx-auto px-4">
-                <div class="text-center mb-12">
-                    <h2 class="text-3xl font-black text-gray-900">Pilihan Paket Lengkap</h2>
-                    <p class="text-gray-500 mt-2">Sesuaikan dengan kebutuhan budget Anda</p>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    
-                    <div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 hover:shadow-lg transition bg-white">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-bold text-gray-800">PAKET A</h3>
-                            <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold">10k</span>
-                        </div>
-                        <ul class="space-y-2 mb-6">
-                            <li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500"></iconify-icon><span class="text-sm text-gray-600">Akses Dasar</span></li>
-                            <li class="flex items-center gap-3"><iconify-icon icon="ph:x-bold" class="text-red-300"></iconify-icon><span class="text-sm text-gray-400">Tanpa Mentor</span></li>
-                        </ul>
-                        <button class="btn btn-sm btn-outline w-full rounded-lg">Pilih Paket A</button>
-                    </div>
-
-                    <div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 hover:shadow-lg transition bg-white">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-bold text-gray-800">PAKET B</h3>
-                            <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold">25k</span>
-                        </div>
-                        <ul class="space-y-2 mb-6">
-                            <li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500"></iconify-icon><span class="text-sm text-gray-600">Akses + Ebook</span></li>
-                            <li class="flex items-center gap-3"><iconify-icon icon="ph:x-bold" class="text-red-300"></iconify-icon><span class="text-sm text-gray-400">Tanpa Mentor</span></li>
-                        </ul>
-                        <button class="btn btn-sm btn-outline w-full rounded-lg">Pilih Paket B</button>
-                    </div>
-
-                    <div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 hover:shadow-lg transition bg-white">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-bold text-gray-800">PAKET C</h3>
-                            <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold">50k</span>
-                        </div>
-                        <ul class="space-y-2 mb-6">
-                            <li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500"></iconify-icon><span class="text-sm text-gray-600">Full Akses</span></li>
-                            <li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500"></iconify-icon><span class="text-sm text-gray-600">Group Support</span></li>
-                        </ul>
-                        <button class="btn btn-sm btn-outline w-full rounded-lg">Pilih Paket C</button>
-                    </div>
-
-                    <div class="p-6 border-2 border-indigo-600 bg-indigo-50 rounded-xl relative overflow-hidden">
-                        <div class="absolute top-0 right-0 bg-indigo-600 text-white text-[9px] px-2 py-1 rounded-bl">POPULAR</div>
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-bold text-indigo-700">PAKET PRO</h3>
-                            <span class="bg-white text-indigo-700 border border-indigo-200 px-2 py-1 rounded text-xs font-bold">99k</span>
-                        </div>
-                        <ul class="space-y-2 mb-6">
-                            <li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-indigo-600"></iconify-icon><span class="text-sm text-gray-700 font-medium">All Access VIP</span></li>
-                            <li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-indigo-600"></iconify-icon><span class="text-sm text-gray-700 font-medium">Private Mentor</span></li>
-                        </ul>
-                        <button class="btn btn-sm btn-primary w-full rounded-lg shadow-md">Ambil Promo Ini</button>
-                    </div>
-
-                    <div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 hover:shadow-lg transition bg-white">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-bold text-gray-800">PAKET E</h3>
-                            <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold">150k</span>
-                        </div>
-                        <ul class="space-y-2 mb-6">
-                            <li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500"></iconify-icon><span class="text-sm text-gray-600">Bundle Course A+B</span></li>
-                            <li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500"></iconify-icon><span class="text-sm text-gray-600">Sertifikat Fisik</span></li>
-                        </ul>
-                        <button class="btn btn-sm btn-outline w-full rounded-lg">Pilih Paket E</button>
-                    </div>
-
-                    <div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 hover:shadow-lg transition bg-white">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-bold text-gray-800">PAKET F</h3>
-                            <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold">200k</span>
-                        </div>
-                        <ul class="space-y-2 mb-6">
-                            <li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500"></iconify-icon><span class="text-sm text-gray-600">Lifetime Access</span></li>
-                            <li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500"></iconify-icon><span class="text-sm text-gray-600">Reseller License</span></li>
-                        </ul>
-                        <button class="btn btn-sm btn-outline w-full rounded-lg">Pilih Paket F</button>
-                    </div>
-
-                </div>
-            </div>
-        </section>` 
-    });
-
-    // === 2. COUNTDOWN TIMER (FIXED & EYE CATCHING) ===
-    bm.add('countdown-smart', { 
-        label: 'Countdown Pro', category: '3. Content', 
-        content: `
-        <div class="py-8 px-4 bg-gray-900 rounded-2xl text-center max-w-3xl mx-auto my-6" data-gjs-type="countdown-smart" data-expire="2026-12-31T23:59">
-            <div class="js-expired-msg hidden">
-                <h2 class="text-3xl md:text-4xl font-black text-red-500 tracking-widest uppercase animate-pulse">PROMO BERAKHIR</h2>
-                <p class="text-gray-400 mt-2">Maaf, Anda terlambat. Silakan tunggu promo berikutnya.</p>
-            </div>
-            <div class="js-countdown-display">
-                <h3 class="text-white text-sm md:text-base font-bold uppercase tracking-[0.2em] mb-6 text-indigo-400">Penawaran Berakhir Dalam:</h3>
-                <div class="flex flex-wrap justify-center gap-4 md:gap-8">
-                    <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 w-24 md:w-32 shadow-2xl relative overflow-hidden group">
-                        <div class="absolute top-0 left-0 w-full h-1 bg-indigo-500 shadow-[0_0_10px_#6366f1]"></div>
-                        <div class="countdown-number text-white js-d">00</div>
-                        <div class="countdown-label text-gray-400">HARI</div>
-                    </div>
-                    <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 w-24 md:w-32 shadow-2xl relative overflow-hidden">
-                        <div class="absolute top-0 left-0 w-full h-1 bg-indigo-500 shadow-[0_0_10px_#6366f1]"></div>
-                        <div class="countdown-number text-white js-h">00</div>
-                        <div class="countdown-label text-gray-400">JAM</div>
-                    </div>
-                    <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 w-24 md:w-32 shadow-2xl relative overflow-hidden">
-                        <div class="absolute top-0 left-0 w-full h-1 bg-indigo-500 shadow-[0_0_10px_#6366f1]"></div>
-                        <div class="countdown-number text-white js-m">00</div>
-                        <div class="countdown-label text-gray-400">MENIT</div>
-                    </div>
-                    <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 w-24 md:w-32 shadow-2xl relative overflow-hidden">
-                        <div class="absolute top-0 left-0 w-full h-1 bg-red-500 shadow-[0_0_10px_#ef4444]"></div>
-                        <div class="countdown-number text-red-500 js-s">00</div>
-                        <div class="countdown-label text-red-400">DETIK</div>
-                    </div>
-                </div>
-            </div>
-        </div>` 
-    });
-
-    // === WIDGET LAINNYA (DIPERTAHANKAN) ===
-    bm.add('hero-slider', { label: 'Hero Slider', category: '1. Header & Hero', content: `<div class="editable-carousel relative h-[500px] bg-gray-900 overflow-hidden group" data-gjs-type="editable-carousel"><div class="slides flex transition-transform duration-500 h-full"><div class="slide min-w-full relative"><img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80" class="w-full h-full object-cover opacity-60"><div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white p-4"><h2 class="text-5xl font-black mb-4">BIG SALE</h2><button class="btn btn-primary rounded-full px-8">Belanja Sekarang</button></div></div><div class="slide min-w-full relative"><img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80" class="w-full h-full object-cover opacity-60"><div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white p-4"><h2 class="text-5xl font-black mb-4">NEW ARRIVAL</h2><button class="btn btn-outline text-white rounded-full px-8">Lihat Koleksi</button></div></div></div><button class="prev absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full text-white flex items-center justify-center backdrop-blur-sm transition opacity-0 group-hover:opacity-100 cursor-pointer">❮</button><button class="next absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full text-white flex items-center justify-center backdrop-blur-sm transition opacity-0 group-hover:opacity-100 cursor-pointer">❯</button></div>` });
-    bm.add('product-gallery', { label: 'Thumb Carousel', category: '2. Media', content: `<div class="max-w-2xl mx-auto p-4 bg-white rounded-xl shadow-sm border border-gray-100" data-gjs-type="product-gallery"><div class="main-img mb-4 h-[400px] overflow-hidden rounded-lg bg-gray-100"><img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover"></div><div class="thumbs flex gap-3 overflow-x-auto pb-2 scrollbar-hide"><img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=150&q=80" class="thumb active w-20 h-20 rounded-lg object-cover cursor-pointer border-2 border-indigo-600"><img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=150&q=80" class="thumb w-20 h-20 rounded-lg object-cover cursor-pointer border-2 border-transparent hover:border-gray-300"><img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=150&q=80" class="thumb w-20 h-20 rounded-lg object-cover cursor-pointer border-2 border-transparent hover:border-gray-300"></div></div>` });
-    bm.add('header-sticky', { label: 'Header Sticky', category: '1. Header', content: `<header style="position:sticky;top:0;z-index:999;background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);border-bottom:1px solid #f1f5f9;"><div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between"><div class="font-bold text-2xl text-indigo-600 tracking-tighter">BRAND.</div><nav class="hidden md:flex gap-8"><a href="#" class="text-sm font-medium hover:text-indigo-600 text-gray-600">Features</a><a href="#" class="text-sm font-medium hover:text-indigo-600 text-gray-600">Pricing</a><a href="#" class="text-sm font-medium hover:text-indigo-600 text-gray-600">Contact</a></nav><button class="btn btn-primary btn-sm rounded-full px-6">Get Started</button></div></header>` });
-    bm.add('header-simple', { label: 'Header Simple', category: '1. Header', content: `<header class="bg-white border-b py-4"><div class="container mx-auto px-4 flex justify-between items-center"><div class="font-black text-xl text-gray-800">LOGO</div><nav class="flex gap-6 text-sm font-bold text-gray-500"><a href="#" class="hover:text-black">Home</a><a href="#" class="hover:text-black">Shop</a><a href="#" class="hover:text-black">About</a></nav></div></header>` });
-    bm.add('header-center', { label: 'Header Center', category: '1. Header', content: `<header class="bg-white py-6 border-b"><div class="container mx-auto px-4 flex flex-col items-center gap-4"><div class="font-black text-3xl tracking-widest text-indigo-600 uppercase">CENTERED</div><nav class="flex gap-8 text-xs font-bold uppercase tracking-wider text-gray-500"><a href="#" class="hover:text-indigo-600">New Arrivals</a><a href="#" class="hover:text-indigo-600">Best Sellers</a><a href="#" class="hover:text-indigo-600">Sale</a></nav></div></header>` });
-    bm.add('header-transparent', { label: 'Header Trans', category: '1. Header', content: `<header class="absolute top-0 left-0 w-full z-10 py-6"><div class="container mx-auto px-4 flex justify-between items-center"><div class="font-black text-white text-2xl drop-shadow-md">GLASS.</div><nav class="flex gap-6 text-white text-sm font-bold drop-shadow-md"><a href="#" class="hover:text-indigo-200">Home</a><a href="#" class="hover:text-indigo-200">Features</a></nav></div><div class="bg-gray-800 h-[300px] flex items-center justify-center text-white">Hero Area Placeholder</div></header>` });
-    bm.add('flash-news', { label: 'News Flash', category: '3. Content', content: `<div class="bg-gray-900 text-white py-2 overflow-hidden border-b border-gray-800"><div class="animate-marquee inline-block font-mono text-xs font-bold tracking-widest uppercase"><span class="mx-4">🔥 FLASH SALE: DISKON 50% HANYA HARI INI!</span> <span class="mx-4 text-yellow-400">GUNAKAN KODE: SERBU50</span> <span class="mx-4">🚀 GRATIS ONGKIR SELURUH INDONESIA</span></div></div>` });
-    bm.add('contact-form', { label: 'Contact Basic', category: '4. Commerce', content: `<div x-data="{ state: 'idle' }" class="max-w-md mx-auto p-8 bg-white rounded-2xl shadow-xl border border-gray-100" style="min-height:480px"><div x-show="state === 'idle'"><h3 class="text-2xl font-bold text-gray-800 mb-2">Hubungi Kami</h3><p class="text-gray-500 mb-6 text-sm">Isi form di bawah, kami akan membalas secepatnya.</p><form @submit.prevent="state = 'loading'; const fd = new FormData($event.target); setTimeout(() => { state = 'success' }, 1500);" class="space-y-4"><input type="hidden" name="page_id" value="0"><div><label class="font-bold text-xs uppercase text-gray-500">Nama Lengkap</label><input type="text" name="name" required class="w-full p-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="John Doe" /></div><div><label class="font-bold text-xs uppercase text-gray-500">Email</label><input type="email" name="email" required class="w-full p-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="email@anda.com" /></div><div><label class="font-bold text-xs uppercase text-gray-500">Pesan</label><textarea name="message" required class="w-full p-3 h-40 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none resize-none" placeholder="Tulis pesan Anda..."></textarea></div><button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-lg transition transform hover:-translate-y-1">Kirim Pesan <i class="ph ph-paper-plane-right-fill ml-2"></i></button></form></div><div x-show="state === 'loading'" style="display: none;" class="py-20 text-center"><i class="ph ph-spinner animate-spin text-4xl text-indigo-600 mb-4"></i><p class="text-gray-500 font-bold">Mengirim pesan...</p></div><div x-show="state === 'success'" style="display: none;" class="py-10 text-center animate-fade-in"><div class="w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4"><i class="ph ph-check text-3xl font-bold"></i></div><h3 class="text-xl font-black text-gray-800 mb-2">Pesan Terkirim!</h3><p class="text-gray-500 text-sm mb-6">Terima kasih telah menghubungi kami.<br>Tim kami akan segera merespon.</p><button @click="state = 'idle'" class="text-indigo-600 font-bold text-xs hover:underline">Kirim pesan lagi</button></div></div>` });
-    bm.add('contact-form-pro-17', { label: 'Contact Pro', category: '4. Commerce', content: `<section class="py-12 px-4 bg-gray-50"><div x-data="{ state: 'idle' }" class="max-w-lg mx-auto bg-white p-8 rounded-2xl shadow-xl border border-gray-100" style="min-height:600px"><div class="text-center mb-8" x-show="state !== 'success'"><h2 class="text-2xl font-black text-gray-800">Hubungi Kami</h2><p class="text-gray-400 text-xs mt-1 uppercase tracking-widest">Kami siap membantu 24/7</p></div><form x-show="state === 'idle'" @submit.prevent="state = 'loading'; setTimeout(() => { state = 'success' }, 1500);" class="space-y-5"><input type="hidden" name="page_id" value="0"><div class="grid grid-cols-2 gap-4"><div><label class="text-[10px] font-bold text-gray-400 uppercase">Nama</label><input type="text" name="name" required class="w-full mt-1 p-3 bg-gray-50 rounded-lg text-sm border focus:border-indigo-500 outline-none transition" placeholder="Nama Anda"></div><div><label class="text-[10px] font-bold text-gray-400 uppercase">WhatsApp</label><input type="tel" name="phone" required class="w-full mt-1 p-3 bg-gray-50 rounded-lg text-sm border focus:border-indigo-500 outline-none transition" placeholder="0812..."></div></div><div><label class="text-[10px] font-bold text-gray-400 uppercase">Email</label><input type="email" name="email" class="w-full mt-1 p-3 bg-gray-50 rounded-lg text-sm border focus:border-indigo-500 outline-none transition" placeholder="email@anda.com"></div><div><label class="text-[10px] font-bold text-gray-400 uppercase">Perihal</label><div class="relative"><select name="subject" class="w-full mt-1 p-3 bg-gray-50 rounded-lg text-sm border focus:border-indigo-500 outline-none appearance-none cursor-pointer"><option>Pertanyaan Produk</option><option>Konfirmasi Pembayaran</option><option>Komplain</option><option>Kerjasama</option></select><i class="ph ph-caret-down absolute right-3 top-4 text-gray-400 pointer-events-none"></i></div></div><div><label class="text-[10px] font-bold text-gray-400 uppercase">Pesan</label><textarea name="message" rows="5" required class="w-full mt-1 p-3 bg-gray-50 rounded-lg text-sm border focus:border-indigo-500 outline-none resize-none" placeholder="Tulis pesan Anda..."></textarea></div><button type="submit" class="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition transform hover:-translate-y-1 flex justify-center items-center gap-2"><span>KIRIM PESAN SEKARANG</span><i class="ph ph-paper-plane-right font-bold"></i></button></form><div x-show="state === 'loading'" style="display: none;" class="py-12 text-center"><div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-indigo-100 border-t-indigo-600 mb-4"></div><h4 class="text-gray-600 font-bold text-sm">Sedang mengirim pesan...</h4></div><div x-show="state === 'success'" style="display: none;" class="py-8 text-center"><div class="w-20 h-20 bg-green-500 text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-green-200"><i class="ph ph-check-fat text-4xl"></i></div><h2 class="text-2xl font-black text-gray-800 mb-2">Sukses!</h2><p class="text-gray-500 text-sm leading-relaxed mb-8">Pesan Anda telah kami terima.<br>Customer service kami akan menghubungi Anda via WhatsApp/Email sesaat lagi.</p><button @click="state = 'idle'" class="px-6 py-2 bg-gray-100 text-gray-600 rounded-lg font-bold text-xs hover:bg-gray-200 transition">Kembali</button></div></div></section>` });
-    bm.add('container', { label: 'Container', category: 'Custom', content: `<div class="container mx-auto p-4 border-2 border-dashed border-gray-300 min-h-[100px] flex items-center justify-center text-gray-400">Drop Content Here</div>` });
-    bm.add('container-800', { label: 'Cont-800px', category: 'Custom', content: `<div class="py-2 bg-gray-100"><div class="mx-auto max-w-[800px] w-full min-h-[150px] bg-white border-x-2 border-dashed border-blue-400 flex items-center justify-center text-blue-500 font-bold text-xs uppercase tracking-widest">Batas Kiri | 800px | Batas Kanan</div></div>` });
-    bm.add('container-1000', { label: 'Cont-1000px', category: 'Custom', content: `<div class="py-2 bg-gray-100"><div class="mx-auto max-w-[1000px] w-full min-h-[150px] bg-white border-x-2 border-dashed border-blue-400 flex items-center justify-center text-blue-500 font-bold text-xs uppercase tracking-widest">Batas Kiri | 1000px | Batas Kanan</div></div>` });
-    bm.add('container-1140', { label: 'Cont-1140px', category: 'Custom', content: `<div class="py-2 bg-gray-100"><div class="mx-auto max-w-[1140px] w-full min-h-[150px] bg-white border-x-2 border-dashed border-blue-400 flex items-center justify-center text-blue-500 font-bold text-xs uppercase tracking-widest">Batas Kiri | 1140px | Batas Kanan</div></div>` });
-    bm.add('container-1200', { label: 'Cont-1200px', category: 'Custom', content: `<div class="py-2 bg-gray-100"><div class="mx-auto max-w-[1200px] w-full min-h-[150px] bg-white border-x-2 border-dashed border-blue-400 flex items-center justify-center text-blue-500 font-bold text-xs uppercase tracking-widest">Batas Kiri | 1200px | Batas Kanan</div></div>` });
-    
-    // --- CLICK TO ADD ---
-    setTimeout(() => {
-        const container = document.getElementById('blocks-container');
-        if (container) {
-            container.addEventListener('click', (e) => {
-                const blockEl = e.target.closest('.gjs-block');
-                if (blockEl) {
-                    const id = blockEl.getAttribute('title') || blockEl.innerText.trim();
-                    const block = window.editor.BlockManager.get(id);
-                    if (block) {
-                        window.editor.addComponents(block.get('content'));
-                        if(window.innerWidth < 768) this.mobileMenuOpen = false;
                     }
-                }
-            });
-        }
-    }, 1500); 
-}
-    </script>
+                } catch (e) { this.notify('Error', 'Gagal memuat data', 'error'); }
+                this.loading = false;
+            },
+
+            // --- SAVE DATA ---
+            async savePage() {
+                this.loading = true;
+                try {
+                    const payload = {
+                        id: this.page.id, 
+                        slug: this.page.slug, 
+                        title: this.page.title,
+                        html: `${window.editor.getHtml()}<script>${window.editor.getJs()}<\/script>`,
+                        css: window.editor.getCss(), 
+                        meta: this.page.meta, 
+                        product_config: this.page.config
+                    };
+                    const res = await fetch('/api/admin/pages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    this.notify(res.ok ? 'Sukses' : 'Error', res.ok ? 'Berhasil disimpan!' : 'Gagal menyimpan', res.ok ? 'success' : 'error');
+                } catch (e) { this.notify('Error', 'Masalah koneksi', 'error'); }
+                this.loading = false;
+            },
+
+            // --- UTILS ---
+            notify(title, msg, type = 'success') { 
+                const id = Date.now(); 
+                this.notifications.push({ id, title, msg, type, show: true }); 
+                setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); 
+            },
+            setDevice(d) { this.device = d; if (window.editor) window.editor.setDevice(d); },
+            cmd(c) { window.editor.runCommand(c); },
+
+            // --- GRAPESJS SETUP ---
+            initGrapes() {
+                const bridgeCSS = `
+                    body { min-height: 100vh; background: #fff; overflow-x: hidden; font-family: 'Inter', sans-serif; }
+                    [x-cloak] { display: none !important; }
+                    .countdown-item { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 60px; }
+                    .countdown-number { font-weight: 900; font-size: 2rem; line-height: 1; }
+                    .countdown-label { font-size: 0.65rem; text-transform: uppercase; font-weight: 700; margin-top: 4px; opacity: 0.8; }
+                    @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+                    .animate-marquee { display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite; }
+                    .product-gallery { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+                    .gallery-main img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 12px; }
+                    .gallery-thumbs { display: flex; gap: 10px; overflow-x: auto; padding: 5px 0; }
+                    .thumb-item { width: 60px; height: 60px; border-radius: 8px; cursor: pointer; opacity: 0.6; object-fit: cover; }
+                    .thumb-item.active { border: 2px solid #4f46e5; opacity: 1; }
+                    .editable-carousel { position: relative; width: 100%; overflow: hidden; }
+                    .editable-carousel .slides { display: flex; transition: transform 0.5s; }
+                    .editable-carousel .slide { min-width: 100%; position: relative; }
+                    .editable-carousel .slide img { width: 100%; height: 100%; object-fit: cover; }
+                    .editable-carousel .carousel-controls button { background: rgba(0,0,0,0.3); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+                `;
+
+                window.editor = grapesjs.init({
+                    container: '#gjs', height: '100%', storageManager: false, panels: { defaults: [] },
+                    canvas: {
+                        scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
+                        styles: ['https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap', 'https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
+                        content: `<style>${bridgeCSS}</style>`
+                    },
+                    plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-tabs', 'grapesjs-custom-code', 'grapesjs-tooltip', 'grapesjs-blocks-flexbox', 'grapesjs-typed', 'grapesjs-style-bg'],
+                    deviceManager: { devices: [{ id: 'desktop', width: '' }, { id: 'tablet', width: '768px' }, { id: 'mobile', width: '375px' }] },
+                    blockManager: { appendTo: '#blocks-container' },
+                    layerManager: { appendTo: '#layers-container' },
+                    selectorManager: { appendTo: '#selectors-container' },
+                    traitManager: { appendTo: '#traits-container' },
+                    styleManager: { appendTo: '#styles-container', sectors: [{ name: 'Typography', open:true, buildProps:['font-family','font-size','font-weight','color','text-align'] }, { name: 'Decorations', buildProps:['background-color','border','border-radius','box-shadow'] }, { name: 'Dimensions', buildProps:['width','padding','margin'] }] }
+                });
+
+                const domc = window.editor.DomComponents;
+                const bm = window.editor.BlockManager;
+
+                // --- COMPONENT LOGIC ---
+                // 1. COUNTDOWN SMART
+                domc.addType('countdown-smart', {
+                    model: {
+                        defaults: {
+                            traits: [{ type: 'datetime-local', name: 'data-expire', label: 'Waktu Berakhir' }],
+                            attributes: { 'data-expire': '2026-12-31T23:59' },
+                            script: function() {
+                                const el = this;
+                                const display = el.querySelector('.js-countdown-display');
+                                const expiredMsg = el.querySelector('.js-expired-msg');
+                                const expireStr = el.getAttribute('data-expire');
+                                if(!expireStr) return;
+                                const update = () => {
+                                    const now = new Date().getTime();
+                                    const distance = new Date(expireStr).getTime() - now;
+                                    if (distance < 0) {
+                                        if(display) display.style.display = 'none';
+                                        if(expiredMsg) expiredMsg.style.display = 'block';
+                                        return;
+                                    }
+                                    const d = Math.floor(distance / (1000 * 60 * 60 * 24));
+                                    const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                                    const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                                    const s = Math.floor((distance % (1000 * 60)) / 1000);
+                                    if(el.querySelector('.js-d')) el.querySelector('.js-d').innerText = d < 10 ? '0'+d : d;
+                                    if(el.querySelector('.js-h')) el.querySelector('.js-h').innerText = h < 10 ? '0'+h : h;
+                                    if(el.querySelector('.js-m')) el.querySelector('.js-m').innerText = m < 10 ? '0'+m : m;
+                                    if(el.querySelector('.js-s')) el.querySelector('.js-s').innerText = s < 10 ? '0'+s : s;
+                                    requestAnimationFrame(update);
+                                };
+                                update();
+                            }
+                        }
+                    }
+                });
+
+                // 2. ICONIFY
+                domc.addType('iconify-icon', { model: { defaults: { tagName: 'iconify-icon', attributes: { icon: 'ph:star-fill', width: '24' }, traits: [{ type: 'button', text: 'Ganti Icon', command: (ed, t) => window.openIconifyPicker(t.target) }] } } });
+
+                // 3. CAROUSEL & GALLERY
+                domc.addType('editable-carousel', { model: { defaults: { script: function() { const el = this; const s=el.querySelector('.slides'); const i=el.querySelectorAll('.slide'); if(!s||!i.length)return; let idx=0; const show=(n)=>{idx=(n+i.length)%i.length;s.style.transform='translateX(-'+(idx*100)+'%)'}; const n=el.querySelector('.next');if(n)n.onclick=(e)=>{e.preventDefault();show(idx+1)}; const p=el.querySelector('.prev');if(p)p.onclick=(e)=>{e.preventDefault();show(idx-1)}; let t=setInterval(()=>show(idx+1),5000); el.onmouseenter=()=>clearInterval(t); el.onmouseleave=()=>t=setInterval(()=>show(idx+1),5000); } } } });
+                domc.addType('product-gallery', { model: { defaults: { script: function() { const m=this.querySelector('.main-img img'); const t=this.querySelectorAll('.thumb'); if(!m||!t.length)return; t.forEach(x=>{x.onclick=function(){m.src=this.src;t.forEach(k=>k.classList.remove('active'));this.classList.add('active')}}) } } } });
+
+                // --- WIDGETS ---
+                
+                // PRICING 3 COL (Eye Catching - Icon Kiri, Teks Kanan)
+                bm.add('pricing-pro-3col', { 
+                    label: 'Pricing 3-Col', category: '4. Commerce', 
+                    content: `
+                    <section class="py-16 bg-gray-50">
+                        <div class="max-w-7xl mx-auto px-4">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                <div class="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm hover:shadow-xl transition flex flex-col">
+                                    <div class="mb-6"><h3 class="text-indigo-600 font-bold uppercase tracking-wider text-sm mb-2">Basic</h3><div class="flex items-baseline gap-1"><span class="text-4xl font-black text-gray-900">Rp 0</span><span class="text-gray-400">/bln</span></div></div>
+                                    <ul class="space-y-4 mb-8 flex-1">
+                                        <li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-green-500 text-xl"></iconify-icon><span class="text-gray-600 font-medium">Akses Dasar</span></li>
+                                        <li class="flex items-start gap-3 opacity-50"><iconify-icon icon="ph:x-circle-fill" class="text-gray-400 text-xl"></iconify-icon><span class="text-gray-400">Support VIP</span></li>
+                                    </ul>
+                                    <button class="w-full py-4 rounded-xl border-2 border-indigo-100 text-indigo-600 font-bold hover:bg-indigo-50">DAFTAR</button>
+                                </div>
+                                <div class="bg-indigo-600 rounded-2xl p-8 shadow-2xl scale-105 z-10 text-white flex flex-col relative overflow-hidden">
+                                    <div class="absolute top-0 right-0 bg-yellow-400 text-indigo-900 text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase">BEST VALUE</div>
+                                    <div class="mb-6"><h3 class="text-indigo-200 font-bold uppercase tracking-wider text-sm mb-2">PRO</h3><div class="flex items-baseline gap-1"><span class="text-5xl font-black">99k</span></div></div>
+                                    <ul class="space-y-4 mb-8 flex-1">
+                                        <li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-yellow-400 text-xl"></iconify-icon><span class="font-medium">All Features</span></li>
+                                        <li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-yellow-400 text-xl"></iconify-icon><span class="font-medium">Priority Support</span></li>
+                                    </ul>
+                                    <button class="w-full py-4 rounded-xl bg-white text-indigo-700 font-black hover:bg-gray-100 shadow-lg">BELI SEKARANG</button>
+                                </div>
+                                <div class="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm hover:shadow-xl transition flex flex-col">
+                                    <div class="mb-6"><h3 class="text-indigo-600 font-bold uppercase tracking-wider text-sm mb-2">Expert</h3><div class="flex items-baseline gap-1"><span class="text-4xl font-black text-gray-900">299k</span></div></div>
+                                    <ul class="space-y-4 mb-8 flex-1">
+                                        <li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-green-500 text-xl"></iconify-icon><span class="text-gray-600 font-medium">Unlimited</span></li>
+                                        <li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-green-500 text-xl"></iconify-icon><span class="text-gray-600 font-medium">Dedicated Team</span></li>
+                                    </ul>
+                                    <button class="w-full py-4 rounded-xl border-2 border-indigo-100 text-indigo-600 font-bold hover:bg-indigo-50">CONTACT</button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>` 
+                });
+
+                // PRICING 6 COL (Split 2 Baris)
+                bm.add('pricing-pro-6col', { 
+                    label: 'Pricing 6-Item', category: '4. Commerce', 
+                    content: `
+                    <section class="py-16 bg-white">
+                        <div class="max-w-6xl mx-auto px-4">
+                            <h2 class="text-3xl font-black text-center mb-12 text-gray-900">Pilihan Paket</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 transition bg-white flex flex-col items-center text-center">
+                                    <h3 class="font-bold text-gray-800 uppercase">Paket A</h3><div class="text-2xl font-black my-2">10k</div>
+                                    <ul class="space-y-2 mb-6 text-sm text-gray-600"><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:check-bold" class="text-green-500"></iconify-icon>Akses Dasar</li></ul>
+                                    <button class="btn btn-sm btn-outline w-full rounded-lg">Pilih</button>
+                                </div>
+                                <div class="p-6 border-2 border-indigo-600 bg-indigo-50 rounded-xl relative overflow-hidden flex flex-col items-center text-center">
+                                    <div class="absolute top-0 right-0 bg-indigo-600 text-white text-[9px] px-2 py-1 rounded-bl">HOT</div>
+                                    <h3 class="font-bold text-indigo-700 uppercase">Paket B</h3><div class="text-2xl font-black my-2">25k</div>
+                                    <ul class="space-y-2 mb-6 text-sm text-gray-700"><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:check-bold" class="text-indigo-600"></iconify-icon>Full Akses</li></ul>
+                                    <button class="btn btn-sm btn-primary w-full rounded-lg">Pilih</button>
+                                </div>
+                                <div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 transition bg-white flex flex-col items-center text-center">
+                                    <h3 class="font-bold text-gray-800 uppercase">Paket C</h3><div class="text-2xl font-black my-2">50k</div>
+                                    <ul class="space-y-2 mb-6 text-sm text-gray-600"><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:check-bold" class="text-green-500"></iconify-icon>Premium</li></ul>
+                                    <button class="btn btn-sm btn-outline w-full rounded-lg">Pilih</button>
+                                </div>
+                                <div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 transition bg-white flex flex-col items-center text-center">
+                                    <h3 class="font-bold text-gray-800 uppercase">Paket D</h3><div class="text-2xl font-black my-2">75k</div>
+                                    <ul class="space-y-2 mb-6 text-sm text-gray-600"><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:check-bold" class="text-green-500"></iconify-icon>Ultimate</li></ul>
+                                    <button class="btn btn-sm btn-outline w-full rounded-lg">Pilih</button>
+                                </div>
+                                <div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 transition bg-white flex flex-col items-center text-center">
+                                    <h3 class="font-bold text-gray-800 uppercase">Paket E</h3><div class="text-2xl font-black my-2">100k</div>
+                                    <ul class="space-y-2 mb-6 text-sm text-gray-600"><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:check-bold" class="text-green-500"></iconify-icon>Exclusive</li></ul>
+                                    <button class="btn btn-sm btn-outline w-full rounded-lg">Pilih</button>
+                                </div>
+                                <div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 transition bg-white flex flex-col items-center text-center">
+                                    <h3 class="font-bold text-gray-800 uppercase">Paket F</h3><div class="text-2xl font-black my-2">150k</div>
+                                    <ul class="space-y-2 mb-6 text-sm text-gray-600"><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:check-bold" class="text-green-500"></iconify-icon>Lifetime</li></ul>
+                                    <button class="btn btn-sm btn-outline w-full rounded-lg">Pilih</button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>` 
+                });
+
+                // COUNTDOWN PRO (Fixed Logic)
+                bm.add('countdown-smart', { 
+                    label: 'Countdown Pro', category: '3. Content', 
+                    content: `
+                    <div class="py-8 px-4 bg-gray-900 rounded-2xl text-center max-w-3xl mx-auto my-6" data-gjs-type="countdown-smart" data-expire="2026-12-31T23:59">
+                        <div class="js-expired-msg hidden">
+                            <h2 class="text-3xl md:text-4xl font-black text-red-500 tracking-widest uppercase animate-pulse">PROMO BERAKHIR</h2>
+                            <p class="text-gray-400 mt-2">Maaf, Anda terlambat. Silakan tunggu promo berikutnya.</p>
+                        </div>
+                        <div class="js-countdown-display">
+                            <h3 class="text-white text-sm md:text-base font-bold uppercase tracking-[0.2em] mb-6 text-indigo-400">Penawaran Berakhir Dalam:</h3>
+                            <div class="flex flex-wrap justify-center gap-4 md:gap-8">
+                                <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 w-24 shadow-2xl relative overflow-hidden">
+                                    <div class="absolute top-0 left-0 w-full h-1 bg-indigo-500 shadow-[0_0_10px_#6366f1]"></div>
+                                    <div class="countdown-number text-white js-d">00</div>
+                                    <div class="countdown-label text-gray-400">HARI</div>
+                                </div>
+                                <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 w-24 shadow-2xl relative overflow-hidden">
+                                    <div class="absolute top-0 left-0 w-full h-1 bg-indigo-500 shadow-[0_0_10px_#6366f1]"></div>
+                                    <div class="countdown-number text-white js-h">00</div>
+                                    <div class="countdown-label text-gray-400">JAM</div>
+                                </div>
+                                <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 w-24 shadow-2xl relative overflow-hidden">
+                                    <div class="absolute top-0 left-0 w-full h-1 bg-indigo-500 shadow-[0_0_10px_#6366f1]"></div>
+                                    <div class="countdown-number text-white js-m">00</div>
+                                    <div class="countdown-label text-gray-400">MENIT</div>
+                                </div>
+                                <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 w-24 shadow-2xl relative overflow-hidden">
+                                    <div class="absolute top-0 left-0 w-full h-1 bg-red-500 shadow-[0_0_10px_#ef4444]"></div>
+                                    <div class="countdown-number text-red-500 js-s">00</div>
+                                    <div class="countdown-label text-red-400">DETIK</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>` 
+                });
+
+                // STANDARD WIDGETS
+                bm.add('hero-slider', { label: 'Hero Slider', category: '1. Header & Hero', content: `<div class="editable-carousel relative h-[500px] bg-gray-900 overflow-hidden group" data-gjs-type="editable-carousel"><div class="slides flex transition-transform duration-500 h-full"><div class="slide min-w-full relative"><img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80" class="w-full h-full object-cover opacity-60"><div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white p-4"><h2 class="text-5xl font-black mb-4">BIG SALE</h2><button class="btn btn-primary rounded-full px-8">Belanja Sekarang</button></div></div><div class="slide min-w-full relative"><img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80" class="w-full h-full object-cover opacity-60"><div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white p-4"><h2 class="text-5xl font-black mb-4">NEW ARRIVAL</h2><button class="btn btn-outline text-white rounded-full px-8">Lihat Koleksi</button></div></div></div><button class="prev absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full text-white flex items-center justify-center backdrop-blur-sm transition opacity-0 group-hover:opacity-100 cursor-pointer">❮</button><button class="next absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full text-white flex items-center justify-center backdrop-blur-sm transition opacity-0 group-hover:opacity-100 cursor-pointer">❯</button></div>` });
+                bm.add('flash-news', { label: 'News Flash', category: '3. Content', content: `<div class="bg-gray-900 text-white py-2 overflow-hidden border-b border-gray-800"><div class="animate-marquee inline-block font-mono text-xs font-bold tracking-widest uppercase"><span class="mx-4">🔥 FLASH SALE: DISKON 50% HANYA HARI INI!</span> <span class="mx-4 text-yellow-400">GUNAKAN KODE: SERBU50</span> <span class="mx-4">🚀 GRATIS ONGKIR SELURUH INDONESIA</span></div></div>` });
+                bm.add('contact-form', { label: 'Contact Basic', category: '4. Commerce', content: `<div x-data="{ state: 'idle' }" class="max-w-md mx-auto p-8 bg-white rounded-2xl shadow-xl border border-gray-100" style="min-height:480px"><div x-show="state === 'idle'"><h3 class="text-2xl font-bold text-gray-800 mb-2">Hubungi Kami</h3><p class="text-gray-500 mb-6 text-sm">Isi form di bawah, kami akan membalas secepatnya.</p><form @submit.prevent="state = 'loading'; const fd = new FormData($event.target); setTimeout(() => { state = 'success' }, 1500);" class="space-y-4"><input type="hidden" name="page_id" value="0"><div><label class="font-bold text-xs uppercase text-gray-500">Nama Lengkap</label><input type="text" name="name" required class="w-full p-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="John Doe" /></div><div><label class="font-bold text-xs uppercase text-gray-500">Email</label><input type="email" name="email" required class="w-full p-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="email@anda.com" /></div><div><label class="font-bold text-xs uppercase text-gray-500">Pesan</label><textarea name="message" required class="w-full p-3 h-40 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none resize-none" placeholder="Tulis pesan Anda..."></textarea></div><button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-lg transition transform hover:-translate-y-1">Kirim Pesan <i class="ph ph-paper-plane-right-fill ml-2"></i></button></form></div><div x-show="state === 'loading'" style="display: none;" class="py-20 text-center"><i class="ph ph-spinner animate-spin text-4xl text-indigo-600 mb-4"></i><p class="text-gray-500 font-bold">Mengirim pesan...</p></div><div x-show="state === 'success'" style="display: none;" class="py-10 text-center animate-fade-in"><div class="w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4"><i class="ph ph-check text-3xl font-bold"></i></div><h3 class="text-xl font-black text-gray-800 mb-2">Pesan Terkirim!</h3><p class="text-gray-500 text-sm mb-6">Terima kasih telah menghubungi kami.<br>Tim kami akan segera merespon.</p><button @click="state = 'idle'" class="text-indigo-600 font-bold text-xs hover:underline">Kirim pesan lagi</button></div></div>` });
+                bm.add('container', { label: 'Container', category: 'Custom', content: `<div class="container mx-auto p-4 border-2 border-dashed border-gray-300 min-h-[100px] flex items-center justify-center text-gray-400">Drop Content Here</div>` });
+                bm.add('header-sticky', { label: 'Header Sticky', category: '1. Header', content: `<header style="position:sticky;top:0;z-index:999;background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);border-bottom:1px solid #f1f5f9;"><div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between"><div class="font-bold text-2xl text-indigo-600 tracking-tighter">BRAND.</div><nav class="hidden md:flex gap-8"><a href="#" class="text-sm font-medium hover:text-indigo-600 text-gray-600">Features</a><a href="#" class="text-sm font-medium hover:text-indigo-600 text-gray-600">Pricing</a><a href="#" class="text-sm font-medium hover:text-indigo-600 text-gray-600">Contact</a></nav><button class="btn btn-primary btn-sm rounded-full px-6">Get Started</button></div></header>` });
+
+                // --- ADD CLICK EVENT ---
+                setTimeout(() => {
+                    const container = document.getElementById('blocks-container');
+                    if (container) {
+                        container.addEventListener('click', (e) => {
+                            const blockEl = e.target.closest('.gjs-block');
+                            if (blockEl) {
+                                const id = blockEl.getAttribute('title') || blockEl.innerText.trim();
+                                const block = window.editor.BlockManager.get(id);
+                                if (block) {
+                                    window.editor.addComponents(block.get('content'));
+                                    if(window.innerWidth < 768) this.mobileMenuOpen = false;
+                                }
+                            }
+                        });
+                    }
+                }, 1500);
+            } // END INIT GRAPES
+        }; // END RETURN
+    } // END EDITOR APP
+</script>
 </body>
 </html>
