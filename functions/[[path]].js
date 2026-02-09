@@ -585,23 +585,26 @@ app.get('/:slug', async (c) => {
     } catch(e) { return c.env.ASSETS.fetch(c.req.raw); }
 });
 
-// FUNGSI RENDER
+// ===============================================
+// FUNGSI RENDER HALAMAN (FINAL - IDENTIK EDITOR)
+// ===============================================
 async function renderPage(c, page) {
     const config = JSON.parse(page.product_config_json || '{}');
     const activePayments = config.active_payments || [];
     
-    // CSS & Tailwind
+    // 1. BRIDGE CSS (Gaya Tambahan untuk Widget Khusus)
+    // Ini harus SAMA PERSIS dengan variabel bridgeCSS di Editor File 34
     const bridgeCSS = `
     body { min-height: 100vh; background-color: #ffffff; overflow-x: hidden; font-family: 'Inter', sans-serif; }
     
-    /* --- TAMBAHAN WAJIB: ANIMASI NEWS FLASH --- */
+    /* ANIMASI NEWS FLASH */
     @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
     .animate-marquee { display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite; }
 
-    /* --- FIX: Z-INDEX SWEETALERT AGAR TIDAK KETUTUPAN --- */
+    /* SWEETALERT FIX */
     .swal2-container { z-index: 99999 !important; }
 
-    /* CSS Gallery & Carousel Standar */
+    /* GALLERY */
     .product-gallery { display: flex; flex-direction: column; gap: 12px; width:100%; }
     .product-gallery .main-img { border-radius: 12px; overflow: hidden; width: 100%; aspect-ratio: 4/3; background: #f3f4f6; }
     .product-gallery .main-img img { width: 100%; height: 100%; object-fit: cover; transition: 0.3s; }
@@ -609,6 +612,7 @@ async function renderPage(c, page) {
     .product-gallery .thumb { min-width: 70px; width: 70px; height: 70px; flex-shrink: 0; border-radius: 8px; cursor: pointer; border: 2px solid transparent; opacity: 0.7; transition: 0.2s; object-fit: cover; }
     .product-gallery .thumb.active, .product-gallery .thumb:hover { border-color: #2563eb; opacity: 1; }
     
+    /* CAROUSEL */
     .editable-carousel { position: relative; width: 100%; overflow: hidden; }
     .editable-carousel .slides { display: flex; flex-direction: row; width: 100%; height: 100%; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
     .editable-carousel .slide { min-width: 100%; flex-shrink: 0; position: relative; height: 100%; }
@@ -617,14 +621,14 @@ async function renderPage(c, page) {
     .editable-carousel .carousel-controls button { pointer-events: auto; background: rgba(0,0,0,0.2); color: white; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; backdrop-filter: blur(2px); }
     .editable-carousel .carousel-controls button:hover { background: rgba(0,0,0,0.5); transform: scale(1.1); }
     
-    .pricing-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 32px; display: flex; flex-direction: column; height: 100%; transition: 0.3s; position: relative; overflow: hidden; }
-    .pricing-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.1); }
-    .pricing-card.highlight { border: 2px solid #2563eb; z-index: 2; box-shadow: 0 20px 40px -5px rgba(37, 99, 235, 0.15); }
-    .testimonial-card { background: #fff; border: 1px solid #f1f5f9; padding: 24px; border-radius: 12px; height: 100%; }
+    /* UTILS */
+    .pricing-card { transition: 0.3s; }
+    .pricing-card:hover { transform: translateY(-5px); }
     .scrollbar-hide::-webkit-scrollbar { display: none; }
-    .btn { text-transform: none !important; }
-`;
+    [x-cloak] { display: none !important; }
+    `;
 
+    // 2. TAILWIND CONFIG (Agar warna/font sama dengan Editor)
     const tailwindConfig = `
         tailwind.config = {
             darkMode: 'class',
@@ -639,24 +643,22 @@ async function renderPage(c, page) {
         }
     `;
 
-     // SCRIPT LOGIC (SINGLE DECLARATION)
+    // 3. LIVE SCRIPTS (Logika Javascript untuk Frontend)
+    // Perbaikan: Tidak ada backslash pada variabel server, tapi ada backslash pada string template literal client
     const liveScripts = `
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // A. Notifikasi Pesan Terkirim (SweetAlert)
+            // A. Notifikasi Pesan (SweetAlert)
             const params = new URLSearchParams(window.location.search);
             if(params.get('status') === 'sent') {
                 Swal.fire({
-                    icon: 'success',
-                    title: 'Pesan Terkirim!',
-                    text: 'Kami akan segera menghubungi Anda.',
-                    confirmButtonColor: '#2563eb',
-                    customClass: { popup: 'rounded-2xl' }
+                    icon: 'success', title: 'Pesan Terkirim!', text: 'Kami akan segera menghubungi Anda.',
+                    confirmButtonColor: '#2563eb', customClass: { popup: 'rounded-2xl' }
                 });
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
 
-            // B. Gallery Thumbnail Logic
+            // B. Gallery Logic
             document.querySelectorAll('.product-gallery').forEach(el => {
                 const main = el.querySelector('.main-img img');
                 const thumbs = el.querySelectorAll('.thumb');
@@ -670,26 +672,24 @@ async function renderPage(c, page) {
                 });
             });
             
-            // C. Carousel Auto Play Logic
+            // C. Carousel Logic
             document.querySelectorAll('.editable-carousel').forEach(el => {
                 const slides = el.querySelector('.slides');
                 const items = el.querySelectorAll('.slide');
                 if(!slides || !items.length) return;
-                
                 let idx = 0;
                 function show(n) { 
                     idx = (n + items.length) % items.length; 
                     slides.style.transform = 'translateX(-'+(idx*100)+'%)'; 
                 }
-                const next = el.querySelector('.next'); if(next) next.onclick = () => show(idx+1);
-                const prev = el.querySelector('.prev'); if(prev) prev.onclick = () => show(idx-1);
-                
+                const next = el.querySelector('.next'); if(next) next.onclick = (e) => { e.preventDefault(); show(idx+1); };
+                const prev = el.querySelector('.prev'); if(prev) prev.onclick = (e) => { e.preventDefault(); show(idx-1); };
                 let timer = setInterval(() => show(idx+1), 5000);
                 el.onmouseenter = () => clearInterval(timer);
                 el.onmouseleave = () => timer = setInterval(() => show(idx+1), 5000);
             });
 
-            // D. Checkout Logic
+            // D. Checkout Logic (Server-Side Injection Clean)
             const container = document.body;
             if (container.innerHTML.includes('[ CHECKOUT ]')) {
                 const config = ${JSON.stringify(config)};
@@ -702,6 +702,7 @@ async function renderPage(c, page) {
                     '</label>'
                 ).join('') : '<p class="text-red-500 text-xs">Belum ada metode pembayaran.</p>';
 
+                // Client-Side Template (Pakai Backslash)
                 const checkoutHTML = \`
                     <div class="max-w-md mx-auto my-8 p-6 bg-white rounded-2xl shadow-xl border border-gray-100 font-sans">
                         <h2 class="text-xl font-black text-gray-800 mb-6 text-center">Formulir Pemesanan</h2>
@@ -728,13 +729,11 @@ async function renderPage(c, page) {
                     const payMethod = document.querySelector('input[name="pay_method"]:checked')?.value;
                     const name = document.getElementById('c_name').value;
                     const phone = document.getElementById('c_phone').value;
-
                     if(!name || !phone) return Swal.fire('Data Kurang', 'Mohon lengkapi nama dan WhatsApp', 'warning');
                     if(!payMethod) return Swal.fire('Pilih Pembayaran', 'Metode pembayaran belum dipilih', 'warning');
 
                     const btn = document.getElementById('btn-submit-order');
-                    btn.disabled = true;
-                    btn.innerText = 'Memproses...';
+                    btn.disabled = true; btn.innerText = 'Memproses...';
 
                     try {
                         const res = await fetch('/api/public/checkout', {
@@ -752,35 +751,45 @@ async function renderPage(c, page) {
                         else Swal.fire('Gagal', d.error || 'Terjadi kesalahan sistem', 'error');
                     } catch(e) { Swal.fire('Error', 'Koneksi bermasalah', 'error'); }
                     
-                    btn.disabled = false;
-                    btn.innerText = 'BAYAR SEKARANG';
+                    btn.disabled = false; btn.innerText = 'BAYAR SEKARANG';
                 });
             }
         });
     </script>
     `;
 
+    // 4. RETURN HTML LENGKAP
+    // Pastikan semua CDN yang ada di Editor JUGA ADA DISINI
     return c.html(`
     <!DOCTYPE html>
     <html lang='id'>
     <head>
         <meta charset='UTF-8'>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
         <title>${page.title}</title>
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        
         <script src="https://cdn.tailwindcss.com"></script>
         <script>${tailwindConfig}</script>
+        
+        <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+        
+        <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+        <script src="https://unpkg.com/@phosphor-icons/web"></script>
+        
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-        <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+        
         <style>
             ${bridgeCSS}
-            ${page.css_content}
+            ${page.css_content || ''}
         </style>
     </head>
     <body>
-        ${page.html_content}
+        ${page.html_content || ''}
+        
         <script>window.PAGE_ID=${page.id};</script>
+        
         ${liveScripts}
     </body>
     </html>
