@@ -1,14 +1,30 @@
 import { decryptJSON, sha1 } from '../utils';
 
+// HARUS SAMA PERSIS DENGAN YANG DI WORKER.JS
+const FALLBACK_SECRET = 'BantarCaringin1BantarCaringin2BantarCaringin3';
+
 export const uploadImage = async (c) => {
     try {
-        // 1. Ambil Config Cloudinary dari DB (tetap via tabel credentials)
+        // 1. Ambil Config dari DB
         const credRow = await c.env.DB.prepare("SELECT * FROM credentials WHERE provider_slug = 'cloudinary'").first();
-        if (!credRow) return c.json({ success: false, message: "Cloudinary belum dikonfigurasi di settings." }, 500);
+        
+        if (!credRow) {
+            return c.json({ success: false, message: "Cloudinary belum dikonfigurasi." }, 500);
+        }
 
-        const config = await decryptJSON(credRow.encrypted_data, credRow.iv, c.env.APP_MASTER_KEY);
-        if (!config || !config.cloud_name || !config.api_key) {
-            return c.json({ success: false, message: "Kredensial Cloudinary rusak/salah." }, 400);
+        // --- PERBAIKAN DISINI: TAMBAHKAN || FALLBACK_SECRET ---
+        const secretKey = c.env.APP_MASTER_KEY || FALLBACK_SECRET;
+        
+        const config = await decryptJSON(credRow.encrypted_data, credRow.iv, secretKey);
+        
+        // Debugging (Opsional: Cek di terminal kalau masih gagal)
+        if (!config) {
+            console.log("Decryption result is NULL. Key used:", secretKey ? "EXIST" : "EMPTY");
+            return c.json({ success: false, message: "Gagal dekripsi. Key tidak cocok." }, 400);
+        }
+
+        if (!config.cloud_name || !config.api_key || !config.api_secret) {
+            return c.json({ success: false, message: "Kredensial tidak lengkap (Butuh: cloud_name, api_key, api_secret)." }, 400);
         }
 
         const { cloud_name, api_key, api_secret } = config;
