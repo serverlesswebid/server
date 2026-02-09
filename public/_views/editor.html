@@ -630,41 +630,45 @@
                 });
 
                 // 2. Logic Slide Pintar (Bisa Ganti Gambar di Settings)
-                domc.addType('carousel-slide', {
-                    model: {
-                        defaults: {
-                            tagName: 'div',
-                            classes: ['slide', 'min-w-full', 'relative', 'h-full'],
-                            traits: [
-                                { type: 'text', name: 'img-src', label: 'URL Gambar (Link)' },
-                                { type: 'text', name: 'title-text', label: 'Judul Promo' },
-                                { type: 'color', name: 'text-color', label: 'Warna Teks' }
-                            ],
-                            attributes: {
-                                'img-src': 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80',
-                                'title-text': 'JUDUL PROMO',
-                                'text-color': '#ffffff'
-                            }
-                        },
-                        init() {
-                            // Update tampilan saat Settings berubah
-                            this.on('change:attributes:img-src', this.updateView);
-                            this.on('change:attributes:title-text', this.updateView);
-                            this.on('change:attributes:text-color', this.updateView);
-                        },
-                        updateView() {
-                            const attrs = this.getAttributes();
-                            const img = this.view.el.querySelector('img');
-                            const h2 = this.view.el.querySelector('h2');
-                            
-                            if(img) img.src = attrs['img-src'];
-                            if(h2) {
-                                h2.innerText = attrs['title-text'];
-                                h2.style.color = attrs['text-color'];
-                            }
-                        }
+                // 2. Logic Slide Pintar (Komponen Satuan)
+        domc.addType('carousel-slide', {
+            model: {
+                defaults: {
+                    tagName: 'div',
+                    classes: ['slide', 'min-w-full', 'relative', 'h-full'],
+                    traits: [
+                        // Pengaturan ini akan muncul saat Slide terpilih
+                        { type: 'text', name: 'img-src', label: 'URL Gambar (Link)' },
+                        { type: 'text', name: 'title-text', label: 'Judul Promo' }
+                    ],
+                    attributes: {
+                        'img-src': 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80',
+                        'title-text': 'JUDUL PROMO'
                     }
-                });
+                },
+                init() {
+                    // Aktifkan listener saat ada perubahan di Settings
+                    this.on('change:attributes:img-src', this.updateImage);
+                    this.on('change:attributes:title-text', this.updateTitle);
+                },
+                updateImage() {
+                    // Otomatis cari komponen gambar di dalamnya dan update
+                    const src = this.getAttributes()['img-src'];
+                    const imgComp = this.components().models.find(c => c.get('tagName') === 'img');
+                    if (imgComp) imgComp.addAttributes({ src: src });
+                },
+                updateTitle() {
+                    const txt = this.getAttributes()['title-text'];
+                    // Cari H2 di dalam komponen ini
+                    // Note: Kita mencari secara recursive sederhana atau asumsi struktur flat
+                    const overlay = this.components().models.find(c => c.get('classes').includes('absolute'));
+                    if(overlay) {
+                        const h2 = overlay.components().models.find(c => c.get('tagName') === 'h2');
+                        if(h2) h2.content = txt; // Update teks di canvas
+                    }
+                }
+            }
+        });
         
         domc.addType('product-gallery', { model: { defaults: { script: function() { const m=this.querySelector('.main-img img'); const t=this.querySelectorAll('.thumb'); if(!m||!t.length)return; t.forEach(x=>{x.onclick=function(){m.src=this.src;t.forEach(k=>k.classList.remove('active'));this.classList.add('active')}}) } } } });
 
@@ -840,8 +844,7 @@
                 });
 
                 // STANDARD WIDGETS
-                // HERO SLIDER (FIXED: TAILWIND CLASSES EMBEDDED - PASTI HORIZONTAL & RESPONSIF)
-                // HERO SLIDER (SMART 10 SLIDES)
+                // HERO SLIDER (FIXED: SELEKSI LANGSUNG KE PARENT)
                 bm.add('hero-slider', { 
                     label: 'Hero Slider (10x)', 
                     category: '1. Header & Hero', 
@@ -859,17 +862,23 @@
                                  title-text="PROMO ${i+1}">
                                  
                                 <img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80&sig=${i}" 
-                                     class="w-full h-full object-cover block pointer-events-none">
+                                     class="w-full h-full object-cover block"
+                                     data-gjs-selectable="false" 
+                                     data-gjs-highlightable="false">
                                      
-                                <div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white p-4 bg-black/30">
+                                <div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white p-4 bg-black/30"
+                                     data-gjs-selectable="false" 
+                                     data-gjs-highlightable="false">
+                                     
                                     <h2 class="text-3xl md:text-5xl font-black mb-4 drop-shadow-md">PROMO ${i+1}</h2>
                                     <button class="btn btn-primary rounded-full px-8 shadow-lg">Lihat Detail</button>
                                 </div>
                             </div>
                             `).join('')}
                         </div>
-
-                        <div class="carousel-controls absolute inset-0 flex justify-between items-center px-4 pointer-events-none z-10">
+                
+                        <div class="carousel-controls absolute inset-0 flex justify-between items-center px-4 pointer-events-none z-10"
+                             data-gjs-selectable="false">
                             <button class="prev pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-10 h-10 rounded-full bg-black/30 text-white flex items-center justify-center hover:bg-black/60 cursor-pointer backdrop-blur-sm">❮</button>
                             <button class="next pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-10 h-10 rounded-full bg-black/30 text-white flex items-center justify-center hover:bg-black/60 cursor-pointer backdrop-blur-sm">❯</button>
                         </div>
