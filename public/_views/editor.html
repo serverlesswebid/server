@@ -612,50 +612,96 @@
                     </section>` 
                 });
 
-                // PRICING 6 COL (Split 2 Baris)
+                // PRICING 6 ITEMS (Fixed: 2 Baris @ 3 Kolom, Font Besar, Editable)
                 bm.add('pricing-pro-6col', { 
                     label: 'Pricing 6-Item', category: '4. Commerce', 
                     content: `
                     <section class="py-16 bg-white">
-                        <div class="max-w-6xl mx-auto px-4">
-                            <h2 class="text-3xl font-black text-center mb-12 text-gray-900">Pilihan Paket</h2>
+                        <div class="max-w-7xl mx-auto px-4">
+                            <div class="text-center mb-12">
+                                <h2 class="text-3xl font-black text-gray-900">Pilihan Paket Lengkap</h2>
+                                <p class="text-gray-500 mt-2">Pilih paket yang sesuai kebutuhan Anda</p>
+                            </div>
+                            
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                <div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 transition bg-white flex flex-col items-center text-center">
-                                    <h3 class="font-bold text-gray-800 uppercase">Paket A</h3><div class="text-2xl font-black my-2">10k</div>
-                                    <ul class="space-y-2 mb-6 text-sm text-gray-600"><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:check-bold" class="text-green-500"></iconify-icon>Akses Dasar</li></ul>
-                                    <button class="btn btn-sm btn-outline w-full rounded-lg">Pilih</button>
+                                
+                                <div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 hover:shadow-lg transition bg-white flex flex-col">
+                                    <div class="text-center mb-6 border-b pb-4 border-gray-100">
+                                        <h3 class="font-bold text-gray-800 uppercase tracking-wider text-sm">PAKET 1</h3>
+                                        <div class="text-3xl font-black text-gray-900 mt-2">10k</div>
+                                    </div>
+                                    <ul class="space-y-3 mb-6 flex-1 text-sm text-gray-600">
+                                        <li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500 text-lg"></iconify-icon><span>Akses Materi Dasar</span></li>
+                                        <li class="flex items-center gap-3"><iconify-icon icon="ph:x-bold" class="text-red-300 text-lg"></iconify-icon><span class="text-gray-400">Tanpa Mentor</span></li>
+                                    </ul>
+                                    <button class="btn btn-outline w-full rounded-lg font-bold border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-indigo-600">Pilih Paket</button>
                                 </div>
-                                <div class="p-6 border-2 border-indigo-600 bg-indigo-50 rounded-xl relative overflow-hidden flex flex-col items-center text-center">
-                                    <div class="absolute top-0 right-0 bg-indigo-600 text-white text-[9px] px-2 py-1 rounded-bl">HOT</div>
-                                    <h3 class="font-bold text-indigo-700 uppercase">Paket B</h3><div class="text-2xl font-black my-2">25k</div>
-                                    <ul class="space-y-2 mb-6 text-sm text-gray-700"><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:check-bold" class="text-indigo-600"></iconify-icon>Full Akses</li></ul>
-                                    <button class="btn btn-sm btn-primary w-full rounded-lg">Pilih</button>
+                
+                                <div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 hover:shadow-lg transition bg-white flex flex-col">
+                                    <div class="text-center mb-6 border-b pb-4 border-gray-100">
+                                        <h3 class="font-bold text-gray-800 uppercase tracking-wider text-sm">PAKET 2</h3>
+                                        <div class="text-3xl font-black text-gray-900 mt-2">25k</div>
+                                    </div>
+                                    <ul class="space-y-3 mb-6 flex-1 text-sm text-gray-600">
+                                        <li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500 text-lg"></iconify-icon><span>Materi + Ebook</span></li>
+                                        <li class="flex items-center gap-3"><iconify-icon icon="ph:x-bold" class="text-red-300 text-lg"></iconify-icon><span class="text-gray-400">Tanpa Mentor</span></li>
+                                    </ul>
+                                    <button class="btn btn-outline w-full rounded-lg font-bold border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-indigo-600">Pilih Paket</button>
                                 </div>
-                                <div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 transition bg-white flex flex-col items-center text-center">
-                                    <h3 class="font-bold text-gray-800 uppercase">Paket C</h3><div class="text-2xl font-black my-2">50k</div>
-                                    <ul class="space-y-2 mb-6 text-sm text-gray-600"><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:check-bold" class="text-green-500"></iconify-icon>Premium</li></ul>
-                                    <button class="btn btn-sm btn-outline w-full rounded-lg">Pilih</button>
+                
+                                <div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 hover:shadow-lg transition bg-white flex flex-col">
+                                    <div class="text-center mb-6 border-b pb-4 border-gray-100">
+                                        <h3 class="font-bold text-gray-800 uppercase tracking-wider text-sm">PAKET 3</h3>
+                                        <div class="text-3xl font-black text-gray-900 mt-2">50k</div>
+                                    </div>
+                                    <ul class="space-y-3 mb-6 flex-1 text-sm text-gray-600">
+                                        <li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500 text-lg"></iconify-icon><span>Full Akses Video</span></li>
+                                        <li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500 text-lg"></iconify-icon><span>Group Support</span></li>
+                                    </ul>
+                                    <button class="btn btn-outline w-full rounded-lg font-bold border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-indigo-600">Pilih Paket</button>
                                 </div>
-                                <div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 transition bg-white flex flex-col items-center text-center">
-                                    <h3 class="font-bold text-gray-800 uppercase">Paket D</h3><div class="text-2xl font-black my-2">75k</div>
-                                    <ul class="space-y-2 mb-6 text-sm text-gray-600"><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:check-bold" class="text-green-500"></iconify-icon>Ultimate</li></ul>
-                                    <button class="btn btn-sm btn-outline w-full rounded-lg">Pilih</button>
+                
+                                <div class="p-6 border-2 border-indigo-600 bg-indigo-50 rounded-xl relative overflow-hidden flex flex-col shadow-xl z-10">
+                                    <div class="absolute top-0 right-0 bg-indigo-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider">Popular</div>
+                                    <div class="text-center mb-6 border-b border-indigo-200 pb-4">
+                                        <h3 class="font-bold text-indigo-700 uppercase tracking-wider text-sm">PRO PACK</h3>
+                                        <div class="text-3xl font-black text-indigo-900 mt-2">99k</div>
+                                    </div>
+                                    <ul class="space-y-3 mb-6 flex-1 text-sm text-gray-700">
+                                        <li class="flex items-center gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-indigo-600 text-lg"></iconify-icon><span class="font-bold">All Access VIP</span></li>
+                                        <li class="flex items-center gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-indigo-600 text-lg"></iconify-icon><span class="font-bold">Private Mentor</span></li>
+                                    </ul>
+                                    <button class="btn btn-primary w-full rounded-lg font-bold shadow-lg">Ambil Promo</button>
                                 </div>
-                                <div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 transition bg-white flex flex-col items-center text-center">
-                                    <h3 class="font-bold text-gray-800 uppercase">Paket E</h3><div class="text-2xl font-black my-2">100k</div>
-                                    <ul class="space-y-2 mb-6 text-sm text-gray-600"><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:check-bold" class="text-green-500"></iconify-icon>Exclusive</li></ul>
-                                    <button class="btn btn-sm btn-outline w-full rounded-lg">Pilih</button>
+                
+                                <div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 hover:shadow-lg transition bg-white flex flex-col">
+                                    <div class="text-center mb-6 border-b pb-4 border-gray-100">
+                                        <h3 class="font-bold text-gray-800 uppercase tracking-wider text-sm">PAKET 5</h3>
+                                        <div class="text-3xl font-black text-gray-900 mt-2">150k</div>
+                                    </div>
+                                    <ul class="space-y-3 mb-6 flex-1 text-sm text-gray-600">
+                                        <li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500 text-lg"></iconify-icon><span>Bundle Course A+B</span></li>
+                                        <li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500 text-lg"></iconify-icon><span>Sertifikat Fisik</span></li>
+                                    </ul>
+                                    <button class="btn btn-outline w-full rounded-lg font-bold border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-indigo-600">Pilih Paket</button>
                                 </div>
-                                <div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 transition bg-white flex flex-col items-center text-center">
-                                    <h3 class="font-bold text-gray-800 uppercase">Paket F</h3><div class="text-2xl font-black my-2">150k</div>
-                                    <ul class="space-y-2 mb-6 text-sm text-gray-600"><li class="flex items-center gap-2 justify-center"><iconify-icon icon="ph:check-bold" class="text-green-500"></iconify-icon>Lifetime</li></ul>
-                                    <button class="btn btn-sm btn-outline w-full rounded-lg">Pilih</button>
+                
+                                <div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 hover:shadow-lg transition bg-white flex flex-col">
+                                    <div class="text-center mb-6 border-b pb-4 border-gray-100">
+                                        <h3 class="font-bold text-gray-800 uppercase tracking-wider text-sm">PAKET 6</h3>
+                                        <div class="text-3xl font-black text-gray-900 mt-2">200k</div>
+                                    </div>
+                                    <ul class="space-y-3 mb-6 flex-1 text-sm text-gray-600">
+                                        <li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500 text-lg"></iconify-icon><span>Lifetime Access</span></li>
+                                        <li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500 text-lg"></iconify-icon><span>Reseller License</span></li>
+                                    </ul>
+                                    <button class="btn btn-outline w-full rounded-lg font-bold border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-indigo-600">Pilih Paket</button>
                                 </div>
+                
                             </div>
                         </div>
                     </section>` 
                 });
-
                 // COUNTDOWN PRO (Fixed Logic)
                 bm.add('countdown-smart', { 
                     label: 'Countdown Pro', category: '3. Content', 
