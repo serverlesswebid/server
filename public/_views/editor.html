@@ -515,6 +515,13 @@
 
                 window.editor = grapesjs.init({
                     container: '#gjs', height: '100%', storageManager: false, panels: { defaults: [] },
+                    
+                    // --- 1. KONFIGURASI API UPLOAD (SESUAI REQUEST ANDA) ---
+                    assetManager: {
+                        upload: '/api/upload', // Endpoint API Anda
+                        uploadText: 'Drop files here or click to upload',
+                        autoAdd: 1, // Otomatis tambah ke list setelah upload sukses
+                    },
                     canvas: {
                         scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
                         styles: ['https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap', 'https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
@@ -531,7 +538,30 @@
 
                 const domc = window.editor.DomComponents;
                 const bm = window.editor.BlockManager;
+                const cmds = window.editor.Commands;
 
+                // --- 2. COMMAND KHUSUS: BUKA ASSET MANAGER & AMBIL URL DARI API ---
+                cmds.add('set-img-src', {
+                    run(editor, sender) {
+                        const component = editor.getSelected();
+                        editor.runCommand('open-assets', {
+                            target: component,
+                            onSelect() {
+                                // Ambil URL gambar yang sudah diupload ke API dan dipilih user
+                                const asset = editor.AssetManager.getSelection();
+                                if(asset && asset.length) {
+                                    const imageUrl = asset[0].getSrc();
+                                    // Update atribut dan tampilan
+                                    component.addAttributes({ 'img-src': imageUrl });
+                                    const imgEl = component.view.el.querySelector('img');
+                                    if(imgEl) imgEl.src = imageUrl;
+                                }
+                                editor.Modal.close();
+                            }
+                        });
+                    }
+                });
+                
                 // --- COMPONENT LOGIC ---
                 // 1. COUNTDOWN SMART (DENGAN CUSTOM PESAN EXPIRED)
 
@@ -597,30 +627,20 @@
                 domc.addType('iconify-icon', { model: { defaults: { tagName: 'iconify-icon', attributes: { icon: 'ph:star-fill', width: '24' }, traits: [{ type: 'button', text: 'Ganti Icon', command: (ed, t) => window.openIconifyPicker(t.target) }] } } });
 
                 // 3. CAROUSEL & GALLERY
-                // --- A. LOGIC CAROUSEL & SLIDE PINTAR ---
-                
-                // 1. Logic Pembungkus Carousel
+                // LOGIC CAROUSEL WRAPPER
                 domc.addType('editable-carousel', {
                     model: {
                         defaults: {
-                            droppable: '[data-gjs-type="carousel-slide"]', // Hanya boleh diisi Slide
+                            droppable: '[data-gjs-type="carousel-slide"]', 
                             script: function() {
                                 const el = this;
                                 const slidesContainer = el.querySelector('.slides');
                                 const items = el.querySelectorAll('.slide');
                                 if (!slidesContainer || items.length === 0) return;
-                                
                                 let idx = 0;
-                                const show = (n) => {
-                                    idx = (n + items.length) % items.length;
-                                    slidesContainer.style.transform = 'translateX(-' + (idx * 100) + '%)';
-                                };
-            
-                                const nextBtn = el.querySelector('.next');
-                                const prevBtn = el.querySelector('.prev');
-                                if(nextBtn) nextBtn.onclick = (e) => { e.preventDefault(); show(idx + 1); };
-                                if(prevBtn) prevBtn.onclick = (e) => { e.preventDefault(); show(idx - 1); };
-            
+                                const show = (n) => { idx = (n + items.length) % items.length; slidesContainer.style.transform = 'translateX(-' + (idx * 100) + '%)'; };
+                                const nextBtn = el.querySelector('.next'); if(nextBtn) nextBtn.onclick = (e) => { e.preventDefault(); show(idx + 1); };
+                                const prevBtn = el.querySelector('.prev'); if(prevBtn) prevBtn.onclick = (e) => { e.preventDefault(); show(idx - 1); };
                                 let interval = setInterval(() => show(idx + 1), 5000);
                                 el.onmouseenter = () => clearInterval(interval);
                                 el.onmouseleave = () => interval = setInterval(() => show(idx + 1), 5000);
@@ -629,24 +649,20 @@
                     }
                 });
 
-               // 2. Logic Slide Pintar (Bisa Upload Gambar)
+                // LOGIC SLIDE (LINK KE ASSET MANAGER API)
                 domc.addType('carousel-slide', {
                     model: {
                         defaults: {
                             tagName: 'div',
                             classes: ['slide', 'min-w-full', 'relative', 'h-full'],
                             traits: [
-                                // UBAH TIPE JADI 'image' AGAR MEMBUKA ASSET MANAGER
                                 { 
-                                    type: 'image', 
-                                    name: 'img-src', 
-                                    label: 'Gambar Background' 
+                                    type: 'button', 
+                                    label: 'Gambar Background',
+                                    text: 'UPLOAD / GANTI GAMBAR', 
+                                    command: 'set-img-src' // Panggil command asset manager
                                 },
-                                { 
-                                    type: 'text', 
-                                    name: 'title-text', 
-                                    label: 'Judul Promo' 
-                                }
+                                { type: 'text', name: 'title-text', label: 'Judul Promo' }
                             ],
                             attributes: {
                                 'img-src': 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80',
@@ -654,19 +670,7 @@
                             }
                         },
                         init() {
-                            // Deteksi perubahan dari Asset Manager
-                            this.on('change:attributes:img-src', this.updateImage);
                             this.on('change:attributes:title-text', this.updateTitle);
-                        },
-                        updateImage() {
-                            // Ambil URL dari atribut (hasil pilihan di Asset Manager)
-                            const src = this.getAttributes()['img-src'];
-                            // Cari elemen IMG di dalam slide ini
-                            const imgComp = this.components().models.find(c => c.get('tagName') === 'img');
-                            // Update source gambarnya
-                            if (imgComp) {
-                                imgComp.addAttributes({ src: src });
-                            }
                         },
                         updateTitle() {
                             const txt = this.getAttributes()['title-text'];
@@ -853,41 +857,27 @@
                 });
 
                 // STANDARD WIDGETS
-                // HERO SLIDER (FIXED: SELEKSI LANGSUNG KE PARENT)
+                // HERO SLIDER
                 bm.add('hero-slider', { 
-                    label: 'Hero Slider (10x)', 
-                    category: '1. Header & Hero', 
+                    label: 'Hero Slider (10x)', category: '1. Header & Hero', 
                     content: `
-                    <div class="editable-carousel group relative w-full overflow-hidden bg-gray-900" 
-                         style="aspect-ratio: 21/9; min-height: 320px;" 
-                         data-gjs-type="editable-carousel">
-                        
+                    <div class="editable-carousel group relative w-full overflow-hidden bg-gray-900" style="aspect-ratio: 21/9; min-height: 320px;" data-gjs-type="editable-carousel">
                         <div class="slides flex w-full h-full transition-transform duration-500 ease-in-out">
                             ${Array.from({length: 10}).map((_, i) => `
-                            
                             <div class="slide min-w-full relative h-full" 
                                  data-gjs-type="carousel-slide"
                                  img-src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80&sig=${i}"
                                  title-text="PROMO ${i+1}">
-                                 
                                 <img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80&sig=${i}" 
-                                     class="w-full h-full object-cover block"
-                                     data-gjs-selectable="false" 
-                                     data-gjs-highlightable="false">
-                                     
-                                <div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white p-4 bg-black/30"
-                                     data-gjs-selectable="false" 
-                                     data-gjs-highlightable="false">
-                                     
+                                     class="w-full h-full object-cover block pointer-events-none" data-gjs-selectable="false">
+                                <div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white p-4 bg-black/30" data-gjs-selectable="false">
                                     <h2 class="text-3xl md:text-5xl font-black mb-4 drop-shadow-md">PROMO ${i+1}</h2>
                                     <button class="btn btn-primary rounded-full px-8 shadow-lg">Lihat Detail</button>
                                 </div>
                             </div>
                             `).join('')}
                         </div>
-                
-                        <div class="carousel-controls absolute inset-0 flex justify-between items-center px-4 pointer-events-none z-10"
-                             data-gjs-selectable="false">
+                        <div class="carousel-controls absolute inset-0 flex justify-between items-center px-4 pointer-events-none z-10" data-gjs-selectable="false">
                             <button class="prev pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-10 h-10 rounded-full bg-black/30 text-white flex items-center justify-center hover:bg-black/60 cursor-pointer backdrop-blur-sm">❮</button>
                             <button class="next pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-10 h-10 rounded-full bg-black/30 text-white flex items-center justify-center hover:bg-black/60 cursor-pointer backdrop-blur-sm">❯</button>
                         </div>
