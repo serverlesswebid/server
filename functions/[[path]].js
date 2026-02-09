@@ -221,39 +221,58 @@ async function serveAsset(c, path) {
 }
 
 // ===============================================
-// 3. MIDDLEWARE
+// 3. MIDDLEWARE (LOGIKA YANG BENAR: BLACKLIST ADMIN)
 // ===============================================
 const requireAuth = async (c, next) => {
     const url = new URL(c.req.url);
     const path = url.pathname;
     
-    const whitelisted = (
-        path === '/' || path === '/login' || path === '/admin/login' ||
-        path === '/api/login' || path === '/api/setup-first-user' ||
-        path.startsWith('/api/public/') || path.startsWith('/api/webhook/') ||
-        path.startsWith('/api/internal/') ||
-        path.endsWith('.js') || path.endsWith('.css') ||
-        path.endsWith('.png') || path.endsWith('.jpg') || path.endsWith('.ico')
-    );
+    // 1. DEFINISI AREA TERLARANG (Hanya Area Admin & API Admin)
+    // Logikanya dibalik: Kita hanya mencegat URL yang depannya "/admin" atau "/api/admin"
+    const isAdminUI = path.startsWith('/admin');
+    const isAdminAPI = path.startsWith('/api/admin');
 
-    if (whitelisted && !path.startsWith('/_views')) {
+    // 2. LOGIKA PUBLIC (DEFAULT ALLOW)
+    // Jika URL BUKAN area admin, biarkan lolos langsung! 
+    // Ini akan otomatis mengizinkan:
+    // - Halaman Landing Page baru (/promo-spesial, /landing-1, dll)
+    // - API Public (/api/public/checkout, /api/public/contact)
+    // - Asset statis (.js, .css, .png)
+    // - Halaman Login (/login)
+    if (!isAdminUI && !isAdminAPI) {
         await next();
         return;
     }
 
+    // 3. PENGECUALIAN KHUSUS DI DALAM AREA ADMIN
+    // Halaman Login Admin harus bisa diakses tanpa token
+    if (path === '/admin/login' || path === '/admin/login.html') {
+        await next();
+        return;
+    }
+
+    // --- DI BAWAH SINI ADALAH ZONA PROTEKSI (HANYA UNTUK ADMIN) ---
+    // Jika kode sampai sini, berarti user mencoba akses /admin/... tanpa izin pengecualian.
+    
     let token = getCookie(c, 'auth_token');
     const authHeader = c.req.header('Authorization');
     if (!token && authHeader && authHeader.startsWith('Bearer ')) token = authHeader.split(' ')[1];
 
-    if (!token) return c.redirect('/login');
+    // Jika tidak ada token -> Tendang
+    if (!token) {
+        if (isAdminAPI) return c.json({ success: false, message: 'Unauthorized' }, 401);
+        return c.redirect('/login'); 
+    }
 
+    // Verifikasi Token
     try {
         const secret = c.env.APP_MASTER_KEY || JWT_SECRET;
         const payload = await verify(token, secret, 'HS256');
         c.set('user', payload);
-        await next();
+        await next(); // Token valid, silakan masuk ke Admin Dashboard
     } catch (e) {
         deleteCookie(c, 'auth_token');
+        if (isAdminAPI) return c.json({ success: false, message: 'Session Expired' }, 401);
         return c.redirect('/login');
     }
 };
