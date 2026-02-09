@@ -503,12 +503,13 @@
                     .gallery-thumbs { display: flex; gap: 10px; overflow-x: auto; padding: 5px 0; }
                     .thumb-item { width: 60px; height: 60px; border-radius: 8px; cursor: pointer; opacity: 0.6; object-fit: cover; }
                     .thumb-item.active { border: 2px solid #4f46e5; opacity: 1; }
-                    ./* CAROUSEL FIXED (RESPONSIVE) */
-                    .editable-carousel { position: relative; width: 100%; overflow: hidden; aspect-ratio: 16/9; }
-                    .editable-carousel .slides { display: flex; width: 100%; height: 100%; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-                    .editable-carousel .slide { min-width: 100%; flex: 0 0 100%; position: relative; height: 100%; }
+                    /* CAROUSEL FIXED & RESPONSIVE */
+                    .editable-carousel { position: relative; width: 100%; overflow: hidden; aspect-ratio: 16/9; min-height: 300px; }
+                    .editable-carousel .slides { display: flex; flex-direction: row; width: 100%; height: 100%; transition: transform 0.5s ease-in-out; }
+                    .editable-carousel .slide { min-width: 100%; flex: 0 0 100%; position: relative; height: 100%; overflow: hidden; }
                     .editable-carousel .slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
-                    .editable-carousel .carousel-controls button { background: rgba(0,0,0,0.3); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10; cursor: pointer; backdrop-filter: blur(4px); transition: 0.2s; }
+                    .editable-carousel .carousel-controls { position: absolute; inset: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 1rem; pointer-events: none; z-index: 10; }
+                    .editable-carousel .carousel-controls button { pointer-events: auto; background: rgba(0,0,0,0.3); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); transition: 0.2s; cursor: pointer; }
                     .editable-carousel .carousel-controls button:hover { background: rgba(0,0,0,0.6); transform: scale(1.1); }
                 `;
 
@@ -596,8 +597,41 @@
                 domc.addType('iconify-icon', { model: { defaults: { tagName: 'iconify-icon', attributes: { icon: 'ph:star-fill', width: '24' }, traits: [{ type: 'button', text: 'Ganti Icon', command: (ed, t) => window.openIconifyPicker(t.target) }] } } });
 
                 // 3. CAROUSEL & GALLERY
-                domc.addType('editable-carousel', { model: { defaults: { script: function() { const el = this; const s=el.querySelector('.slides'); const i=el.querySelectorAll('.slide'); if(!s||!i.length)return; let idx=0; const show=(n)=>{idx=(n+i.length)%i.length;s.style.transform='translateX(-'+(idx*100)+'%)'}; const n=el.querySelector('.next');if(n)n.onclick=(e)=>{e.preventDefault();show(idx+1)}; const p=el.querySelector('.prev');if(p)p.onclick=(e)=>{e.preventDefault();show(idx-1)}; let t=setInterval(()=>show(idx+1),5000); el.onmouseenter=()=>clearInterval(t); el.onmouseleave=()=>t=setInterval(()=>show(idx+1),5000); } } } });
-                domc.addType('product-gallery', { model: { defaults: { script: function() { const m=this.querySelector('.main-img img'); const t=this.querySelectorAll('.thumb'); if(!m||!t.length)return; t.forEach(x=>{x.onclick=function(){m.src=this.src;t.forEach(k=>k.classList.remove('active'));this.classList.add('active')}}) } } } });
+                // LOGIC CAROUSEL (Updated)
+            domc.addType('editable-carousel', {
+                model: {
+                    defaults: {
+                        script: f
+                            unction() {
+                            const el = this;
+                            const slidesContainer = el.querySelector('.slides');
+                            const items = el.querySelectorAll('.slide');
+                            
+                            if (!slidesContainer || items.length === 0) return;
+                            
+                            let idx = 0;
+                            
+                            const show = (n) => {
+                                idx = (n + items.length) % items.length;
+                                slidesContainer.style.transform = 'translateX(-' + (idx * 100) + '%)';
+                            };
+            
+                            const nextBtn = el.querySelector('.next');
+                            const prevBtn = el.querySelector('.prev');
+            
+                            if(nextBtn) nextBtn.onclick = (e) => { e.preventDefault(); show(idx + 1); };
+                            if(prevBtn) prevBtn.onclick = (e) => { e.preventDefault(); show(idx - 1); };
+            
+                            // Auto Play
+                            let interval = setInterval(() => show(idx + 1), 5000);
+                            el.onmouseenter = () => clearInterval(interval);
+                            el.onmouseleave = () => interval = setInterval(() => show(idx + 1), 5000);
+                        }
+                    }
+                }
+            }); 
+        
+        domc.addType('product-gallery', { model: { defaults: { script: function() { const m=this.querySelector('.main-img img'); const t=this.querySelectorAll('.thumb'); if(!m||!t.length)return; t.forEach(x=>{x.onclick=function(){m.src=this.src;t.forEach(k=>k.classList.remove('active'));this.classList.add('active')}}) } } } });
 
                 // --- WIDGETS ---
                 
@@ -771,31 +805,31 @@
                 });
 
                 // STANDARD WIDGETS
-                // HERO SLIDER (Responsive Aspect Ratio)
+                // HERO SLIDER (Structure Fixed)
                 bm.add('hero-slider', { 
                     label: 'Hero Slider', 
                     category: '1. Header & Hero', 
                     content: `
-                    <div class="editable-carousel relative bg-gray-900 group" style="aspect-ratio: 21/9; min-height: 300px;" data-gjs-type="editable-carousel">
+                    <div class="editable-carousel group" data-gjs-type="editable-carousel">
                         <div class="slides">
                             <div class="slide">
                                 <img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80">
                                 <div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white p-4 bg-black/30">
-                                    <h2 class="text-3xl md:text-5xl font-black mb-4 drop-shadow-lg">BIG SALE</h2>
+                                    <h2 class="text-4xl font-black mb-4 drop-shadow-md">BIG SALE</h2>
                                     <button class="btn btn-primary rounded-full px-8 shadow-lg">Belanja Sekarang</button>
                                 </div>
                             </div>
                             <div class="slide">
                                 <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80">
                                 <div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white p-4 bg-black/30">
-                                    <h2 class="text-3xl md:text-5xl font-black mb-4 drop-shadow-lg">NEW ARRIVAL</h2>
+                                    <h2 class="text-4xl font-black mb-4 drop-shadow-md">NEW ARRIVAL</h2>
                                     <button class="btn btn-outline text-white border-2 rounded-full px-8 hover:bg-white hover:text-black transition">Lihat Koleksi</button>
                                 </div>
                             </div>
                         </div>
-                        <div class="carousel-controls absolute inset-0 flex justify-between items-center px-4 pointer-events-none">
-                            <button class="prev pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300">❮</button>
-                            <button class="next pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300">❯</button>
+                        <div class="carousel-controls">
+                            <button class="prev opacity-0 group-hover:opacity-100 transition-opacity">❮</button>
+                            <button class="next opacity-0 group-hover:opacity-100 transition-opacity">❯</button>
                         </div>
                     </div>` 
                 });
