@@ -639,99 +639,138 @@ async function renderPage(c, page) {
         }
     `;
 
-    // SCRIPT LOGIC (SINGLE DECLARATION)
-    const liveScripts = `
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // A. Notifikasi Pesan Terkirim (SweetAlert)
-        const params = new URLSearchParams(window.location.search);
-        if(params.get('status') === 'sent') {
-            Swal.fire({
-                icon: 'success',
-                title: 'Pesan Terkirim!',
-                text: 'Kami akan segera menghubungi Anda.',
-                confirmButtonColor: '#2563eb',
-                customClass: { popup: 'rounded-2xl' }
-            });
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
-
-        // B. LOGIC GALLERY (Thumbnails)
-        document.querySelectorAll('.product-gallery').forEach(el => {
-            const main = el.querySelector('.main-img img');
-            const thumbs = el.querySelectorAll('.thumb');
-            if(!main || thumbs.length === 0) return;
-            thumbs.forEach(t => {
-                t.onclick = function() {
-                    main.src = this.src;
-                    thumbs.forEach(x => x.classList.remove('active'));
-                    this.classList.add('active');
+            // SCRIPT LOGIC (SINGLE DECLARATION)
+            const liveScripts = `
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                // A. Notifikasi Pesan Terkirim (SweetAlert)
+                const params = new URLSearchParams(window.location.search);
+                if(params.get('status') === 'sent') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Pesan Terkirim!',
+                        text: 'Kami akan segera menghubungi Anda.',
+                        confirmButtonColor: '#2563eb',
+                        customClass: { popup: 'rounded-2xl' }
+                    });
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+        
+                // B. LOGIC GALLERY (Thumbnails)
+                document.querySelectorAll('.product-gallery').forEach(el => {
+                    const main = el.querySelector('.main-img img');
+                    const thumbs = el.querySelectorAll('.thumb');
+                    if(!main || thumbs.length === 0) return;
+                    thumbs.forEach(t => {
+                        t.onclick = function() {
+                            main.src = this.src;
+                            thumbs.forEach(x => x.classList.remove('active'));
+                            this.classList.add('active');
+                        }
+                    });
+                });
+                
+                // C. LOGIC CAROUSEL (Auto Play + Pause on Hover)
+                document.querySelectorAll('.editable-carousel').forEach(el => {
+                    const slides = el.querySelector('.slides');
+                    const items = el.querySelectorAll('.slide');
+                    if(!slides || !items.length) return;
+                    
+                    let idx = 0;
+                    function show(n) { 
+                        idx = (n + items.length) % items.length; 
+                        slides.style.transform = 'translateX(-'+(idx*100)+'%)'; 
+                    }
+                    
+                    // Tombol Next/Prev
+                    const next = el.querySelector('.next'); 
+                    if(next) next.onclick = (e) => { e.preventDefault(); show(idx+1); };
+                    
+                    const prev = el.querySelector('.prev'); 
+                    if(prev) prev.onclick = (e) => { e.preventDefault(); show(idx-1); };
+                    
+                    // Auto Play
+                    let timer = setInterval(() => show(idx+1), 5000);
+                    
+                    // Pause saat mouse masuk agar user bisa lihat/klik tombol
+                    el.onmouseenter = () => clearInterval(timer);
+                    el.onmouseleave = () => timer = setInterval(() => show(idx+1), 5000);
+                });
+        
+                // D. Checkout Logic (Biarkan kode checkout tetap ada)
+                const container = document.body;
+                if (container.innerHTML.includes('[ CHECKOUT ]')) {
+                    // FIX: Hapus backslash agar Server merender JSON-nya ke sini
+                    const config = ${JSON.stringify(config)};
+                    const activePayments = ${JSON.stringify(activePayments)};
+                    
+                    const paymentHTML = activePayments.length > 0 ? activePayments.map(slug => 
+                        '<label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition border-gray-200 mb-2">' +
+                        '<input type="radio" name="pay_method" value="' + slug + '" class="mr-3 w-4 h-4 text-blue-600">' +
+                        '<span class="text-sm font-bold text-gray-700 uppercase">' + slug.split('-').join(' ') + '</span>' +
+                        '</label>'
+                    ).join('') : '<p class="text-red-500 text-xs">Belum ada metode pembayaran.</p>';
+        
+                    // FIX: Hapus backslash pada page.title agar judul muncul dari Server
+                    // FIX: Biarkan backslash pada config.price dan paymentHTML karena itu variabel Client
+                    const checkoutHTML = \`
+                        <div class="max-w-md mx-auto my-8 p-6 bg-white rounded-2xl shadow-xl border border-gray-100 font-sans">
+                            <h2 class="text-xl font-black text-gray-800 mb-6 text-center">Formulir Pemesanan</h2>
+                            <div class="flex justify-between items-center p-4 bg-blue-50 rounded-xl border border-blue-100 mb-6">
+                                <span class="font-bold text-blue-900">${page.title}</span>
+                                <span class="font-black text-blue-700">Rp \${new Intl.NumberFormat('id-ID').format(config.price || 0)}</span>
+                            </div>
+                            <div class="space-y-4 mb-6">
+                                <input type="text" id="c_name" placeholder="Nama Lengkap" class="w-full p-3 border rounded-lg">
+                                <input type="tel" id="c_phone" placeholder="No. WhatsApp" class="w-full p-3 border rounded-lg">
+                            </div>
+                            <div class="mb-6">
+                                <label class="text-xs font-bold text-gray-400 uppercase block mb-2">Pembayaran</label>
+                                <div class="grid gap-2">\${paymentHTML}</div>
+                            </div>
+                            <button id="btn-submit-order" class="w-full py-4 bg-blue-600 text-white font-black rounded-xl shadow-lg hover:bg-blue-700 transition">
+                                BAYAR SEKARANG
+                            </button>
+                        </div>
+                    \`;
+                    container.innerHTML = container.innerHTML.replace('[ CHECKOUT ]', checkoutHTML);
+        
+                    document.getElementById('btn-submit-order')?.addEventListener('click', async () => {
+                        const payMethod = document.querySelector('input[name="pay_method"]:checked')?.value;
+                        const name = document.getElementById('c_name').value;
+                        const phone = document.getElementById('c_phone').value;
+        
+                        if(!name || !phone) return Swal.fire('Data Kurang', 'Mohon lengkapi nama dan WhatsApp', 'warning');
+                        if(!payMethod) return Swal.fire('Pilih Pembayaran', 'Metode pembayaran belum dipilih', 'warning');
+        
+                        const btn = document.getElementById('btn-submit-order');
+                        btn.disabled = true;
+                        btn.innerText = 'Memproses...';
+        
+                        try {
+                            const res = await fetch('/api/public/checkout', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    page_id: ${page.id}, // FIX: Hapus backslash, gunakan ID dari Server
+                                    slug_payment: payMethod,
+                                    quantity: 1,
+                                    customer: { name, phone }
+                                })
+                            });
+                            const d = await res.json();
+                            if(d.payment_url) window.location.href = d.payment_url;
+                            else Swal.fire('Gagal', d.error || 'Terjadi kesalahan sistem', 'error');
+                        } catch(e) { Swal.fire('Error', 'Koneksi bermasalah', 'error'); }
+                        
+                        btn.disabled = false;
+                        btn.innerText = 'BAYAR SEKARANG';
+                    });
                 }
             });
-        });
-        
-        // C. LOGIC CAROUSEL (Auto Play + Pause on Hover)
-        document.querySelectorAll('.editable-carousel').forEach(el => {
-            const slides = el.querySelector('.slides');
-            const items = el.querySelectorAll('.slide');
-            if(!slides || !items.length) return;
-            
-            let idx = 0;
-            function show(n) { 
-                idx = (n + items.length) % items.length; 
-                slides.style.transform = 'translateX(-'+(idx*100)+'%)'; 
-            }
-            
-            // Tombol Next/Prev
-            const next = el.querySelector('.next'); 
-            if(next) next.onclick = (e) => { e.preventDefault(); show(idx+1); };
-            
-            const prev = el.querySelector('.prev'); 
-            if(prev) prev.onclick = (e) => { e.preventDefault(); show(idx-1); };
-            
-            // Auto Play
-            let timer = setInterval(() => show(idx+1), 5000);
-            
-            // Pause saat mouse masuk agar user bisa lihat/klik tombol
-            el.onmouseenter = () => clearInterval(timer);
-            el.onmouseleave = () => timer = setInterval(() => show(idx+1), 5000);
-        });
-
-        // D. Checkout Logic (Biarkan kode checkout tetap ada)
-        const container = document.body;
-        if (container.innerHTML.includes('[ CHECKOUT ]')) {
-            const config = \${JSON.stringify(config)};
-            const activePayments = \${JSON.stringify(activePayments)};
-            
-            // ... (KODE CHECKOUT BAWAAN JANGAN DIHAPUS) ...
-            
-            const paymentHTML = activePayments.length > 0 ? activePayments.map(slug => 
-                '<label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition border-gray-200 mb-2">' +
-                '<input type="radio" name="pay_method" value="' + slug + '" class="mr-3 w-4 h-4 text-blue-600">' +
-                '<span class="text-sm font-bold text-gray-700 uppercase">' + slug.split('-').join(' ') + '</span>' +
-                '</label>'
-            ).join('') : '<p class="text-red-500 text-xs">Belum ada metode pembayaran.</p>';
-
-            const checkoutHTML = \`
-                <div class="max-w-md mx-auto my-8 p-6 bg-white rounded-2xl shadow-xl border border-gray-100 font-sans">
-                    <h2 class="text-xl font-black text-gray-800 mb-6 text-center">Formulir Pemesanan</h2>
-                    <div class="flex justify-between items-center p-4 bg-blue-50 rounded-xl border border-blue-100 mb-6">
-                        <span class="font-bold text-blue-900">\${page.title}</span>
-                        <span class="font-black text-blue-700">Rp \${new Intl.NumberFormat('id-ID').format(config.price || 0)}</span>
-                    </div>
-                    <div class="space-y-4 mb-6">
-                        <input type="text" id="c_name" placeholder="Nama Lengkap" class="w-full p-3 border rounded-lg">
-                        <input type="tel" id="c_phone" placeholder="No. WhatsApp" class="w-full p-3 border rounded-lg">
-                    </div>
-                    <div class="mb-6">
-                        <label class="text-xs font-bold text-gray-400 uppercase block mb-2">Pembayaran</label>
-                        <div class="grid gap-2">\${paymentHTML}</div>
-                    </div>
-                    <button id="btn-submit-order" class="w-full py-4 bg-blue-600 text-white font-black rounded-xl shadow-lg hover:bg-blue-700 transition">
-                        BAYAR SEKARANG
-                    </button>
-                </div>
-            \`;
+        </script>
+        `;
+    
             container.innerHTML = container.innerHTML.replace('[ CHECKOUT ]', checkoutHTML);
 
             document.getElementById('btn-submit-order')?.addEventListener('click', async () => {
