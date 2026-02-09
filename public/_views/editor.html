@@ -516,11 +516,48 @@
                 window.editor = grapesjs.init({
                     container: '#gjs', height: '100%', storageManager: false, panels: { defaults: [] },
                     
-                    // --- 1. KONFIGURASI API UPLOAD (SESUAI REQUEST ANDA) ---
+                    // --- 1. KONFIGURASI API UPLOAD
                     assetManager: {
-                        upload: '/api/upload', // Endpoint API Anda
                         uploadText: 'Drop files here or click to upload',
-                        autoAdd: 1, // Otomatis tambah ke list setelah upload sukses
+                        uploadFile: async (e) => {
+                            const files = e.dataTransfer ? e.dataTransfer.files : e.target.files;
+                            const file = files[0];
+                            if(!file) return;
+                    
+                            // 1. Convert ke Base64 (Wajib untuk API Anda)
+                            const toBase64 = f => new Promise((resolve, reject) => {
+                                const reader = new FileReader();
+                                reader.readAsDataURL(f);
+                                reader.onload = () => resolve(reader.result);
+                                reader.onerror = error => reject(error);
+                            });
+                    
+                            try {
+                                const base64Image = await toBase64(file);
+                                
+                                // 2. Kirim ke API Backend Anda
+                                const response = await fetch('/api/admin/upload-image', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        image: base64Image, 
+                                        filename: file.name
+                                    })
+                                });
+                    
+                                const result = await response.json();
+                    
+                                // 3. Masukkan URL hasil upload ke Galeri GrapesJS
+                                if (result.data) {
+                                    window.editor.AssetManager.add(result.data); 
+                                } else {
+                                    alert('Upload Gagal: ' + (result.message || 'Error API'));
+                                }
+                            } catch (err) {
+                                console.error('Upload Error:', err);
+                                alert('Gagal koneksi ke server.');
+                            }
+                        }
                     },
                     canvas: {
                         scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
@@ -544,15 +581,17 @@
                 cmds.add('set-img-src', {
                     run(editor, sender) {
                         const component = editor.getSelected();
+                        // Buka Modal Asset Manager
                         editor.runCommand('open-assets', {
                             target: component,
                             onSelect() {
-                                // Ambil URL gambar yang sudah diupload ke API dan dipilih user
+                                // Ambil gambar yang dipilih user
                                 const asset = editor.AssetManager.getSelection();
                                 if(asset && asset.length) {
                                     const imageUrl = asset[0].getSrc();
-                                    // Update atribut dan tampilan
+                                    // Update atribut img-src di komponen
                                     component.addAttributes({ 'img-src': imageUrl });
+                                    // Update visual gambar di canvas
                                     const imgEl = component.view.el.querySelector('img');
                                     if(imgEl) imgEl.src = imageUrl;
                                 }
