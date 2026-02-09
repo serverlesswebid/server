@@ -629,46 +629,55 @@
                     }
                 });
 
-                // 2. Logic Slide Pintar (Bisa Ganti Gambar di Settings)
-                // 2. Logic Slide Pintar (Komponen Satuan)
-        domc.addType('carousel-slide', {
-            model: {
-                defaults: {
-                    tagName: 'div',
-                    classes: ['slide', 'min-w-full', 'relative', 'h-full'],
-                    traits: [
-                        // Pengaturan ini akan muncul saat Slide terpilih
-                        { type: 'text', name: 'img-src', label: 'URL Gambar (Link)' },
-                        { type: 'text', name: 'title-text', label: 'Judul Promo' }
-                    ],
-                    attributes: {
-                        'img-src': 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80',
-                        'title-text': 'JUDUL PROMO'
+               // 2. Logic Slide Pintar (Bisa Upload Gambar)
+                domc.addType('carousel-slide', {
+                    model: {
+                        defaults: {
+                            tagName: 'div',
+                            classes: ['slide', 'min-w-full', 'relative', 'h-full'],
+                            traits: [
+                                // UBAH TIPE JADI 'image' AGAR MEMBUKA ASSET MANAGER
+                                { 
+                                    type: 'image', 
+                                    name: 'img-src', 
+                                    label: 'Gambar Background' 
+                                },
+                                { 
+                                    type: 'text', 
+                                    name: 'title-text', 
+                                    label: 'Judul Promo' 
+                                }
+                            ],
+                            attributes: {
+                                'img-src': 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80',
+                                'title-text': 'JUDUL PROMO'
+                            }
+                        },
+                        init() {
+                            // Deteksi perubahan dari Asset Manager
+                            this.on('change:attributes:img-src', this.updateImage);
+                            this.on('change:attributes:title-text', this.updateTitle);
+                        },
+                        updateImage() {
+                            // Ambil URL dari atribut (hasil pilihan di Asset Manager)
+                            const src = this.getAttributes()['img-src'];
+                            // Cari elemen IMG di dalam slide ini
+                            const imgComp = this.components().models.find(c => c.get('tagName') === 'img');
+                            // Update source gambarnya
+                            if (imgComp) {
+                                imgComp.addAttributes({ src: src });
+                            }
+                        },
+                        updateTitle() {
+                            const txt = this.getAttributes()['title-text'];
+                            const overlay = this.components().models.find(c => c.get('classes').includes('absolute'));
+                            if(overlay) {
+                                const h2 = overlay.components().models.find(c => c.get('tagName') === 'h2');
+                                if(h2) h2.content = txt;
+                            }
+                        }
                     }
-                },
-                init() {
-                    // Aktifkan listener saat ada perubahan di Settings
-                    this.on('change:attributes:img-src', this.updateImage);
-                    this.on('change:attributes:title-text', this.updateTitle);
-                },
-                updateImage() {
-                    // Otomatis cari komponen gambar di dalamnya dan update
-                    const src = this.getAttributes()['img-src'];
-                    const imgComp = this.components().models.find(c => c.get('tagName') === 'img');
-                    if (imgComp) imgComp.addAttributes({ src: src });
-                },
-                updateTitle() {
-                    const txt = this.getAttributes()['title-text'];
-                    // Cari H2 di dalam komponen ini
-                    // Note: Kita mencari secara recursive sederhana atau asumsi struktur flat
-                    const overlay = this.components().models.find(c => c.get('classes').includes('absolute'));
-                    if(overlay) {
-                        const h2 = overlay.components().models.find(c => c.get('tagName') === 'h2');
-                        if(h2) h2.content = txt; // Update teks di canvas
-                    }
-                }
-            }
-        });
+                });
         
         domc.addType('product-gallery', { model: { defaults: { script: function() { const m=this.querySelector('.main-img img'); const t=this.querySelectorAll('.thumb'); if(!m||!t.length)return; t.forEach(x=>{x.onclick=function(){m.src=this.src;t.forEach(k=>k.classList.remove('active'));this.classList.add('active')}}) } } } });
 
