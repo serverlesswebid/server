@@ -639,7 +639,7 @@ async function renderPage(c, page) {
         }
     `;
 
-      // SCRIPT LOGIC (SINGLE DECLARATION)
+     // SCRIPT LOGIC (SINGLE DECLARATION)
     const liveScripts = `
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -675,6 +675,7 @@ async function renderPage(c, page) {
                 const slides = el.querySelector('.slides');
                 const items = el.querySelectorAll('.slide');
                 if(!slides || !items.length) return;
+                
                 let idx = 0;
                 function show(n) { 
                     idx = (n + items.length) % items.length; 
@@ -682,6 +683,7 @@ async function renderPage(c, page) {
                 }
                 const next = el.querySelector('.next'); if(next) next.onclick = () => show(idx+1);
                 const prev = el.querySelector('.prev'); if(prev) prev.onclick = () => show(idx-1);
+                
                 let timer = setInterval(() => show(idx+1), 5000);
                 el.onmouseenter = () => clearInterval(timer);
                 el.onmouseleave = () => timer = setInterval(() => show(idx+1), 5000);
@@ -757,7 +759,7 @@ async function renderPage(c, page) {
         });
     </script>
     `;
-    
+
     return c.html(`
     <!DOCTYPE html>
     <html lang='id'>
