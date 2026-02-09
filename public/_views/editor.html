@@ -103,10 +103,10 @@
         .custom-scroll { overflow-y: auto; height: 100%; -webkit-overflow-scrolling: touch; }
         .gjs-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px; }
 
-        /* TOOLBAR & RESIZER */
-        .gjs-toolbar { background-color: #1f2937 !important; border-radius: 8px !important; border: 1px solid #374151 !important; box-shadow: 4px 4px 15px rgba(0,0,0,0.2) !important; display: flex !important; flex-direction: column !important; gap: 6px !important; padding: 8px 0 !important; position: absolute !important; top: 0 !important; left: auto !important; right: -50px !important; width: 40px !important; height: auto !important; z-index: 100 !important; }
-        .gjs-toolbar-item { color: white !important; width: 100% !important; height: 28px !important; display: flex !important; align-items: center; justify-content: center !important; cursor: pointer !important; transition: 0.2s !important; }
-        .gjs-toolbar-item:hover { color: #818cf8 !important; transform: scale(1.1); }
+        /* Toolbar Vertikal - FIX SECTION (Posisi di DALAM Kanan Atas) */
+        .gjs-toolbar { background-color: #1f2937 !important; border-radius: 6px !important; border: 1px solid #ffffff33 !important; box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important; display: flex !important; flex-direction: column !important; gap: 5px !important; padding: 6px 0 !important; position: absolute !important; top: 10px !important; left: auto !important; right: 10px !important; width: 36px !important; height: auto !important; z-index: 99999 !important; transform: none !important; }
+        .gjs-toolbar-item { color: white !important; width: 100% !important; height: 26px !important; display: flex !important; align-items: center; justify-content: center !important; cursor: pointer !important; transition: 0.2s !important; }
+        .gjs-toolbar-item:hover { color: #818cf8 !important; transform: scale(1.1); background: rgba(255,255,255,0.1); }
         /* Paksa Color Picker GrapesJS muncul di lapisan paling depan */
         /* 1. Kotak warna di panel Styles (biar tetap kotak mungil, tidak memanjang) */
     .gjs-field-color-picker {
