@@ -531,33 +531,55 @@
 
                 // --- COMPONENT LOGIC ---
                 // 1. COUNTDOWN SMART
+                // --- WIDGETS (BLOCK MANAGER) ---
+                
+                // 1. COUNTDOWN SMART (DENGAN CUSTOM PESAN EXPIRED)
                 domc.addType('countdown-smart', {
                     model: {
                         defaults: {
-                            traits: [{ type: 'datetime-local', name: 'data-expire', label: 'Waktu Berakhir' }],
-                            attributes: { 'data-expire': '2026-12-31T23:59' },
+                            traits: [
+                                { type: 'datetime-local', name: 'data-expire', label: 'Waktu Berakhir' },
+                                { type: 'text', name: 'data-msg', label: 'Pesan Expired', placeholder: 'PROMO BERAKHIR' }
+                            ],
+                            attributes: { 
+                                'data-expire': '2026-12-31T23:59',
+                                'data-msg': 'PROMO BERAKHIR' 
+                            },
                             script: function() {
                                 const el = this;
                                 const display = el.querySelector('.js-countdown-display');
-                                const expiredMsg = el.querySelector('.js-expired-msg');
+                                const expiredBox = el.querySelector('.js-expired-msg');
+                                const expiredText = el.querySelector('.js-expired-text');
+                                
                                 const expireStr = el.getAttribute('data-expire');
+                                const msgStr = el.getAttribute('data-msg') || 'PROMO BERAKHIR';
+
                                 if(!expireStr) return;
+
                                 const update = () => {
                                     const now = new Date().getTime();
                                     const distance = new Date(expireStr).getTime() - now;
+
                                     if (distance < 0) {
                                         if(display) display.style.display = 'none';
-                                        if(expiredMsg) expiredMsg.style.display = 'block';
+                                        if(expiredBox) {
+                                            expiredBox.style.display = 'block';
+                                            expiredBox.classList.remove('hidden');
+                                            if(expiredText) expiredText.innerText = msgStr;
+                                        }
                                         return;
                                     }
+
                                     const d = Math.floor(distance / (1000 * 60 * 60 * 24));
                                     const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                                     const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
                                     const s = Math.floor((distance % (1000 * 60)) / 1000);
+
                                     if(el.querySelector('.js-d')) el.querySelector('.js-d').innerText = d < 10 ? '0'+d : d;
                                     if(el.querySelector('.js-h')) el.querySelector('.js-h').innerText = h < 10 ? '0'+h : h;
                                     if(el.querySelector('.js-m')) el.querySelector('.js-m').innerText = m < 10 ? '0'+m : m;
                                     if(el.querySelector('.js-s')) el.querySelector('.js-s').innerText = s < 10 ? '0'+s : s;
+                                    
                                     requestAnimationFrame(update);
                                 };
                                 update();
@@ -565,7 +587,6 @@
                         }
                     }
                 });
-
                 // 2. ICONIFY
                 domc.addType('iconify-icon', { model: { defaults: { tagName: 'iconify-icon', attributes: { icon: 'ph:star-fill', width: '24' }, traits: [{ type: 'button', text: 'Ganti Icon', command: (ed, t) => window.openIconifyPicker(t.target) }] } } });
 
@@ -703,36 +724,41 @@
                     </section>` 
                 });
                 // COUNTDOWN PRO (Fixed Logic)
+                // --- WIDGETS (BLOCK MANAGER) ---
+                
+                // COUNTDOWN PRO (Updated HTML structure for msg)
                 bm.add('countdown-smart', { 
                     label: 'Countdown Pro', category: '3. Content', 
                     content: `
-                    <div class="py-8 px-4 bg-gray-900 rounded-2xl text-center max-w-3xl mx-auto my-6" data-gjs-type="countdown-smart" data-expire="2026-12-31T23:59">
-                        <div class="js-expired-msg hidden">
-                            <h2 class="text-3xl md:text-4xl font-black text-red-500 tracking-widest uppercase animate-pulse">PROMO BERAKHIR</h2>
-                            <p class="text-gray-400 mt-2">Maaf, Anda terlambat. Silakan tunggu promo berikutnya.</p>
+                    <div class="py-8 px-4 bg-gray-900 rounded-2xl text-center max-w-3xl mx-auto my-6" data-gjs-type="countdown-smart" data-expire="2026-12-31T23:59" data-msg="PROMO BERAKHIR">
+                        
+                        <div class="js-expired-msg hidden animate-fade-in">
+                            <h2 class="js-expired-text text-3xl md:text-4xl font-black text-red-500 tracking-widest uppercase animate-pulse">PROMO BERAKHIR</h2>
+                            <p class="text-gray-400 mt-2 text-sm">Penawaran ini telah ditutup.</p>
                         </div>
+                        
                         <div class="js-countdown-display">
-                            <h3 class="text-white text-sm md:text-base font-bold uppercase tracking-[0.2em] mb-6 text-indigo-400">Penawaran Berakhir Dalam:</h3>
-                            <div class="flex flex-wrap justify-center gap-4 md:gap-8">
-                                <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 w-24 shadow-2xl relative overflow-hidden">
+                            <h3 class="text-white text-xs md:text-sm font-bold uppercase tracking-[0.3em] mb-6 text-indigo-400">Penawaran Berakhir Dalam:</h3>
+                            <div class="flex flex-wrap justify-center gap-3 md:gap-6">
+                                <div class="bg-gray-800 border border-gray-700 rounded-xl p-3 w-20 md:w-28 shadow-2xl relative overflow-hidden group">
                                     <div class="absolute top-0 left-0 w-full h-1 bg-indigo-500 shadow-[0_0_10px_#6366f1]"></div>
-                                    <div class="countdown-number text-white js-d">00</div>
-                                    <div class="countdown-label text-gray-400">HARI</div>
+                                    <div class="countdown-number text-white text-2xl md:text-4xl font-black js-d">00</div>
+                                    <div class="countdown-label text-[9px] md:text-[10px] text-gray-400 font-bold uppercase mt-1 tracking-wider">HARI</div>
                                 </div>
-                                <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 w-24 shadow-2xl relative overflow-hidden">
+                                <div class="bg-gray-800 border border-gray-700 rounded-xl p-3 w-20 md:w-28 shadow-2xl relative overflow-hidden">
                                     <div class="absolute top-0 left-0 w-full h-1 bg-indigo-500 shadow-[0_0_10px_#6366f1]"></div>
-                                    <div class="countdown-number text-white js-h">00</div>
-                                    <div class="countdown-label text-gray-400">JAM</div>
+                                    <div class="countdown-number text-white text-2xl md:text-4xl font-black js-h">00</div>
+                                    <div class="countdown-label text-[9px] md:text-[10px] text-gray-400 font-bold uppercase mt-1 tracking-wider">JAM</div>
                                 </div>
-                                <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 w-24 shadow-2xl relative overflow-hidden">
+                                <div class="bg-gray-800 border border-gray-700 rounded-xl p-3 w-20 md:w-28 shadow-2xl relative overflow-hidden">
                                     <div class="absolute top-0 left-0 w-full h-1 bg-indigo-500 shadow-[0_0_10px_#6366f1]"></div>
-                                    <div class="countdown-number text-white js-m">00</div>
-                                    <div class="countdown-label text-gray-400">MENIT</div>
+                                    <div class="countdown-number text-white text-2xl md:text-4xl font-black js-m">00</div>
+                                    <div class="countdown-label text-[9px] md:text-[10px] text-gray-400 font-bold uppercase mt-1 tracking-wider">MENIT</div>
                                 </div>
-                                <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 w-24 shadow-2xl relative overflow-hidden">
+                                <div class="bg-gray-800 border border-gray-700 rounded-xl p-3 w-20 md:w-28 shadow-2xl relative overflow-hidden">
                                     <div class="absolute top-0 left-0 w-full h-1 bg-red-500 shadow-[0_0_10px_#ef4444]"></div>
-                                    <div class="countdown-number text-red-500 js-s">00</div>
-                                    <div class="countdown-label text-red-400">DETIK</div>
+                                    <div class="countdown-number text-red-500 text-2xl md:text-4xl font-black js-s">00</div>
+                                    <div class="countdown-label text-[9px] md:text-[10px] text-red-400 font-bold uppercase mt-1 tracking-wider">DETIK</div>
                                 </div>
                             </div>
                         </div>
