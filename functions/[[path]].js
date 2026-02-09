@@ -772,6 +772,53 @@ async function renderPage(c, page) {
                     
                     btn.disabled = false; btn.innerText = 'BAYAR SEKARANG';
                 });
+
+            document.addEventListener('DOMContentLoaded', () => {
+        
+        // --- 1. LOGIKA COUNTDOWN (WAJIB ADA DISINI AGAR JALAN DI FRONTEND) ---
+        document.querySelectorAll('[data-gjs-type="countdown-smart"]').forEach(el => {
+            const expireDate = el.getAttribute('data-expire');
+            const expiredMsg = el.getAttribute('data-msg') || 'PROMO BERAKHIR';
+            
+            if (!expireDate) return;
+
+            const targetTime = new Date(expireDate).getTime();
+            const displayBox = el.querySelector('.js-countdown-display');
+            const msgBox = el.querySelector('.js-expired-msg');
+            const msgText = el.querySelector('.js-expired-text');
+
+            const tick = () => {
+                const now = new Date().getTime();
+                const distance = targetTime - now;
+
+                // JIKA WAKTU HABIS
+                if (distance < 0) {
+                    if (displayBox) displayBox.style.display = 'none';
+                    if (msgBox) {
+                        msgBox.style.display = 'block';
+                        msgBox.classList.remove('hidden');
+                        if (msgText) msgText.innerText = expiredMsg; // Ganti teks sesuai settingan
+                    }
+                    return; // Stop timer
+                }
+
+                // UPDATE ANGKA
+                const d = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const s = Math.floor((distance % (1000 * 60)) / 1000);
+
+                if(el.querySelector('.js-d')) el.querySelector('.js-d').innerText = d < 10 ? '0'+d : d;
+                if(el.querySelector('.js-h')) el.querySelector('.js-h').innerText = h < 10 ? '0'+h : h;
+                if(el.querySelector('.js-m')) el.querySelector('.js-m').innerText = m < 10 ? '0'+m : m;
+                if(el.querySelector('.js-s')) el.querySelector('.js-s').innerText = s < 10 ? '0'+s : s;
+
+                requestAnimationFrame(tick);
+            };
+
+            tick(); // Jalankan
+        });
+            
             }
         });
     </script>
