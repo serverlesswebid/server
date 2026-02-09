@@ -324,13 +324,13 @@
     </div>
 </div>
 
-    <div class="fixed bottom-20 left-5 z-[9999] flex flex-col gap-2 pointer-events-none">
-        <template x-for="n in notifications" :key="n.id">
-            <div x-show="n.show" x-transition class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border-l-4 bg-white min-w-[250px]" :class="n.type==='success'?'border-green-500':'border-red-500'">
-                <i class="ph text-xl" :class="n.type==='success'?'ph-check-circle text-green-500':'ph-warning-circle text-red-500'"></i>
-                <div><h4 class="text-xs font-bold text-gray-800" x-text="n.title"></h4><p class="text-[10px] text-gray-500" x-text="n.msg"></p></div>
-            </div>
-        </template>
+    <div class="fixed bottom-5 left-5 z-[100000] flex flex-col gap-2 pointer-events-none">
+    <template x-for="n in notifications" :key="n.id">
+        <div x-show="n.show" x-transition class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-l-4 bg-white min-w-[280px] transform transition-all" :class="n.type==='success'?'border-green-500':'border-red-500'">
+            <i class="ph text-2xl" :class="n.type==='success'?'ph-check-circle text-green-500':'ph-warning-circle text-red-500'"></i>
+            <div><h4 class="text-xs font-bold text-gray-800 uppercase" x-text="n.title"></h4><p class="text-[10px] text-gray-500 font-medium" x-text="n.msg"></p></div>
+        </div>
+    </template>
     </div>
 
     <div id="iconify-picker-modal" class="fixed inset-0 hidden z-[99999] bg-black/40 flex items-start justify-center p-6 backdrop-blur-sm">
@@ -449,6 +449,9 @@
                         .gallery-thumbs { display: flex; gap: 10px; overflow-x: auto; padding: 5px 0; }
                         .thumb-item { min-width: 60px; width: 60px; height: 60px; flex-shrink: 0; border-radius: 8px; cursor: pointer; opacity: 0.6; object-fit: cover; }
                         .thumb-item.active { border: 2px solid #4f46e5; opacity: 1; }
+                        /* ANIMASI NEWS FLASH */
+                        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+                        .animate-marquee { display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite; }
                     `;
 
                     window.editor = grapesjs.init({
