@@ -631,14 +631,13 @@ async function renderPage(c, page) {
     .product-gallery .thumb { min-width: 70px; width: 70px; height: 70px; flex-shrink: 0; border-radius: 8px; cursor: pointer; border: 2px solid transparent; opacity: 0.7; transition: 0.2s; object-fit: cover; }
     .product-gallery .thumb.active, .product-gallery .thumb:hover { border-color: #2563eb; opacity: 1; }
     
-    /* CAROUSEL */
-    .editable-carousel { position: relative; width: 100%; overflow: hidden; }
-    .editable-carousel .slides { display: flex; flex-direction: row; width: 100%; height: 100%; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-    .editable-carousel .slide { min-width: 100%; flex-shrink: 0; position: relative; height: 100%; }
-    .editable-carousel .slide img { width: 100%; height: 100%; object-fit: cover; }
-    .editable-carousel .carousel-controls { position: absolute; top: 50%; left: 0; right: 0; transform: translateY(-50%); display: flex; justify-content: space-between; padding: 0 20px; pointer-events: none; z-index: 10; }
-    .editable-carousel .carousel-controls button { pointer-events: auto; background: rgba(0,0,0,0.2); color: white; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; backdrop-filter: blur(2px); }
-    .editable-carousel .carousel-controls button:hover { background: rgba(0,0,0,0.5); transform: scale(1.1); }
+    ./* CAROUSEL FIXED (RESPONSIVE) */
+    .editable-carousel { position: relative; width: 100%; overflow: hidden; aspect-ratio: 16/9; }
+    .editable-carousel .slides { display: flex; width: 100%; height: 100%; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+    .editable-carousel .slide { min-width: 100%; flex: 0 0 100%; position: relative; height: 100%; }
+    .editable-carousel .slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .editable-carousel .carousel-controls button { background: rgba(0,0,0,0.3); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10; cursor: pointer; backdrop-filter: blur(4px); transition: 0.2s; }
+    .editable-carousel .carousel-controls button:hover { background: rgba(0,0,0,0.6); transform: scale(1.1); }
     
     /* UTILS */
     .pricing-card { transition: 0.3s; }
