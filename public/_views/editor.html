@@ -597,38 +597,74 @@
                 domc.addType('iconify-icon', { model: { defaults: { tagName: 'iconify-icon', attributes: { icon: 'ph:star-fill', width: '24' }, traits: [{ type: 'button', text: 'Ganti Icon', command: (ed, t) => window.openIconifyPicker(t.target) }] } } });
 
                 // 3. CAROUSEL & GALLERY
-                // LOGIC CAROUSEL (Updated)
-            domc.addType('editable-carousel', {
-                model: {
-                    defaults: {
-                        script: function() {
-                            const el = this;
-                            const slidesContainer = el.querySelector('.slides');
-                            const items = el.querySelectorAll('.slide');
-                            
-                            if (!slidesContainer || items.length === 0) return;
-                            
-                            let idx = 0;
-                            
-                            const show = (n) => {
-                                idx = (n + items.length) % items.length;
-                                slidesContainer.style.transform = 'translateX(-' + (idx * 100) + '%)';
-                            };
+                // --- A. LOGIC CAROUSEL & SLIDE PINTAR ---
+                
+                // 1. Logic Pembungkus Carousel
+                domc.addType('editable-carousel', {
+                    model: {
+                        defaults: {
+                            droppable: '[data-gjs-type="carousel-slide"]', // Hanya boleh diisi Slide
+                            script: function() {
+                                const el = this;
+                                const slidesContainer = el.querySelector('.slides');
+                                const items = el.querySelectorAll('.slide');
+                                if (!slidesContainer || items.length === 0) return;
+                                
+                                let idx = 0;
+                                const show = (n) => {
+                                    idx = (n + items.length) % items.length;
+                                    slidesContainer.style.transform = 'translateX(-' + (idx * 100) + '%)';
+                                };
             
-                            const nextBtn = el.querySelector('.next');
-                            const prevBtn = el.querySelector('.prev');
+                                const nextBtn = el.querySelector('.next');
+                                const prevBtn = el.querySelector('.prev');
+                                if(nextBtn) nextBtn.onclick = (e) => { e.preventDefault(); show(idx + 1); };
+                                if(prevBtn) prevBtn.onclick = (e) => { e.preventDefault(); show(idx - 1); };
             
-                            if(nextBtn) nextBtn.onclick = (e) => { e.preventDefault(); show(idx + 1); };
-                            if(prevBtn) prevBtn.onclick = (e) => { e.preventDefault(); show(idx - 1); };
-            
-                            // Auto Play
-                            let interval = setInterval(() => show(idx + 1), 5000);
-                            el.onmouseenter = () => clearInterval(interval);
-                            el.onmouseleave = () => interval = setInterval(() => show(idx + 1), 5000);
+                                let interval = setInterval(() => show(idx + 1), 5000);
+                                el.onmouseenter = () => clearInterval(interval);
+                                el.onmouseleave = () => interval = setInterval(() => show(idx + 1), 5000);
+                            }
                         }
                     }
-                }
-            }); 
+                });
+
+                // 2. Logic Slide Pintar (Bisa Ganti Gambar di Settings)
+                domc.addType('carousel-slide', {
+                    model: {
+                        defaults: {
+                            tagName: 'div',
+                            classes: ['slide', 'min-w-full', 'relative', 'h-full'],
+                            traits: [
+                                { type: 'text', name: 'img-src', label: 'URL Gambar (Link)' },
+                                { type: 'text', name: 'title-text', label: 'Judul Promo' },
+                                { type: 'color', name: 'text-color', label: 'Warna Teks' }
+                            ],
+                            attributes: {
+                                'img-src': 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80',
+                                'title-text': 'JUDUL PROMO',
+                                'text-color': '#ffffff'
+                            }
+                        },
+                        init() {
+                            // Update tampilan saat Settings berubah
+                            this.on('change:attributes:img-src', this.updateView);
+                            this.on('change:attributes:title-text', this.updateView);
+                            this.on('change:attributes:text-color', this.updateView);
+                        },
+                        updateView() {
+                            const attrs = this.getAttributes();
+                            const img = this.view.el.querySelector('img');
+                            const h2 = this.view.el.querySelector('h2');
+                            
+                            if(img) img.src = attrs['img-src'];
+                            if(h2) {
+                                h2.innerText = attrs['title-text'];
+                                h2.style.color = attrs['text-color'];
+                            }
+                        }
+                    }
+                });
         
         domc.addType('product-gallery', { model: { defaults: { script: function() { const m=this.querySelector('.main-img img'); const t=this.querySelectorAll('.thumb'); if(!m||!t.length)return; t.forEach(x=>{x.onclick=function(){m.src=this.src;t.forEach(k=>k.classList.remove('active'));this.classList.add('active')}}) } } } });
 
@@ -805,8 +841,9 @@
 
                 // STANDARD WIDGETS
                 // HERO SLIDER (FIXED: TAILWIND CLASSES EMBEDDED - PASTI HORIZONTAL & RESPONSIF)
+                // HERO SLIDER (SMART 10 SLIDES)
                 bm.add('hero-slider', { 
-                    label: 'Hero Slider', 
+                    label: 'Hero Slider (10x)', 
                     category: '1. Header & Hero', 
                     content: `
                     <div class="editable-carousel group relative w-full overflow-hidden bg-gray-900" 
@@ -814,27 +851,24 @@
                          data-gjs-type="editable-carousel">
                         
                         <div class="slides flex w-full h-full transition-transform duration-500 ease-in-out">
+                            ${Array.from({length: 10}).map((_, i) => `
                             
-                            <div class="slide min-w-full relative h-full">
-                                <img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80" 
-                                     class="w-full h-full object-cover block">
+                            <div class="slide min-w-full relative h-full" 
+                                 data-gjs-type="carousel-slide"
+                                 img-src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80&sig=${i}"
+                                 title-text="PROMO ${i+1}">
+                                 
+                                <img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80&sig=${i}" 
+                                     class="w-full h-full object-cover block pointer-events-none">
+                                     
                                 <div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white p-4 bg-black/30">
-                                    <h2 class="text-3xl md:text-5xl font-black mb-4 drop-shadow-md">BIG SALE</h2>
-                                    <button class="btn btn-primary rounded-full px-8 shadow-lg">Belanja Sekarang</button>
+                                    <h2 class="text-3xl md:text-5xl font-black mb-4 drop-shadow-md">PROMO ${i+1}</h2>
+                                    <button class="btn btn-primary rounded-full px-8 shadow-lg">Lihat Detail</button>
                                 </div>
                             </div>
-                
-                            <div class="slide min-w-full relative h-full">
-                                <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80" 
-                                     class="w-full h-full object-cover block">
-                                <div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white p-4 bg-black/30">
-                                    <h2 class="text-3xl md:text-5xl font-black mb-4 drop-shadow-md">NEW ARRIVAL</h2>
-                                    <button class="btn btn-outline text-white border-2 rounded-full px-8 hover:bg-white hover:text-black transition">Lihat Koleksi</button>
-                                </div>
-                            </div>
-                
+                            `).join('')}
                         </div>
-                
+
                         <div class="carousel-controls absolute inset-0 flex justify-between items-center px-4 pointer-events-none z-10">
                             <button class="prev pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-10 h-10 rounded-full bg-black/30 text-white flex items-center justify-center hover:bg-black/60 cursor-pointer backdrop-blur-sm">❮</button>
                             <button class="next pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-10 h-10 rounded-full bg-black/30 text-white flex items-center justify-center hover:bg-black/60 cursor-pointer backdrop-blur-sm">❯</button>
