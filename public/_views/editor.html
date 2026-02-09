@@ -503,11 +503,13 @@
                     .gallery-thumbs { display: flex; gap: 10px; overflow-x: auto; padding: 5px 0; }
                     .thumb-item { width: 60px; height: 60px; border-radius: 8px; cursor: pointer; opacity: 0.6; object-fit: cover; }
                     .thumb-item.active { border: 2px solid #4f46e5; opacity: 1; }
-                    .editable-carousel { position: relative; width: 100%; overflow: hidden; }
-                    .editable-carousel .slides { display: flex; transition: transform 0.5s; }
-                    .editable-carousel .slide { min-width: 100%; position: relative; }
-                    .editable-carousel .slide img { width: 100%; height: 100%; object-fit: cover; }
-                    .editable-carousel .carousel-controls button { background: rgba(0,0,0,0.3); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+                    ./* CAROUSEL FIXED (RESPONSIVE) */
+                    .editable-carousel { position: relative; width: 100%; overflow: hidden; aspect-ratio: 16/9; }
+                    .editable-carousel .slides { display: flex; width: 100%; height: 100%; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+                    .editable-carousel .slide { min-width: 100%; flex: 0 0 100%; position: relative; height: 100%; }
+                    .editable-carousel .slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+                    .editable-carousel .carousel-controls button { background: rgba(0,0,0,0.3); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10; cursor: pointer; backdrop-filter: blur(4px); transition: 0.2s; }
+                    .editable-carousel .carousel-controls button:hover { background: rgba(0,0,0,0.6); transform: scale(1.1); }
                 `;
 
                 window.editor = grapesjs.init({
