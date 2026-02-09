@@ -530,10 +530,8 @@
                 const bm = window.editor.BlockManager;
 
                 // --- COMPONENT LOGIC ---
-                // 1. COUNTDOWN SMART
-                // --- WIDGETS (BLOCK MANAGER) ---
-                
                 // 1. COUNTDOWN SMART (DENGAN CUSTOM PESAN EXPIRED)
+
                 domc.addType('countdown-smart', {
                     model: {
                         defaults: {
@@ -543,7 +541,7 @@
                             ],
                             attributes: { 
                                 'data-expire': '2026-12-31T23:59',
-                                'data-msg': 'PROMO BERAKHIR' 
+                                'data-msg': 'PROMO BERAKHIR'
                             },
                             script: function() {
                                 const el = this;
@@ -553,13 +551,13 @@
                                 
                                 const expireStr = el.getAttribute('data-expire');
                                 const msgStr = el.getAttribute('data-msg') || 'PROMO BERAKHIR';
-
+                
                                 if(!expireStr) return;
-
+                
                                 const update = () => {
                                     const now = new Date().getTime();
                                     const distance = new Date(expireStr).getTime() - now;
-
+                
                                     if (distance < 0) {
                                         if(display) display.style.display = 'none';
                                         if(expiredBox) {
@@ -569,16 +567,21 @@
                                         }
                                         return;
                                     }
-
+                
                                     const d = Math.floor(distance / (1000 * 60 * 60 * 24));
                                     const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                                     const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
                                     const s = Math.floor((distance % (1000 * 60)) / 1000);
-
-                                    if(el.querySelector('.js-d')) el.querySelector('.js-d').innerText = d < 10 ? '0'+d : d;
-                                    if(el.querySelector('.js-h')) el.querySelector('.js-h').innerText = h < 10 ? '0'+h : h;
-                                    if(el.querySelector('.js-m')) el.querySelector('.js-m').innerText = m < 10 ? '0'+m : m;
-                                    if(el.querySelector('.js-s')) el.querySelector('.js-s').innerText = s < 10 ? '0'+s : s;
+                
+                                    const setTxt = (sel, val) => { 
+                                        const node = el.querySelector(sel); 
+                                        if(node) node.innerText = val < 10 ? '0'+val : val; 
+                                    };
+                
+                                    setTxt('.js-d', d);
+                                    setTxt('.js-h', h);
+                                    setTxt('.js-m', m);
+                                    setTxt('.js-s', s);
                                     
                                     requestAnimationFrame(update);
                                 };
