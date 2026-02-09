@@ -483,14 +483,63 @@
                     // --- COMPONENT: ICONIFY (FIXED) ---
                     domc.addType('iconify-icon', { model: { defaults: { tagName: 'iconify-icon', attributes: { icon: 'ph:star-fill', width: '32' }, traits: [{ type: 'button', text: 'Change Icon', command: (ed, t) => window.openIconifyPicker(t.target) }] } } });
                     
-                    // --- COMPONENT: GALLERY ---
-                    domc.addType('product-gallery', {
-                        model: { defaults: { script: function() {
-                            const main = this.querySelector('.gallery-main'); const thumbs = this.querySelectorAll('.thumb-item');
-                            const goTo = (i) => { if(!main) return; main.style.transform = `translateX(-${i * 100}%)`; thumbs.forEach((t, idx) => idx === i ? t.classList.add('active') : t.classList.remove('active')); };
-                            thumbs.forEach((t, i) => t.onclick = () => goTo(i));
-                        }}}
-                    });
+                    // A. LOGIKA CAROUSEL (Auto-play + Pause on Hover + Circular Loop)
+                        domc.addType('editable-carousel', {
+                            model: {
+                                defaults: {
+                                    script: function() {
+                                        const el = this;
+                                        const slides = el.querySelector('.slides');
+                                        const items = el.querySelectorAll('.slide');
+                                        if (!slides || items.length === 0) return;
+                                        
+                                        let idx = 0;
+                                        
+                                        // Fungsi geser
+                                        const show = (n) => {
+                                            idx = (n + items.length) % items.length; // Logika circular
+                                            slides.style.transform = 'translateX(-' + (idx * 100) + '%)';
+                                        };
+                        
+                                        // Event Listeners Tombol
+                                        const prev = el.querySelector('.prev');
+                                        const next = el.querySelector('.next');
+                                        if (prev) prev.onclick = (e) => { e.preventDefault(); show(idx - 1); };
+                                        if (next) next.onclick = (e) => { e.preventDefault(); show(idx + 1); };
+                        
+                                        // Auto Play dengan Pause on Hover
+                                        let interval = setInterval(() => show(idx + 1), 5000);
+                                        el.onmouseenter = () => clearInterval(interval);
+                                        el.onmouseleave = () => interval = setInterval(() => show(idx + 1), 5000);
+                                    }
+                                }
+                            }
+                        });
+                        
+                        // B. LOGIKA PRODUCT GALLERY (Thumbnail Click)
+                        domc.addType('product-gallery', {
+                            model: {
+                                defaults: {
+                                    script: function() {
+                                        const el = this;
+                                        const main = el.querySelector('.main-img img');
+                                        const thumbs = el.querySelectorAll('.thumb');
+                                        
+                                        if(!main || thumbs.length === 0) return;
+                        
+                                        thumbs.forEach(t => {
+                                            t.onclick = function() {
+                                                // Ganti gambar utama
+                                                main.src = this.src;
+                                                // Atur kelas active
+                                                thumbs.forEach(x => x.classList.remove('active'));
+                                                this.classList.add('active');
+                                            }
+                                        });
+                                    }
+                                }
+                            }
+                        });
                     domc.addType('countdown-smart', { model: { defaults: { traits: [{ type: 'datetime-local', name: 'data-expire', label: 'Waktu Berakhir' }], attributes: { 'data-expire': '2026-12-31T23:59' }, script: function() { const el = this; const update = () => { const dist = new Date(el.getAttribute('data-expire')).getTime() - new Date().getTime(); if (dist < 0) return; el.querySelector('.js-d').innerText = Math.floor(dist / 864e5); el.querySelector('.js-h').innerText = Math.floor((dist % 864e5) / 36e5); el.querySelector('.js-m').innerText = Math.floor((dist % 36e5) / 6e4); el.querySelector('.js-s').innerText = Math.floor((dist % 6e4) / 1e3); }; setInterval(update, 1000); update(); } } } });
                     domc.addType('countdown-dynamic', { model: { defaults: { attributes: { 'data-reset': '2' }, script: function() { const el = this; let target = Date.now() + (parseFloat(el.getAttribute('data-reset')) * 3600000); const update = () => { let dist = target - Date.now(); if (dist < 0) { target = Date.now() + (parseFloat(el.getAttribute('data-reset')) * 3600000); dist = target - Date.now(); } el.querySelector('.js-h').innerText = Math.floor(dist / 36e5); el.querySelector('.js-m').innerText = Math.floor((dist % 36e5) / 6e4); el.querySelector('.js-s').innerText = Math.floor((dist % 6e4) / 1e3); }; setInterval(update, 1000); update(); } } } });
 
@@ -524,7 +573,12 @@
                     bm.add('iconify-blk', { label: 'Icon', category: 'Basic', content: { type: 'iconify-icon' } });
                     bm.add('ui-divider', { label: 'Garis', category: 'Basic', content: '<div class="divider py-4"></div>' });
 
-                    bm.add('gallery-carousel-1', { label: 'Slider', category: '2. Media', content: '<div class="product-gallery" data-gjs-type="product-gallery"><div class="gallery-main"><img src="https://via.placeholder.com/800x600/2563eb/fff?text=Slide+1"><img src="https://via.placeholder.com/800x600/10b981/fff?text=Slide+2"></div><div class="gallery-thumbs"><img src="https://via.placeholder.com/150/2563eb/fff" class="thumb-item active"><img src="https://via.placeholder.com/150/10b981/fff" class="thumb-item"></div></div>' });
+                    // 1. HERO SLIDER (Carousel)
+                    bm.add('hero-slider', { label: 'Hero Slider', category: '1. Header & Hero', content: `<div class="editable-carousel relative h-[500px] bg-gray-900 overflow-hidden group" data-gjs-type="editable-carousel"><div class="slides flex transition-transform duration-500 h-full"><div class="slide min-w-full relative"><img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80" class="w-full h-full object-cover opacity-60"><div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white p-4"><h2 class="text-5xl font-black mb-4">BIG SALE</h2><button class="btn btn-primary rounded-full px-8">Belanja Sekarang</button></div></div><div class="slide min-w-full relative"><img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80" class="w-full h-full object-cover opacity-60"><div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white p-4"><h2 class="text-5xl font-black mb-4">NEW ARRIVAL</h2><button class="btn btn-outline text-white rounded-full px-8">Lihat Koleksi</button></div></div></div><button class="prev absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full text-white flex items-center justify-center backdrop-blur-sm transition opacity-0 group-hover:opacity-100 cursor-pointer">❮</button><button class="next absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full text-white flex items-center justify-center backdrop-blur-sm transition opacity-0 group-hover:opacity-100 cursor-pointer">❯</button></div>` });
+                    
+                    // 2. PRODUCT GALLERY (Thumbnail)
+                    bm.add('product-gallery', { label: 'Thumb Carousel', category: '2. Media', content: `<div class="max-w-2xl mx-auto p-4 bg-white rounded-xl shadow-sm border border-gray-100" data-gjs-type="product-gallery"><div class="main-img mb-4 h-[400px] overflow-hidden rounded-lg bg-gray-100"><img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover"></div><div class="thumbs flex gap-3 overflow-x-auto pb-2 scrollbar-hide"><img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=150&q=80" class="thumb active w-20 h-20 rounded-lg object-cover cursor-pointer border-2 border-indigo-600"><img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=150&q=80" class="thumb w-20 h-20 rounded-lg object-cover cursor-pointer border-2 border-transparent hover:border-gray-300"><img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=150&q=80" class="thumb w-20 h-20 rounded-lg object-cover cursor-pointer border-2 border-transparent hover:border-gray-300"></div></div>` });
+                    
                     bm.add('video-yt', { label: 'Youtube', category: '2. Media', content: `<div class="aspect-video bg-black"><iframe width="100%" height="100%" src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0"></iframe></div>` });
 
                     bm.add('feature-grid', { label: 'Fitur', category: '3. Content', content: `<section class="py-8"><div class="grid grid-cols-3 gap-4 text-center"><div><iconify-icon icon="ph:rocket" class="text-2xl"></iconify-icon><h3>Fast</h3></div></div></section>` });
