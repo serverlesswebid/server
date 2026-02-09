@@ -592,33 +592,38 @@ async function renderPage(c, page) {
     
     // CSS & Tailwind
     const bridgeCSS = `
-        body { min-height: 100vh; background-color: #ffffff; overflow-x: hidden; font-family: 'Inter', sans-serif; }
-        
-        /* --- FIX SWEETALERT Z-INDEX --- */
-        .swal2-container { z-index: 99999 !important; }
+    body { min-height: 100vh; background-color: #ffffff; overflow-x: hidden; font-family: 'Inter', sans-serif; }
+    
+    /* --- TAMBAHAN WAJIB: ANIMASI NEWS FLASH --- */
+    @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+    .animate-marquee { display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite; }
 
-        .product-gallery { display: flex; flex-direction: column; gap: 12px; width:100%; }
-        .product-gallery .main-img { border-radius: 12px; overflow: hidden; width: 100%; aspect-ratio: 4/3; background: #f3f4f6; }
-        .product-gallery .main-img img { width: 100%; height: 100%; object-fit: cover; transition: 0.3s; }
-        .product-gallery .thumbs { display: flex; flex-direction: row; gap: 10px; overflow-x: auto; padding-bottom: 5px; scroll-behavior: smooth; }
-        .product-gallery .thumb { min-width: 70px; width: 70px; height: 70px; flex-shrink: 0; border-radius: 8px; cursor: pointer; border: 2px solid transparent; opacity: 0.7; transition: 0.2s; object-fit: cover; }
-        .product-gallery .thumb.active, .product-gallery .thumb:hover { border-color: #2563eb; opacity: 1; }
-        .editable-carousel { position: relative; width: 100%; overflow: hidden; }
-        .editable-carousel .slides { display: flex; flex-direction: row; width: 100%; height: 100%; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-        .editable-carousel .slide { min-width: 100%; flex-shrink: 0; position: relative; height: 100%; }
-        .editable-carousel .slide img { width: 100%; height: 100%; object-fit: cover; }
-        .editable-carousel .carousel-controls { position: absolute; top: 50%; left: 0; right: 0; transform: translateY(-50%); display: flex; justify-content: space-between; padding: 0 20px; pointer-events: none; z-index: 10; }
-        .editable-carousel .carousel-controls button { pointer-events: auto; background: rgba(0,0,0,0.2); color: white; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; backdrop-filter: blur(2px); }
-        .editable-carousel .carousel-controls button:hover { background: rgba(0,0,0,0.5); transform: scale(1.1); }
-        .pricing-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 32px; display: flex; flex-direction: column; height: 100%; transition: 0.3s; position: relative; overflow: hidden; }
-        .pricing-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.1); }
-        .pricing-card.highlight { border: 2px solid #2563eb; z-index: 2; box-shadow: 0 20px 40px -5px rgba(37, 99, 235, 0.15); }
-        .testimonial-card { background: #fff; border: 1px solid #f1f5f9; padding: 24px; border-radius: 12px; height: 100%; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-        .animate-marquee { display: inline-block; white-space: nowrap; animation: marquee 30s linear infinite; }
-        .btn { text-transform: none !important; }
-    `;
+    /* --- FIX: Z-INDEX SWEETALERT AGAR TIDAK KETUTUPAN --- */
+    .swal2-container { z-index: 99999 !important; }
+
+    /* CSS Gallery & Carousel Standar */
+    .product-gallery { display: flex; flex-direction: column; gap: 12px; width:100%; }
+    .product-gallery .main-img { border-radius: 12px; overflow: hidden; width: 100%; aspect-ratio: 4/3; background: #f3f4f6; }
+    .product-gallery .main-img img { width: 100%; height: 100%; object-fit: cover; transition: 0.3s; }
+    .product-gallery .thumbs { display: flex; flex-direction: row; gap: 10px; overflow-x: auto; padding-bottom: 5px; scroll-behavior: smooth; }
+    .product-gallery .thumb { min-width: 70px; width: 70px; height: 70px; flex-shrink: 0; border-radius: 8px; cursor: pointer; border: 2px solid transparent; opacity: 0.7; transition: 0.2s; object-fit: cover; }
+    .product-gallery .thumb.active, .product-gallery .thumb:hover { border-color: #2563eb; opacity: 1; }
+    
+    .editable-carousel { position: relative; width: 100%; overflow: hidden; }
+    .editable-carousel .slides { display: flex; flex-direction: row; width: 100%; height: 100%; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+    .editable-carousel .slide { min-width: 100%; flex-shrink: 0; position: relative; height: 100%; }
+    .editable-carousel .slide img { width: 100%; height: 100%; object-fit: cover; }
+    .editable-carousel .carousel-controls { position: absolute; top: 50%; left: 0; right: 0; transform: translateY(-50%); display: flex; justify-content: space-between; padding: 0 20px; pointer-events: none; z-index: 10; }
+    .editable-carousel .carousel-controls button { pointer-events: auto; background: rgba(0,0,0,0.2); color: white; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; backdrop-filter: blur(2px); }
+    .editable-carousel .carousel-controls button:hover { background: rgba(0,0,0,0.5); transform: scale(1.1); }
+    
+    .pricing-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 32px; display: flex; flex-direction: column; height: 100%; transition: 0.3s; position: relative; overflow: hidden; }
+    .pricing-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.1); }
+    .pricing-card.highlight { border: 2px solid #2563eb; z-index: 2; box-shadow: 0 20px 40px -5px rgba(37, 99, 235, 0.15); }
+    .testimonial-card { background: #fff; border: 1px solid #f1f5f9; padding: 24px; border-radius: 12px; height: 100%; }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .btn { text-transform: none !important; }
+`;
 
     const tailwindConfig = `
         tailwind.config = {
@@ -636,85 +641,132 @@ async function renderPage(c, page) {
 
     // SCRIPT LOGIC (SINGLE DECLARATION)
     const liveScripts = `
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // A. Notifikasi Pesan Terkirim (SweetAlert)
-            const params = new URLSearchParams(window.location.search);
-            if(params.get('status') === 'sent') {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Pesan Terkirim!',
-                    text: 'Kami akan segera menghubungi Anda.',
-                    confirmButtonColor: '#2563eb',
-                    customClass: { popup: 'rounded-2xl' }
-                });
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
-
-            // B. Gallery Thumbnail Logic
-            document.querySelectorAll('.product-gallery').forEach(el => {
-                const main = el.querySelector('.main-img img');
-                const thumbs = el.querySelectorAll('.thumb');
-                if(!main || thumbs.length === 0) return;
-                thumbs.forEach(t => {
-                    t.onclick = function() {
-                        main.src = this.src;
-                        thumbs.forEach(x => x.classList.remove('active'));
-                        this.classList.add('active');
-                    }
-                });
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // A. Notifikasi Pesan Terkirim (SweetAlert)
+        const params = new URLSearchParams(window.location.search);
+        if(params.get('status') === 'sent') {
+            Swal.fire({
+                icon: 'success',
+                title: 'Pesan Terkirim!',
+                text: 'Kami akan segera menghubungi Anda.',
+                confirmButtonColor: '#2563eb',
+                customClass: { popup: 'rounded-2xl' }
             });
-            
-            // C. Carousel Auto Play Logic
-            document.querySelectorAll('.editable-carousel').forEach(el => {
-                const slides = el.querySelector('.slides');
-                const items = el.querySelectorAll('.slide');
-                if(!slides || !items.length) return;
-                let idx = 0;
-                function show(n) { 
-                    idx = (n + items.length) % items.length; 
-                    slides.style.transform = 'translateX(-'+(idx*100)+'%)'; 
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        // B. LOGIC GALLERY (Thumbnails)
+        document.querySelectorAll('.product-gallery').forEach(el => {
+            const main = el.querySelector('.main-img img');
+            const thumbs = el.querySelectorAll('.thumb');
+            if(!main || thumbs.length === 0) return;
+            thumbs.forEach(t => {
+                t.onclick = function() {
+                    main.src = this.src;
+                    thumbs.forEach(x => x.classList.remove('active'));
+                    this.classList.add('active');
                 }
-                const next = el.querySelector('.next'); if(next) next.onclick = () => show(idx+1);
-                const prev = el.querySelector('.prev'); if(prev) prev.onclick = () => show(idx-1);
-                let timer = setInterval(() => show(idx+1), 5000);
-                el.onmouseenter = () => clearInterval(timer);
-                el.onmouseleave = () => timer = setInterval(() => show(idx+1), 5000);
             });
+        });
+        
+        // C. LOGIC CAROUSEL (Auto Play + Pause on Hover)
+        document.querySelectorAll('.editable-carousel').forEach(el => {
+            const slides = el.querySelector('.slides');
+            const items = el.querySelectorAll('.slide');
+            if(!slides || !items.length) return;
+            
+            let idx = 0;
+            function show(n) { 
+                idx = (n + items.length) % items.length; 
+                slides.style.transform = 'translateX(-'+(idx*100)+'%)'; 
+            }
+            
+            // Tombol Next/Prev
+            const next = el.querySelector('.next'); 
+            if(next) next.onclick = (e) => { e.preventDefault(); show(idx+1); };
+            
+            const prev = el.querySelector('.prev'); 
+            if(prev) prev.onclick = (e) => { e.preventDefault(); show(idx-1); };
+            
+            // Auto Play
+            let timer = setInterval(() => show(idx+1), 5000);
+            
+            // Pause saat mouse masuk agar user bisa lihat/klik tombol
+            el.onmouseenter = () => clearInterval(timer);
+            el.onmouseleave = () => timer = setInterval(() => show(idx+1), 5000);
+        });
 
-            // D. Checkout Logic
-            const container = document.body;
-            if (container.innerHTML.includes('[ CHECKOUT ]')) {
-                const config = ${JSON.stringify(config)};
-                const activePayments = ${JSON.stringify(activePayments)};
-                
-                const paymentHTML = activePayments.length > 0 ? activePayments.map(slug => 
-                    '<label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition border-gray-200 mb-2">' +
-                    '<input type="radio" name="pay_method" value="' + slug + '" class="mr-3 w-4 h-4 text-blue-600">' +
-                    '<span class="text-sm font-bold text-gray-700 uppercase">' + slug.split('-').join(' ') + '</span>' +
-                    '</label>'
-                ).join('') : '<p class="text-red-500 text-xs">Belum ada metode pembayaran.</p>';
+        // D. Checkout Logic (Biarkan kode checkout tetap ada)
+        const container = document.body;
+        if (container.innerHTML.includes('[ CHECKOUT ]')) {
+            const config = \${JSON.stringify(config)};
+            const activePayments = \${JSON.stringify(activePayments)};
+            
+            // ... (KODE CHECKOUT BAWAAN JANGAN DIHAPUS) ...
+            
+            const paymentHTML = activePayments.length > 0 ? activePayments.map(slug => 
+                '<label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition border-gray-200 mb-2">' +
+                '<input type="radio" name="pay_method" value="' + slug + '" class="mr-3 w-4 h-4 text-blue-600">' +
+                '<span class="text-sm font-bold text-gray-700 uppercase">' + slug.split('-').join(' ') + '</span>' +
+                '</label>'
+            ).join('') : '<p class="text-red-500 text-xs">Belum ada metode pembayaran.</p>';
 
-                const checkoutHTML = \`
-                    <div class="max-w-md mx-auto my-8 p-6 bg-white rounded-2xl shadow-xl border border-gray-100 font-sans">
-                        <h2 class="text-xl font-black text-gray-800 mb-6 text-center">Formulir Pemesanan</h2>
-                        <div class="flex justify-between items-center p-4 bg-blue-50 rounded-xl border border-blue-100 mb-6">
-                            <span class="font-bold text-blue-900">${page.title}</span>
-                            <span class="font-black text-blue-700">Rp \${new Intl.NumberFormat('id-ID').format(config.price || 0)}</span>
-                        </div>
-                        <div class="space-y-4 mb-6">
-                            <input type="text" id="c_name" placeholder="Nama Lengkap" class="w-full p-3 border rounded-lg">
-                            <input type="tel" id="c_phone" placeholder="No. WhatsApp" class="w-full p-3 border rounded-lg">
-                        </div>
-                        <div class="mb-6">
-                            <label class="text-xs font-bold text-gray-400 uppercase block mb-2">Pembayaran</label>
-                            <div class="grid gap-2">\${paymentHTML}</div>
-                        </div>
-                        <button id="btn-submit-order" class="w-full py-4 bg-blue-600 text-white font-black rounded-xl shadow-lg hover:bg-blue-700 transition">
-                            BAYAR SEKARANG
-                        </button>
+            const checkoutHTML = \`
+                <div class="max-w-md mx-auto my-8 p-6 bg-white rounded-2xl shadow-xl border border-gray-100 font-sans">
+                    <h2 class="text-xl font-black text-gray-800 mb-6 text-center">Formulir Pemesanan</h2>
+                    <div class="flex justify-between items-center p-4 bg-blue-50 rounded-xl border border-blue-100 mb-6">
+                        <span class="font-bold text-blue-900">\${page.title}</span>
+                        <span class="font-black text-blue-700">Rp \${new Intl.NumberFormat('id-ID').format(config.price || 0)}</span>
                     </div>
-                \`;
+                    <div class="space-y-4 mb-6">
+                        <input type="text" id="c_name" placeholder="Nama Lengkap" class="w-full p-3 border rounded-lg">
+                        <input type="tel" id="c_phone" placeholder="No. WhatsApp" class="w-full p-3 border rounded-lg">
+                    </div>
+                    <div class="mb-6">
+                        <label class="text-xs font-bold text-gray-400 uppercase block mb-2">Pembayaran</label>
+                        <div class="grid gap-2">\${paymentHTML}</div>
+                    </div>
+                    <button id="btn-submit-order" class="w-full py-4 bg-blue-600 text-white font-black rounded-xl shadow-lg hover:bg-blue-700 transition">
+                        BAYAR SEKARANG
+                    </button>
+                </div>
+            \`;
+            container.innerHTML = container.innerHTML.replace('[ CHECKOUT ]', checkoutHTML);
+
+            document.getElementById('btn-submit-order')?.addEventListener('click', async () => {
+                const payMethod = document.querySelector('input[name="pay_method"]:checked')?.value;
+                const name = document.getElementById('c_name').value;
+                const phone = document.getElementById('c_phone').value;
+
+                if(!name || !phone) return Swal.fire('Data Kurang', 'Mohon lengkapi nama dan WhatsApp', 'warning');
+                if(!payMethod) return Swal.fire('Pilih Pembayaran', 'Metode pembayaran belum dipilih', 'warning');
+
+                const btn = document.getElementById('btn-submit-order');
+                btn.disabled = true; btn.innerText = 'Memproses...';
+
+                try {
+                    const res = await fetch('/api/public/checkout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            page_id: \${page.id},
+                            slug_payment: payMethod,
+                            quantity: 1,
+                            customer: { name, phone }
+                        })
+                    });
+                    const d = await res.json();
+                    if(d.payment_url) window.location.href = d.payment_url;
+                    else Swal.fire('Gagal', d.error || 'Terjadi kesalahan sistem', 'error');
+                } catch(e) { Swal.fire('Error', 'Koneksi bermasalah', 'error'); }
+                
+                btn.disabled = false; btn.innerText = 'BAYAR SEKARANG';
+            });
+        }
+    });
+</script>
+`;
                 container.innerHTML = container.innerHTML.replace('[ CHECKOUT ]', checkoutHTML);
 
                 document.getElementById('btn-submit-order')?.addEventListener('click', async () => {
