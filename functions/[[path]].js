@@ -345,7 +345,8 @@ app.get('/api/logout', (c) => { deleteCookie(c, 'auth_token'); return c.redirect
 app.get('/login', (c) => serveAsset(c, '/login.html'));
 app.get('/admin', (c) => c.redirect('/admin/dashboard'));
 app.get('/admin/*', (c) => serveAsset(c, '/_views' + c.req.path.replace('/admin','').replace(/^\/$/,'/dashboard') + '.html'));
-app.post('/api/upload', uploadImage);
+// Di file worker.js
+app.post('/api/admin/upload-image', uploadImage);
 // --- MODULE: HOMEPAGE SETTING ---
 app.get('/api/admin/homepage-slug', async (c) => {
     try {
