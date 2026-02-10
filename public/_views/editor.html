@@ -494,6 +494,38 @@
                     })
                     .catch(e => console.error('Load Error', e));
 
+                // --- 0. LOGIC EDIT DI PANEL (SETTINGS TAB) ---
+                // Saat komponen dipilih, cek apakah itu teks. Jika ya, tambahkan input di panel.
+                window.editor.on('component:selected', (model) => {
+                    const el = model.getEl();
+                    
+                    // Cek apakah elemen punya teks (tapi bukan wrapper kosong)
+                    if (el && el.innerText && el.childElementCount === 0) {
+                        const currentTraits = model.get('traits').filter(t => t.name !== 'content_text');
+                        
+                        // Tambahkan Trait 'Isi Teks' ke Panel Kanan
+                        model.set('traits', [
+                            { 
+                                type: 'textarea', // Kotak isian panjang
+                                name: 'content_text', 
+                                label: 'Edit Teks Disini',
+                                changeProp: 1 // PENTING: Update properti, bukan atribut
+                            },
+                            ...currentTraits
+                        ]);
+
+                        // Sinkronisasi isi saat ini ke panel
+                        // Kita pakai properti custom 'content_text' agar tidak bentrok
+                        model.set('content_text', model.get('content')); 
+                        
+                        // Listener: Saat panel diketik -> update canvas
+                        model.on('change:content_text', () => {
+                            const newVal = model.get('content_text');
+                            model.components(newVal); // Update tampilan visual
+                        });
+                    }
+                });
+                
                 // --- TOOLBAR CONFIG (PASTE INSIDE IS BACK) ---
                 editor.on('component:selected', (c) => {
                     c.set('toolbar', [
