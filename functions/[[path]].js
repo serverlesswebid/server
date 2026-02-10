@@ -646,13 +646,13 @@ app.get('/:slug', async (c) => {
 });
 
 // ===============================================
-// FUNGSI RENDER HALAMAN (FIXED: SAFE DATA INJECTION)
+// FUNGSI RENDER HALAMAN (MURNI DATABASE DRIVEN)
 // ===============================================
 async function renderPage(c, page) {
     const config = JSON.parse(page.product_config_json || '{}');
     const activePayments = config.active_payments || [];
     
-    // 1. DATA SAVER: Kumpulkan data server untuk dikirim ke frontend dengan aman
+    // 1. DATA SAVER (Untuk Logic Checkout/System)
     const serverData = {
         page_id: page.id,
         title: page.title,
@@ -660,28 +660,17 @@ async function renderPage(c, page) {
         active_payments: activePayments
     };
 
-    // 2. CSS SAMA PERSIS DENGAN EDITOR
+    // 2. CSS Global (Bridge Style)
+    // Style dasar untuk layout dan utilitas yang mungkin tidak ada di Tailwind default
     const bridgeCSS = `
     body { min-height: 100vh; background-color: #ffffff; overflow-x: hidden; font-family: 'Inter', sans-serif; }
     .swal2-container { z-index: 99999 !important; }
-    .product-gallery { display: flex; flex-direction: column; gap: 12px; width:100%; }
-    .product-gallery .main-img { border-radius: 12px; overflow: hidden; width: 100%; aspect-ratio: 4/3; background: #f3f4f6; }
-    .product-gallery .main-img img { width: 100%; height: 100%; object-fit: cover; transition: 0.3s; }
-    .product-gallery .thumbs { display: flex; flex-direction: row; gap: 10px; overflow-x: auto; padding-bottom: 5px; scroll-behavior: smooth; }
-    .product-gallery .thumb { min-width: 70px; width: 70px; height: 70px; flex-shrink: 0; border-radius: 8px; cursor: pointer; border: 2px solid transparent; opacity: 0.7; transition: 0.2s; object-fit: cover; }
-    .product-gallery .thumb.active, .product-gallery .thumb:hover { border-color: #2563eb; opacity: 1; }
-    .editable-carousel { position: relative; width: 100%; overflow: hidden; aspect-ratio: 16/9; min-height: 300px; }
-    .editable-carousel .slides { display: flex; flex-direction: row; width: 100%; height: 100%; transition: transform 0.5s ease-in-out; }
-    .editable-carousel .slide { min-width: 100%; flex: 0 0 100%; position: relative; height: 100%; overflow: hidden; }
-    .editable-carousel .slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .editable-carousel .carousel-controls { position: absolute; inset: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 1rem; pointer-events: none; z-index: 10; }
-    .editable-carousel .carousel-controls button { pointer-events: auto; background: rgba(0,0,0,0.3); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); transition: 0.2s; cursor: pointer; }
-    .editable-carousel .carousel-controls button:hover { background: rgba(0,0,0,0.6); transform: scale(1.1); }
-    .pricing-card { transition: 0.3s; }
-    .pricing-card:hover { transform: translateY(-5px); }
-    [x-cloak] { display: none !important; }
+    
+    /* Utility Classes Helper */
+    .countdown-number { font-weight: 900; }
     @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
     .animate-marquee { display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite; }
+    [x-cloak] { display: none !important; }
     `;
 
     const tailwindConfig = `
@@ -696,94 +685,25 @@ async function renderPage(c, page) {
         }
     `;
 
-    // 3. LOGIC SCRIPT (Mengambil data dari window.BS_DATA, bukan diinject langsung)
-    const liveScripts = `
+    // 3. SYSTEM LOGIC ONLY (Checkout & Notification)
+    // PERHATIAN: Logic Carousel, Countdown, Gallery DLL SUDAH DIHAPUS DARI SINI.
+    // Logic tersebut sekarang otomatis ada di dalam ${page.html_content} karena di-inject oleh Editor dari Database.
+    const systemScripts = `
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // AMBIL DATA AMAN DARI WINDOW
             const DATA = window.BS_DATA || {};
             const config = DATA.config || {};
             const activePayments = DATA.active_payments || [];
 
-            // A. Notifikasi
+            // A. Notifikasi System (Global)
             const params = new URLSearchParams(window.location.search);
             if(params.get('status') === 'sent') {
                 Swal.fire({ icon: 'success', title: 'Terkirim!', text: 'Kami akan segera merespon.', confirmButtonColor: '#2563eb' });
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
 
-            // B. Gallery
-            document.querySelectorAll('.product-gallery').forEach(el => {
-                const main = el.querySelector('.main-img img');
-                const thumbs = el.querySelectorAll('.thumb');
-                if(!main || !thumbs.length) return;
-                thumbs.forEach(t => {
-                    t.onclick = function() {
-                        main.src = this.src;
-                        thumbs.forEach(x => x.classList.remove('active'));
-                        this.classList.add('active');
-                    }
-                });
-            });
-            
-            // C. Carousel
-            document.querySelectorAll('.editable-carousel').forEach(el => {
-                const slides = el.querySelector('.slides');
-                const items = el.querySelectorAll('.slide');
-                if(!slides || !items.length) return;
-                let idx = 0;
-                const show = (n) => { 
-                    idx = (n + items.length) % items.length; 
-                    slides.style.transform = 'translateX(-'+(idx*100)+'%)'; 
-                };
-                const next = el.querySelector('.next'); if(next) next.onclick = () => show(idx+1);
-                const prev = el.querySelector('.prev'); if(prev) prev.onclick = () => show(idx-1);
-                let t = setInterval(() => show(idx+1), 5000);
-                el.onmouseenter = () => clearInterval(t);
-                el.onmouseleave = () => t = setInterval(() => show(idx+1), 5000);
-            });
-
-            // D. Countdown
-            document.querySelectorAll('[data-gjs-type="countdown-smart"]').forEach(el => {
-                const expireDate = el.getAttribute('data-expire');
-                const expiredMsg = el.getAttribute('data-msg') || 'PROMO BERAKHIR';
-                if (!expireDate) return;
-
-                const displayBox = el.querySelector('.js-countdown-display');
-                const msgBox = el.querySelector('.js-expired-msg');
-                const msgText = el.querySelector('.js-expired-text');
-                const targetTime = new Date(expireDate).getTime();
-
-                const tick = () => {
-                    const now = new Date().getTime();
-                    const distance = targetTime - now;
-
-                    if (distance < 0) {
-                        if (displayBox) displayBox.style.display = 'none';
-                        if (msgBox) {
-                            msgBox.style.display = 'block';
-                            msgBox.classList.remove('hidden');
-                            if (msgText) msgText.innerText = expiredMsg;
-                        }
-                        return;
-                    }
-
-                    const d = Math.floor(distance / (1000 * 60 * 60 * 24));
-                    const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                    const s = Math.floor((distance % (1000 * 60)) / 1000);
-
-                    if(el.querySelector('.js-d')) el.querySelector('.js-d').innerText = d < 10 ? '0'+d : d;
-                    if(el.querySelector('.js-h')) el.querySelector('.js-h').innerText = h < 10 ? '0'+h : h;
-                    if(el.querySelector('.js-m')) el.querySelector('.js-m').innerText = m < 10 ? '0'+m : m;
-                    if(el.querySelector('.js-s')) el.querySelector('.js-s').innerText = s < 10 ? '0'+s : s;
-
-                    requestAnimationFrame(tick);
-                };
-                tick();
-            });
-
-            // E. Checkout Logic
+            // B. Checkout Logic (System Global)
+            // Ini tetap di sini karena menangani transaksi pembayaran, bukan tampilan widget.
             const container = document.body;
             if (container.innerHTML.includes('[ CHECKOUT ]')) {
                 const paymentHTML = activePayments.length > 0 ? activePayments.map(slug => 
@@ -816,7 +736,6 @@ async function renderPage(c, page) {
                 
                 container.innerHTML = container.innerHTML.replace('[ CHECKOUT ]', checkoutHTML);
 
-                // Handle Submit
                 document.getElementById('btn-submit-order')?.addEventListener('click', async () => {
                     const payMethod = document.querySelector('input[name="pay_method"]:checked')?.value;
                     const name = document.getElementById('c_name').value;
@@ -832,12 +751,7 @@ async function renderPage(c, page) {
                         const res = await fetch('/api/public/checkout', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                page_id: DATA.page_id,
-                                slug_payment: payMethod,
-                                quantity: 1,
-                                customer: { name, phone }
-                            })
+                            body: JSON.stringify({ page_id: DATA.page_id, slug_payment: payMethod, quantity: 1, customer: { name, phone } })
                         });
                         const d = await res.json();
                         if(d.payment_url) window.location.href = d.payment_url;
@@ -878,7 +792,7 @@ async function renderPage(c, page) {
             window.BS_DATA = ${JSON.stringify(serverData)};
         </script>
         
-        ${liveScripts}
+        ${systemScripts}
     </body>
     </html>
     `);
