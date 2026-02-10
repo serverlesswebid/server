@@ -427,6 +427,7 @@
                 });
 
                 // --- LOAD FROM DB ---
+                // --- 2. LOAD WIDGETS & LOGIC FROM DATABASE (FIXED) ---
                 fetch('/api/widgets')
                     .then(res => res.json())
                     .then(widgets => {
@@ -434,26 +435,45 @@
                             let blockContent = w.content;
                             let componentDefaults = {};
 
-                            if (w.attributes && Object.keys(w.attributes).length > 0) componentDefaults = { ...w.attributes };
-                            if (w.script) componentDefaults.script = new Function(w.script);
+                            // 1. Parsing Konfigurasi Traits/Attributes dari DB
+                            if (w.attributes && w.attributes !== 'null') {
+                                try {
+                                    const parsed = typeof w.attributes === 'string' ? JSON.parse(w.attributes) : w.attributes;
+                                    componentDefaults = { ...parsed };
+                                } catch(e) { console.error('JSON Error in widget:', w.id); }
+                            }
 
+                            // 2. Parsing Script Logic dari DB
+                            if (w.script) {
+                                componentDefaults.script = new Function(w.script);
+                            }
+
+                            // 3. REGISTRASI TIPE KOMPONEN (PENTING!)
+                            // Jika ini adalah widget System (seperti iconify-icon), kita daftarkan sebagai Type global.
+                            // Atau jika widget biasa memiliki definisi khusus, kita daftarkan juga.
                             if (Object.keys(componentDefaults).length > 0) {
-                                const typeMatch = w.content.match(/data-gjs-type=["']([^"']+)["']/);
-                                const typeName = (typeMatch && typeMatch[1]) ? typeMatch[1] : w.id;
-                                domc.addType(typeName, { model: { defaults: componentDefaults } });
+                                // Nama tipe diambil dari ID widget (misal: 'iconify-icon')
+                                // Ini yang menghubungkan data-gjs-type="iconify-icon" dengan pengaturan Traits-nya.
+                                const typeName = w.id; 
+                                
+                                domc.addType(typeName, {
+                                    model: {
+                                        defaults: componentDefaults
+                                    }
+                                });
                             }
                             
+                            // 4. MASUKKAN KE PANEL SAMPING (Kecuali System)
                             if (w.category !== 'System') {
-                                // PENTING: Kita kirim data-id ke atribut blok
                                 bm.add(w.id, {
                                     label: w.label,
                                     category: w.category,
                                     content: blockContent,
-                                    attributes: { 'data-id': w.id, 'title': w.label } 
+                                    attributes: { 'data-id': w.id, 'title': w.label }
                                 });
                             }
                         });
-                        console.log('✅ All Widgets & Logic Loaded from DB');
+                        console.log('✅ All Widgets, Types & Logic Loaded from DB');
                     })
                     .catch(e => console.error('❌ Gagal memuat widget:', e));
 
