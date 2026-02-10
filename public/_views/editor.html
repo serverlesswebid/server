@@ -262,9 +262,18 @@
         const modal = document.getElementById('iconify-picker-modal'); 
         const input = document.getElementById('iconify-picker-search'); 
         const results = document.getElementById('iconify-picker-results');
-        window.openIconifyPicker = function(model) { activeModel = model; modal.classList.remove('hidden'); input.value = ''; input.focus(); searchIcons('star'); };
+        
+        window.openIconifyPicker = function(model) { 
+            activeModel = model; 
+            modal.classList.remove('hidden'); 
+            input.value = ''; 
+            input.focus(); 
+            searchIcons('star'); 
+        };
+        
         document.getElementById('iconify-picker-close').onclick = () => modal.classList.add('hidden'); 
         input.oninput = (e) => searchIcons(e.target.value);
+        
         async function searchIcons(q) { 
             if(!q) return; 
             try { 
@@ -276,7 +285,10 @@
                         const btn = document.createElement('button'); 
                         btn.className = 'p-2 hover:bg-indigo-50 rounded flex flex-col items-center gap-1 transition'; 
                         btn.innerHTML = `<iconify-icon icon="${icon}" width="24"></iconify-icon><span class="text-[9px] text-gray-400 truncate w-full text-center">${icon.split(':')[1]}</span>`; 
-                        btn.onclick = () => { if(activeModel) activeModel.setAttributes({ icon: icon }); modal.classList.add('hidden'); }; 
+                        btn.onclick = () => { 
+                            if(activeModel) activeModel.setAttributes({ icon: icon }); 
+                            modal.classList.add('hidden'); 
+                        }; 
                         results.appendChild(btn); 
                     }); 
                 } 
@@ -287,8 +299,24 @@
     // --- 2. MAIN EDITOR APP ---
     function editorApp() {
         return {
-            device: 'desktop', tab: 'blocks', settingsTab: 'commerce', clipboard: null, mobileMenuOpen: false, showSettings: false, loading: false, notifications: [], paymentProviders: [],
-            page: { id: 0, slug: '', title: '', product_type: 'physical', slug_payment: 'whatsapp', meta: { description: '', keywords: '', og_image: '', favicon: '' }, analytics: { fb_pixel: '', ga_id: '', tiktok_pixel: '' }, scripts: { header: '', footer: '' }, config: { price: 0, active_payments: [], variants: [], shipping: { weight: 1000, cod: false }, order_bump: { active: false }, coupons: [], settings: {} } },
+            // STATE VARIABLES
+            device: 'desktop', 
+            tab: 'blocks', 
+            settingsTab: 'commerce', 
+            mobileMenuOpen: false, 
+            showSettings: false, 
+            loading: false, 
+            notifications: [], 
+            paymentProviders: [],
+            
+            // PAGE DATA
+            page: { 
+                id: 0, slug: '', title: '', product_type: 'physical', slug_payment: 'whatsapp',
+                meta: { description: '', keywords: '', og_image: '', favicon: '' },
+                analytics: { fb_pixel: '', ga_id: '', tiktok_pixel: '' },
+                scripts: { header: '', footer: '' },
+                config: { price: 0, active_payments: [], variants: [], shipping: { weight: 1000, cod: false }, order_bump: { active: false }, coupons: [], settings: {} } 
+            },
 
             async init() {
                 this.initGrapes();
@@ -333,7 +361,7 @@
             cmd(c) { window.editor.runCommand(c); },
 
             initGrapes() {
-                const bridgeCSS = `body { min-height: 100vh; background: #fff; overflow-x: hidden; font-family: 'Inter', sans-serif; } [x-cloak] { display: none !important; } .countdown-item { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 60px; } .countdown-number { font-weight: 900; font-size: 2rem; line-height: 1; } .countdown-label { font-size: 0.65rem; text-transform: uppercase; font-weight: 700; margin-top: 4px; opacity: 0.8; } @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } } .animate-marquee { display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite; } .product-gallery { display: flex; flex-direction: column; gap: 12px; width: 100%; } .gallery-main img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 12px; } .gallery-thumbs { display: flex; gap: 10px; overflow-x: auto; padding: 5px 0; } .thumb-item { width: 60px; height: 60px; border-radius: 8px; cursor: pointer; opacity: 0.6; object-fit: cover; } .thumb-item.active { border: 2px solid #4f46e5; opacity: 1; } .editable-carousel { position: relative; width: 100%; overflow: hidden; aspect-ratio: 16/9; min-height: 300px; } .editable-carousel .slides { display: flex; flex-direction: row; width: 100%; height: 100%; transition: transform 0.5s ease-in-out; } .editable-carousel .slide { min-width: 100%; flex: 0 0 100%; position: relative; height: 100%; overflow: hidden; } .editable-carousel .slide img { width: 100%; height: 100%; object-fit: cover; display: block; } .editable-carousel .carousel-controls { position: absolute; inset: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 1rem; pointer-events: none; z-index: 10; } .editable-carousel .carousel-controls button { pointer-events: auto; background: rgba(0,0,0,0.3); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); transition: 0.2s; cursor: pointer; } .editable-carousel .carousel-controls button:hover { background: rgba(0,0,0,0.6); transform: scale(1.1); }`;
+                const bridgeCSS = `body { min-height: 100vh; background: #fff; overflow-x: hidden; font-family: 'Inter', sans-serif; } [x-cloak] { display: none !important; } .countdown-number { font-weight: 900; } .animate-marquee { display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite; } @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } } .product-gallery .main-img img { border-radius: 12px; } .editable-carousel { position: relative; width: 100%; overflow: hidden; aspect-ratio: 16/9; min-height: 300px; } .editable-carousel .slides { display: flex; width: 100%; height: 100%; transition: transform 0.5s ease-in-out; } .editable-carousel .slide { min-width: 100%; height: 100%; } .editable-carousel .slide img { width: 100%; height: 100%; object-fit: cover; } .editable-carousel .carousel-controls { position: absolute; inset: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 1rem; pointer-events: none; } .editable-carousel .carousel-controls button { pointer-events: auto; background: rgba(0,0,0,0.3); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); cursor: pointer; }`;
 
                 window.editor = grapesjs.init({
                     container: '#gjs', height: '100%', storageManager: false, panels: { defaults: [] },
@@ -343,14 +371,13 @@
                             const files = e.dataTransfer ? e.dataTransfer.files : e.target.files;
                             const file = files[0];
                             if(!file) return;
-                            const toBase64 = f => new Promise((resolve, reject) => { const reader = new FileReader(); reader.readAsDataURL(f); reader.onload = () => resolve(reader.result); reader.onerror = error => reject(error); });
+                            const toBase64 = f => new Promise((r, j) => { const x = new FileReader(); x.readAsDataURL(f); x.onload = () => r(x.result); x.onerror = j; });
                             try {
                                 const base64Image = await toBase64(file);
-                                const response = await fetch('/api/admin/upload-image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64Image, filename: file.name }) });
-                                const result = await response.json();
-                                if (result.data) window.editor.AssetManager.add(result.data); 
-                                else alert('Upload Gagal: ' + (result.message || 'Error API'));
-                            } catch (err) { alert('Gagal koneksi ke server.'); }
+                                const res = await fetch('/api/admin/upload-image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64Image, filename: file.name }) });
+                                const result = await res.json();
+                                if (result.data) window.editor.AssetManager.add(result.data); else alert('Upload Error');
+                            } catch (err) { alert('Network Error'); }
                         }
                     },
                     canvas: {
@@ -358,7 +385,7 @@
                         styles: ['https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap', 'https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
                         content: `<style>${bridgeCSS}</style>`
                     },
-                    plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-tabs', 'grapesjs-custom-code', 'grapesjs-tooltip', 'grapesjs-blocks-flexbox', 'grapesjs-plugin-export', 'grapesjs-typed', 'grapesjs-style-bg'],
+                    plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-tabs', 'grapesjs-custom-code', 'grapesjs-tooltip', 'grapesjs-blocks-flexbox', 'grapesjs-typed', 'grapesjs-style-bg'],
                     deviceManager: { devices: [{ id: 'desktop', width: '' }, { id: 'tablet', width: '768px' }, { id: 'mobile', width: '375px' }] },
                     blockManager: { appendTo: '#blocks-container' },
                     layerManager: { appendTo: '#layers-container' },
@@ -371,6 +398,7 @@
                 const bm = window.editor.BlockManager;
                 const cmds = window.editor.Commands;
 
+                // --- GLOBAL COMMANDS ---
                 domc.addType('link', { model: { defaults: { traits: ['href', 'target', 'title'] } } });
                 
                 cmds.add('set-img-src', {
@@ -398,7 +426,7 @@
                     }
                 });
 
-                // --- 2. LOAD WIDGETS & LOGIC FROM DATABASE ---
+                // --- LOAD FROM DB ---
                 fetch('/api/widgets')
                     .then(res => res.json())
                     .then(widgets => {
@@ -406,31 +434,22 @@
                             let blockContent = w.content;
                             let componentDefaults = {};
 
-                            if (w.attributes && Object.keys(w.attributes).length > 0) {
-                                componentDefaults = { ...w.attributes };
-                            }
-
-                            if (w.script) {
-                                componentDefaults.script = new Function(w.script);
-                            }
+                            if (w.attributes && Object.keys(w.attributes).length > 0) componentDefaults = { ...w.attributes };
+                            if (w.script) componentDefaults.script = new Function(w.script);
 
                             if (Object.keys(componentDefaults).length > 0) {
                                 const typeMatch = w.content.match(/data-gjs-type=["']([^"']+)["']/);
                                 const typeName = (typeMatch && typeMatch[1]) ? typeMatch[1] : w.id;
-
-                                domc.addType(typeName, {
-                                    model: {
-                                        defaults: componentDefaults
-                                    }
-                                });
+                                domc.addType(typeName, { model: { defaults: componentDefaults } });
                             }
                             
                             if (w.category !== 'System') {
+                                // PENTING: Kita kirim data-id ke atribut blok
                                 bm.add(w.id, {
                                     label: w.label,
                                     category: w.category,
                                     content: blockContent,
-                                    attributes: { 'data-id': w.id }
+                                    attributes: { 'data-id': w.id, 'title': w.label } 
                                 });
                             }
                         });
@@ -438,44 +457,51 @@
                     })
                     .catch(e => console.error('❌ Gagal memuat widget:', e));
 
-                // --- CONFIG TOOLBAR ---
+                // --- TOOLBAR CONFIG ---
                 editor.on('component:selected', (c) => {
                     c.set('toolbar', [
-                        { attributes: { class: 'fa fa-arrows', title: 'Geser' }, command: 'tlb-move', label: '<iconify-icon icon="ph:arrows-out-cardinal-bold" style="font-size:20px;"></iconify-icon>' },
-                        { attributes: { class: 'fa fa-arrow-up', title: 'Parent' }, command: (e) => e.runCommand('core:component-exit'), label: '<iconify-icon icon="ph:arrow-fat-up-bold" style="font-size:20px;"></iconify-icon>' },
-                        { attributes: { class: 'fa fa-scissors', title: 'Cut' }, command: (e) => { e.runCommand('core:copy'); e.getSelected().remove(); }, label: '<iconify-icon icon="ph:scissors-bold" style="font-size:18px; color:#fbbf24;"></iconify-icon>' },
-                        { attributes: { class: 'fa fa-copy', title: 'Copy' }, command: (e) => e.runCommand('core:copy'), label: '<iconify-icon icon="ph:copy-bold" style="font-size:18px; color:#38bdf8;"></iconify-icon>' },
-                        { attributes: { class: 'fa fa-paste', title: 'Paste' }, command: (e) => e.runCommand('core:paste'), label: '<iconify-icon icon="ph:clipboard-text-bold" style="font-size:18px; color:#4ade80;"></iconify-icon>' },
-                        { attributes: { class: 'fa fa-paste-inside', title: 'Paste Inside' }, command: (e) => { const s = e.getSelected(); const cl = e.Models.Clipboard && e.Models.Clipboard.get ? e.Models.Clipboard.get() : null; if(cl) s.append(cl); }, label: '<iconify-icon icon="ph:arrow-elbow-down-right-bold" style="font-size:18px; color:#c084fc;"></iconify-icon>' },
-                        { attributes: { class: 'fa fa-trash', title: 'Delete' }, command: 'tlb-delete', label: '<iconify-icon icon="ph:trash-bold" style="font-size:18px; color:#ef4444;"></iconify-icon>' }
+                        { attributes: { class: 'fa fa-arrows' }, command: 'tlb-move', label: '<iconify-icon icon="ph:arrows-out-cardinal-bold" style="font-size:20px;"></iconify-icon>' },
+                        { attributes: { class: 'fa fa-arrow-up' }, command: (e) => e.runCommand('core:component-exit'), label: '<iconify-icon icon="ph:arrow-fat-up-bold" style="font-size:20px;"></iconify-icon>' },
+                        { attributes: { class: 'fa fa-trash' }, command: 'tlb-delete', label: '<iconify-icon icon="ph:trash-bold" style="font-size:18px; color:#ef4444;"></iconify-icon>' }
                     ]);
                 });
                 
-                // --- ADD CLICK EVENT (FIXED) ---
-                const container = document.getElementById('blocks-container');
-                if (container) {
-                    container.addEventListener('click', (e) => {
-                        const blockEl = e.target.closest('.gjs-block');
-                        if (blockEl) {
-                            // AMBIL ID DARI DATA-ATTRIBUTE (BUKAN DARI TITLE/LABEL)
-                            const id = blockEl.getAttribute('data-id');
-                            if (id) {
-                                const block = window.editor.BlockManager.get(id);
-                                if (block) {
-                                    window.editor.addComponents(block.get('content'));
-                                    if(window.innerWidth < 768) this.mobileMenuOpen = false;
-                                } else {
-                                    console.error('Block not found for ID:', id);
+                // --- ADD CLICK EVENT (FIXED MOBILE) ---
+                // Menggunakan Timeout agar memastikan BlockManager sudah selesai render
+                setTimeout(() => {
+                    const container = document.getElementById('blocks-container');
+                    if (container) {
+                        container.addEventListener('click', (e) => {
+                            // Cari elemen block yang diklik
+                            const blockEl = e.target.closest('.gjs-block');
+                            if (blockEl) {
+                                // CARA 1: Coba ambil ID dari attribute 'data-id'
+                                let id = blockEl.getAttribute('data-id');
+
+                                // CARA 2: (FALLBACK) Jika data-id tidak ada, cari lewat Model BlockManager
+                                // Ini adalah solusi paling ampuh jika DOM attribute hilang
+                                if (!id) {
+                                    const allBlocks = window.editor.BlockManager.getAll();
+                                    const matchedBlock = allBlocks.find(b => b.getEl() === blockEl);
+                                    if (matchedBlock) id = matchedBlock.getId();
                                 }
-                            } else {
-                                console.error('No data-id found on block element');
+
+                                if (id) {
+                                    const block = window.editor.BlockManager.get(id);
+                                    if (block) {
+                                        window.editor.addComponents(block.get('content'));
+                                        if(window.innerWidth < 768) this.mobileMenuOpen = false;
+                                    }
+                                } else {
+                                    console.error('Gagal mendeteksi ID Widget. Coba refresh halaman.');
+                                }
                             }
-                        }
-                    });
-                }
-            } // END INIT GRAPES
-        }; // END RETURN
-    } // END EDITOR APP
+                        });
+                    }
+                }, 2000); // 2 Detik delay aman
+            }
+        };
+    }
 </script>
 </body>
 </html>
