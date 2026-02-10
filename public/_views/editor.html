@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - DB Connected</title>
+    <title>LandingBuilder Pro - DB Driven</title>
     
     <script>
         (function() {
@@ -71,44 +71,21 @@
             .mobile-overlay.show { display: block; }
         }
 
-        /* HIDE GRAPESJS DEFAULT PANELS */
         .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; width: 0 !important; }
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
 
-        /* ULTRA COMPACT WIDGET BUTTONS */
-        .gjs-blocks-c { 
-            display: grid !important; 
-            grid-template-columns: repeat(3, 1fr) !important; 
-            gap: 4px !important; 
-            padding: 6px !important; 
-        }
-        .gjs-block { 
-            width: 100% !important; 
-            min-height: 45px !important;
-            padding: 4px !important; 
-            background: #fff; 
-            border: 1px solid #e5e7eb; 
-            border-radius: 6px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            gap: 2px; 
-            cursor: pointer; 
-            transition: 0.2s;
-        }
+        .gjs-blocks-c { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 4px !important; padding: 6px !important; }
+        .gjs-block { width: 100% !important; min-height: 45px !important; padding: 4px !important; background: #fff; border: 1px solid #e5e7eb; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; transition: 0.2s; }
         .gjs-block-label { font-size: 7px !important; font-weight: 800; text-transform: uppercase; color: #4b5563; text-align: center; }
         .gjs-block i, .gjs-block iconify-icon { font-size: 14px !important; color: #6366f1; }
 
         .custom-scroll { overflow-y: auto; height: 100%; -webkit-overflow-scrolling: touch; }
         .gjs-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px; }
 
-        /* Toolbar Vertikal */
         .gjs-toolbar { background-color: #1f2937 !important; border-radius: 6px !important; border: 1px solid #ffffff33 !important; box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important; display: flex !important; flex-direction: column !important; gap: 5px !important; padding: 6px 0 !important; position: absolute !important; top: 10px !important; left: auto !important; right: 10px !important; width: 36px !important; height: auto !important; z-index: 99999 !important; transform: none !important; }
         .gjs-toolbar-item { color: white !important; width: 100% !important; height: 26px !important; display: flex !important; align-items: center; justify-content: center !important; cursor: pointer !important; transition: 0.2s !important; }
         .gjs-toolbar-item:hover { color: #818cf8 !important; transform: scale(1.1); background: rgba(255,255,255,0.1); }
         
-        /* Color Picker Fixes */
         .gjs-field-color-picker { width: 25px !important; height: 25px !important; flex-shrink: 0 !important; border: 1px solid #ccc !important; border-radius: 4px !important; cursor: pointer !important; display: inline-block !important; }
         .gjs-field-color { display: flex !important; align-items: center !important; gap: 8px !important; overflow: visible !important; }
         .sp-container { z-index: 999999 !important; position: fixed !important; transform: translateX(-235px) !important; background: #ffffff !important; border: 1px solid #ddd !important; box-shadow: -5px 5px 20px rgba(0,0,0,0.3) !important; padding: 8px !important; }
@@ -372,6 +349,10 @@
                 const cmds = window.editor.Commands;
 
                 domc.addType('link', { model: { defaults: { traits: ['href', 'target', 'title'] } } });
+                
+                // --- 1. GLOBAL COMMANDS (Infrastructure Only) ---
+                // Command ini bisa dipanggil oleh widget manapun via Traits yang ada di Database
+                
                 cmds.add('set-img-src', {
                     run(editor, sender) {
                         const component = editor.getSelected();
@@ -391,62 +372,53 @@
                     }
                 });
 
-                // COMPONENT DEFINITIONS (TRAITS ONLY - LOGIC COMES FROM DB IF NEEDED)
-                domc.addType('countdown-smart', {
-                    model: {
-                        defaults: {
-                            traits: [ { type: 'datetime-local', name: 'data-expire', label: 'Waktu Berakhir' }, { type: 'text', name: 'data-msg', label: 'Pesan Expired', placeholder: 'PROMO BERAKHIR' } ],
-                            attributes: { 'data-expire': '2026-12-31T23:59', 'data-msg': 'PROMO BERAKHIR' },
-                            // Keep default script here as fallback/base
-                            script: function() { const el = this; const display = el.querySelector('.js-countdown-display'); const expiredBox = el.querySelector('.js-expired-msg'); const expiredText = el.querySelector('.js-expired-text'); const expireStr = el.getAttribute('data-expire'); const msgStr = el.getAttribute('data-msg') || 'PROMO BERAKHIR'; if(!expireStr) return; const update = () => { const now = new Date().getTime(); const distance = new Date(expireStr).getTime() - now; if (distance < 0) { if(display) display.style.display = 'none'; if(expiredBox) { expiredBox.style.display = 'block'; expiredBox.classList.remove('hidden'); if(expiredText) expiredText.innerText = msgStr; } return; } const d = Math.floor(distance / (1000 * 60 * 60 * 24)); const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)); const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)); const s = Math.floor((distance % (1000 * 60)) / 1000); const setTxt = (sel, val) => { const node = el.querySelector(sel); if(node) node.innerText = val < 10 ? '0'+val : val; }; setTxt('.js-d', d); setTxt('.js-h', h); setTxt('.js-m', m); setTxt('.js-s', s); requestAnimationFrame(update); }; update(); }
-                        }
+                cmds.add('open-icon-picker', {
+                    run(editor, sender) {
+                        window.openIconifyPicker(editor.getSelected());
                     }
                 });
 
-                domc.addType('iconify-icon', { model: { defaults: { tagName: 'iconify-icon', attributes: { icon: 'ph:star-fill', width: '24' }, traits: [{ type: 'button', text: 'Ganti Icon', command: (ed, t) => window.openIconifyPicker(t.target) }] } } });
-
-                domc.addType('editable-carousel', { model: { defaults: { droppable: '[data-gjs-type="carousel-slide"]', script: function() { const el = this; const slidesContainer = el.querySelector('.slides'); const items = el.querySelectorAll('.slide'); if (!slidesContainer || items.length === 0) return; let idx = 0; const show = (n) => { idx = (n + items.length) % items.length; slidesContainer.style.transform = 'translateX(-' + (idx * 100) + '%)'; }; const nextBtn = el.querySelector('.next'); if(nextBtn) nextBtn.onclick = (e) => { e.preventDefault(); show(idx + 1); }; const prevBtn = el.querySelector('.prev'); if(prevBtn) prevBtn.onclick = (e) => { e.preventDefault(); show(idx - 1); }; let interval = setInterval(() => show(idx + 1), 5000); el.onmouseenter = () => clearInterval(interval); el.onmouseleave = () => interval = setInterval(() => show(idx + 1), 5000); } } } });
-
-                domc.addType('carousel-slide', {
-                    model: {
-                        defaults: {
-                            tagName: 'div', classes: ['slide', 'min-w-full', 'relative', 'h-full'],
-                            traits: [ { type: 'button', label: 'Gambar Background', text: 'UPLOAD / GANTI GAMBAR', command: 'set-img-src' }, { type: 'text', name: 'title-text', label: 'Judul Promo' } ],
-                            attributes: { 'img-src': 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80', 'title-text': 'JUDUL PROMO' },
-                        },
-                        init() { this.on('change:attributes:title-text', this.updateTitle); },
-                        updateTitle() { const txt = this.getAttributes()['title-text']; const overlay = this.components().models.find(c => c.get('classes').includes('absolute')); if(overlay) { const h2 = overlay.components().models.find(c => c.get('tagName') === 'h2'); if(h2) h2.content = txt; } }
-                    }
-                });
-                
-                domc.addType('product-gallery', { model: { defaults: { script: function() { const m=this.querySelector('.main-img img'); const t=this.querySelectorAll('.thumb'); if(!m||!t.length)return; t.forEach(x=>{x.onclick=function(){m.src=this.src;t.forEach(k=>k.classList.remove('active'));this.classList.add('active')}}) } } } });
-
-                // --- LOAD WIDGETS DARI DATABASE (DYNAMIC) ---
+                // --- 2. LOAD WIDGETS & LOGIC FROM DATABASE ---
                 fetch('/api/widgets')
                     .then(res => res.json())
                     .then(widgets => {
                         widgets.forEach(w => {
                             let blockContent = w.content;
-                            // Jika ada script khusus di DB yang override logic bawaan
+                            let componentDefaults = {};
+
+                            // Parsing Attributes (Traits & Defaults) dari DB
+                            if (w.attributes && Object.keys(w.attributes).length > 0) {
+                                componentDefaults = { ...w.attributes };
+                            }
+
+                            // Parsing Script dari DB (Client-Side Logic)
                             if (w.script) {
-                                const typeID = 'wdg-' + w.id;
-                                domc.addType(typeID, {
+                                componentDefaults.script = new Function(w.script);
+                            }
+
+                            // Jika Widget ini punya Logic/Traits khusus, Daftarkan Type-nya
+                            if (Object.keys(componentDefaults).length > 0) {
+                                // Gunakan ID widget sebagai nama Type, atau ambil dari data-gjs-type jika ada
+                                const typeMatch = w.content.match(/data-gjs-type=["']([^"']+)["']/);
+                                const typeName = (typeMatch && typeMatch[1]) ? typeMatch[1] : w.id;
+
+                                domc.addType(typeName, {
                                     model: {
-                                        defaults: {
-                                            script: new Function(w.script),
-                                            ...w.attributes
-                                        }
+                                        defaults: componentDefaults
                                     }
                                 });
-                                blockContent = { type: typeID, content: w.content };
                             }
-                            bm.add(w.id, {
-                                label: w.label,
-                                category: w.category,
-                                content: blockContent
-                            });
+                            
+                            // Hanya tambahkan ke Block Manager jika bukan kategori "System"
+                            if (w.category !== 'System') {
+                                bm.add(w.id, {
+                                    label: w.label,
+                                    category: w.category,
+                                    content: blockContent
+                                });
+                            }
                         });
-                        console.log('✅ Widgets Loaded from DB');
+                        console.log('✅ All Widgets & Logic Loaded from DB');
                     })
                     .catch(e => console.error('❌ Gagal memuat widget:', e));
 
