@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - Final Hybrid</title>
+    <title>LandingBuilder Pro - DB Driven</title>
     
     <script>
         (function() {
@@ -314,7 +314,7 @@
                                 } catch(e) { console.error('Error register logic', w.id); }
                             }
 
-                            // B. BUILD SIDEBAR MENU (CONTENT WIDGETS ONLY)
+                            // B. BUILD SIDEBAR MENU
                             if (w.category !== 'System') {
                                 widgetCache[w.id] = w;
                                 if (!groups[w.category]) groups[w.category] = [];
