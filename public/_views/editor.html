@@ -53,54 +53,45 @@
             .mobile-overlay.show { display: block; }
         }
 
-        /* GrapesJS Overrides */
-        .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; width: 0 !important; }
-        .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
-        .gjs-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px; }
+        .gjs-toolbar {
+        background-color: #1f2937 !important;
+        border-radius: 6px !important;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        
+        /* POSISI: Jauh di atas objek (Tidak Nempel) */
+        top: -35px !important; 
+        left: 0 !important;
+        transform: translateY(0) !important;
+        
+        /* TAMPILAN */
+        display: flex !important;
+        gap: 5px !important;
+        padding: 4px 8px !important;
+        opacity: 1;
+        transition: opacity 0.2s ease, top 0.2s ease;
+        z-index: 9999 !important;
+    }
 
-        /* --- TOOLBAR FIXED (KOMPAK & BERJARAK) --- */
-        .gjs-toolbar { 
-            background-color: #1f2937 !important; 
-            border-radius: 6px !important; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
-            display: flex !important;
-            align-items: center !important;
-            gap: 6px !important;
-            
-            /* UKURAN: Kompak (Tidak diperbesar) */
-            padding: 4px 8px !important; 
-            height: auto !important;
-            
-            position: absolute !important;
-            
-            /* POSISI: Diberi jarak jauh ke atas agar tidak menutupi objek */
-            top: -60px !important; 
-            
-            left: 0 !important;
-            transform: none !important;
-            z-index: 99999 !important;
-            width: max-content !important;
-            border: 1px solid rgba(255,255,255,0.2) !important;
-        }
-        
-        .gjs-toolbar-item { 
-            color: white !important; 
-            
-            /* UKURAN ICON: Standar/Kecil */
-            width: 28px !important; 
-            height: 28px !important; 
-            
-            display: flex !important; 
-            align-items: center; 
-            justify-content: center !important; 
-            cursor: pointer !important; 
-            border-radius: 4px !important; 
-            transition: all 0.2s ease !important;
-        }
-        
-        .gjs-toolbar-item:hover { 
-            background-color: #4f46e5 !important; 
-        }
+    /* Class Sakti: Sembunyikan Toolbar saat Ngetik */
+    .gjs-toolbar.ghost-mode {
+        opacity: 0 !important;
+        pointer-events: none !important;
+        visibility: hidden !important;
+    }
+
+    /* Icon Toolbar */
+    .gjs-toolbar-item {
+        color: white !important;
+        width: 24px !important; height: 24px !important;
+        display: flex !important; align-items: center; justify-content: center !important;
+        border-radius: 4px !important; cursor: pointer !important;
+    }
+    .gjs-toolbar-item:hover { background-color: #4f46e5 !important; }
+
+    /* Fix Color Picker agar tidak tertutup 
+    .gjs-field-color-picker { width: 100%; height: 25px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
+    .sp-container { z-index: 100000 !important; } */
 
         /* COLOR PICKER FIXED (Agar muncul paling depan) */
         .sp-container {
@@ -388,7 +379,6 @@
             },
 
             initGrapes() {
-                // 1. UPDATE CSS BRIDGE (Agar tampilan editor sama dengan Live)
                 const bridgeCSS = `
                     body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; } 
                     .editable-carousel { min-height: 200px; background: #eee; }
@@ -401,6 +391,8 @@
                     storageManager: false, 
                     panels: { defaults: [] },
                     allowScripts: 1, 
+                    
+                    // ASSET MANAGER
                     assetManager: {
                         uploadText: 'Upload Gambar',
                         uploadFile: async (e) => {
@@ -415,173 +407,207 @@
                             } catch(err) { alert('Upload gagal'); }
                         }
                     },
-                    // 2. CONFIG CANVAS (DENGAN ESCAPE SCRIPT YANG BENAR)
+
+                    // CANVAS CONFIG
                     canvas: {
-                        scripts: [
-                            'https://cdn.tailwindcss.com', 
-                            'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'
-                        ],
-                        styles: [
-                            'https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'
-                        ],
-                        // Inject Font & Tailwind Config
+                        scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
+                        styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
                         content: `
                             <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
                             <script>
-                                // Suppress Tailwind Warning di dalam iframe
                                 console.warn = function() {}; 
                                 tailwind.config = {
                                     darkMode: 'class',
-                                    theme: {
-                                        extend: {
-                                            fontFamily: { sans: ['Inter', 'sans-serif'] },
-                                            colors: { theme: { 50:'#eef2ff', 600:'#4f46e5' } }
-                                        }
-                                    }
+                                    theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { theme: { 50:'#eef2ff', 600:'#4f46e5' } } } }
                                 }
                             <\/script>
                             <style>${bridgeCSS}</style>
                         `
                     },
+
                     plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-custom-code', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg'],
                     deviceManager: { devices: [{ id: 'desktop', width: '' }, { id: 'tablet', width: '768px' }, { id: 'mobile', width: '375px' }] },
                     blockManager: { appendTo: '#blocks-container' },
                     layerManager: { appendTo: '#layers-container' },
                     selectorManager: { appendTo: '#selectors-container' },
                     traitManager: { appendTo: '#traits-container' },
-                    styleManager: { appendTo: '#styles-container', sectors: [{name: 'Typography', open:1, buildProps:['font-size', 'color', 'text-align']}, {name: 'Layout', buildProps:['width', 'padding', 'margin', 'display']}] }
+
+                    // --- STYLE MANAGER (FULL FEATURES UNLOCKED) ---
+                    styleManager: { 
+                        appendTo: '#styles-container', 
+                        sectors: [
+                            {
+                                name: 'Typography', 
+                                open: 1, 
+                                buildProps: [
+                                    'font-family', 
+                                    'font-size', 
+                                    'font-weight',      // Ketebalan
+                                    'letter-spacing',   // Spasi Huruf
+                                    'line-height',      // Jarak Baris
+                                    'color',            // Warna
+                                    'text-align',       // Rata Kiri/Kanan
+                                    'text-decoration',  // Underline / Coret
+                                    'font-style',       // Italic
+                                    'text-transform',   // Uppercase / Lowercase
+                                    'text-shadow'       // Bayangan Teks
+                                ],
+                                properties: [
+                                    {
+                                        name: 'Font',
+                                        property: 'font-family',
+                                        defaults: 'Inter, sans-serif',
+                                        list: [
+                                            { value: 'Inter, sans-serif', name: 'Inter' },
+                                            { value: 'Arial, Helvetica, sans-serif', name: 'Arial' },
+                                            { value: 'Times New Roman, serif', name: 'Times' },
+                                            { value: 'Courier New, monospace', name: 'Courier' },
+                                            { value: 'Georgia, serif', name: 'Georgia' },
+                                            { value: 'Verdana, Geneva, sans-serif', name: 'Verdana' }
+                                        ]
+                                    },
+                                    {
+                                        name: 'Weight',
+                                        property: 'font-weight',
+                                        defaults: '400',
+                                        list: [
+                                            {value:'100', name:'Thin'},
+                                            {value:'300', name:'Light'},
+                                            {value:'400', name:'Normal'},
+                                            {value:'500', name:'Medium'},
+                                            {value:'600', name:'Semi Bold'},
+                                            {value:'700', name:'Bold'},
+                                            {value:'900', name:'Black'}
+                                        ]
+                                    }
+                                ]
+                            }, 
+                            {
+                                name: 'Layout & Spacing', 
+                                open: 0,
+                                buildProps: ['width', 'height', 'max-width', 'min-height', 'padding', 'margin', 'display', 'flex-direction', 'justify-content', 'align-items']
+                            },
+                            {
+                                name: 'Background',
+                                open: 0,
+                                buildProps: ['background-color', 'background-image', 'background-repeat', 'background-size', 'background-position']
+                            },
+                            {
+                                name: 'Border & Effects',
+                                open: 0,
+                                buildProps: ['border', 'border-radius', 'box-shadow', 'opacity', 'cursor', 'overflow']
+                            }
+                        ] 
+                    }
                 });
 
+                // --- HELPER VARIABLES ---
                 const domc = window.editor.DomComponents;
-                const bm = window.editor.BlockManager;
                 const cmds = window.editor.Commands;
                 const tm = window.editor.Traits;
 
-                // --- PERBAIKAN: DAFTARKAN TIPE TRAIT 'TEXTAREA' SECARA MANUAL ---
-                // Ini yang sebelumnya hilang sehingga muncul error 'textarea type not found'
+                // --- 1. LOGIC SAKTI: HILANGKAN TOOLBAR SAAT EDIT TEKS ---
+                window.editor.on('rte:enable', () => {
+                    // Cari semua toolbar dan sembunyikan dengan class 'ghost-mode'
+                    const canvasBody = window.editor.Canvas.getBody();
+                    const frameEl = window.editor.Canvas.getFrameEl();
+                    
+                    // Kita cari toolbar di dalam canvas wrapper (tempat GrapesJS merender toolbar)
+                    const wrapper = frameEl.parentNode; 
+                    const toolbars = wrapper.querySelectorAll('.gjs-toolbar');
+                    
+                    toolbars.forEach(t => t.classList.add('ghost-mode'));
+                });
+
+                window.editor.on('rte:disable', () => {
+                    // Munculkan lagi saat selesai mengetik
+                    const frameEl = window.editor.Canvas.getFrameEl();
+                    const wrapper = frameEl.parentNode;
+                    const toolbars = wrapper.querySelectorAll('.gjs-toolbar');
+                    
+                    toolbars.forEach(t => t.classList.remove('ghost-mode'));
+                });
+
+                // --- 2. TRAIT TEXTAREA (MANUAL REGISTER) ---
                 tm.addType('textarea', {
                     createInput({ trait }) {
                         const el = document.createElement('textarea');
                         el.className = 'w-full p-2 text-xs border border-gray-300 rounded bg-gray-50 text-gray-800 focus:outline-none focus:border-indigo-500 transition';
                         el.style.minHeight = '80px';
-                        el.style.resize = 'vertical';
                         el.placeholder = 'Ketik teks disini...';
-                        
-                        el.addEventListener('input', (e) => {
-                            this.onChange(e); // Update model saat diketik
-                        });
+                        el.addEventListener('input', (e) => this.onChange(e));
                         return el;
                     },
                     onUpdate({ elInput, component }) {
-                        // Ambil nilai dari properti komponen
-                        const name = this.model.get('name');
-                        let val = component.get(name);
-                        // Jika properti kosong, ambil dari konten HTML langsung
-                        if (typeof val === 'undefined' || val === null) {
-                            val = component.get('content');
-                        }
+                        const val = component.get(this.model.get('name')) || component.get('content');
                         elInput.value = val || '';
                     },
                 });
 
-                // --- COMPONENT TYPES ---
+                // --- 3. CUSTOM COMPONENTS ---
                 domc.addType('link', { model: { defaults: { traits: ['href', 'target'] } } });
-                
                 domc.addType('iconify-icon', { 
                     model: { 
                         defaults: { 
-                            tagName: 'iconify-icon', 
-                            resizable: true, 
-                            stylable: true,
+                            tagName: 'iconify-icon', resizable: true, stylable: true,
                             attributes: { icon: 'ph:star-fill', width: '24' }, 
                             traits: [{ type: 'button', text: 'Ganti Icon', command: (ed, t) => window.openIconifyPicker(t.target) }] 
                         } 
                     } 
                 });
 
-                // --- COMMANDS ---
-                cmds.add('set-img-src', { run(ed) { ed.runCommand('open-assets', { target: ed.getSelected(), onSelect() { const asset = ed.AssetManager.getSelection()[0]; if(asset) { ed.getSelected().addAttributes({'img-src': asset.getSrc()}); ed.getSelected().view.el.querySelector('img').src = asset.getSrc(); } ed.Modal.close(); } }) } });
+                // --- 4. COMMANDS ---
                 cmds.add('open-icon-picker', { run(ed) { window.openIconifyPicker(ed.getSelected()); } });
 
-                // --- DYNAMIC WIDGETS LOADER ---
-                fetch('/api/widgets')
-                    .then(res => res.json())
-                    .then(widgets => {
-                        const renderer = document.getElementById('blocks-custom-renderer');
-                        renderer.innerHTML = ''; 
-                        const groups = {};
+                // --- 5. WIDGET LOADER ---
+                fetch('/api/widgets').then(res => res.json()).then(widgets => {
+                    const renderer = document.getElementById('blocks-custom-renderer');
+                    renderer.innerHTML = ''; const groups = {};
+                    
+                    widgets.forEach(w => {
+                        if (w.attributes && w.attributes !== 'null' && w.id !== 'iconify-icon') {
+                            try {
+                                const defaults = typeof w.attributes === 'string' ? JSON.parse(w.attributes) : w.attributes;
+                                if(w.script) defaults.script = new Function(w.script);
+                                const typeMatch = w.content.match(/data-gjs-type=["']([^"']+)["']/);
+                                const typeName = (typeMatch && typeMatch[1]) ? typeMatch[1] : w.id;
+                                domc.addType(typeName, { model: { defaults } });
+                            } catch(e) {}
+                        }
+                        if (w.category !== 'System') {
+                            if (!groups[w.category]) groups[w.category] = [];
+                            groups[w.category].push(w);
+                        }
+                    });
 
-                        widgets.forEach(w => {
-                            if (w.attributes && w.attributes !== 'null' && w.id !== 'iconify-icon') {
-                                try {
-                                    const defaults = typeof w.attributes === 'string' ? JSON.parse(w.attributes) : w.attributes;
-                                    if(w.script) defaults.script = new Function(w.script);
-                                    const typeMatch = w.content.match(/data-gjs-type=["']([^"']+)["']/);
-                                    const typeName = (typeMatch && typeMatch[1]) ? typeMatch[1] : w.id;
-                                    domc.addType(typeName, { model: { defaults } });
-                                } catch(e) { console.error('Reg Error', w.id); }
-                            }
-                            if (w.category !== 'System') {
-                                widgetCache[w.id] = w;
-                                if (!groups[w.category]) groups[w.category] = [];
-                                groups[w.category].push(w);
-                            }
+                    Object.keys(groups).sort().forEach(catName => {
+                        const details = document.createElement('details'); details.className = 'group border border-gray-200 rounded-lg bg-white overflow-hidden mb-2'; details.open = true;
+                        const summary = document.createElement('summary'); summary.className = 'p-3 bg-gray-50 text-xs font-bold text-gray-700 cursor-pointer flex justify-between items-center hover:bg-gray-100 select-none'; summary.innerHTML = `<span>${catName}</span> <i class="ph ph-caret-down group-open:rotate-180 transition"></i>`;
+                        const contentDiv = document.createElement('div'); contentDiv.className = 'grid grid-cols-3 gap-2 p-2 bg-white';
+                        
+                        groups[catName].forEach(w => {
+                            const btn = document.createElement('div'); btn.className = 'block-card'; btn.title = w.label; 
+                            btn.setAttribute('x-on:click', `addWidgetToCanvas('${w.id}')`);
+                            btn.innerHTML = `<div class="text-indigo-600 mb-1"><i class="ph ph-cube text-xl"></i></div><div class="block-label">${w.label}</div>`; 
+                            contentDiv.appendChild(btn);
                         });
+                        details.appendChild(summary); details.appendChild(contentDiv); renderer.appendChild(details);
+                    });
+                });
 
-                        Object.keys(groups).sort().forEach(catName => {
-                            const details = document.createElement('details');
-                            details.className = 'group border border-gray-200 rounded-lg bg-white overflow-hidden mb-2';
-                            details.open = true;
-                            const summary = document.createElement('summary');
-                            summary.className = 'p-3 bg-gray-50 text-xs font-bold text-gray-700 cursor-pointer flex justify-between items-center hover:bg-gray-100 select-none';
-                            summary.innerHTML = `<span>${catName}</span> <i class="ph ph-caret-down group-open:rotate-180 transition"></i>`;
-                            const contentDiv = document.createElement('div');
-                            contentDiv.className = 'grid grid-cols-3 gap-2 p-2 bg-white';
-
-                            groups[catName].forEach(w => {
-                                const btn = document.createElement('div');
-                                btn.className = 'block-card';
-                                btn.title = w.label;
-                                btn.setAttribute('x-on:click', `addWidgetToCanvas('${w.id}')`);
-                                btn.innerHTML = `<div class="text-indigo-600 mb-1"><i class="ph ph-cube text-xl"></i></div><div class="block-label">${w.label}</div>`;
-                                contentDiv.appendChild(btn);
-                            });
-                            details.appendChild(summary);
-                            details.appendChild(contentDiv);
-                            renderer.appendChild(details);
-                        });
-                    })
-                    .catch(e => console.error('Load Error', e));
-
-                // --- 0. LOGIC EDIT DI PANEL (SETTINGS TAB) ---
+                // --- 6. EVENT LISTENERS ---
+                // Panel Edit Teks
                 window.editor.on('component:selected', (model) => {
                     const el = model.getEl();
                     if (el && el.innerText && el.childElementCount === 0) {
                         const currentTraits = model.get('traits').filter(t => t.name !== 'content_text');
-                        
-                        // Menambahkan Trait Textarea (Yang sekarang sudah didaftarkan)
-                        model.set('traits', [
-                            { 
-                                type: 'textarea', // SEKARANG SUDAH AMAN
-                                name: 'content_text', 
-                                label: 'Edit Teks Disini',
-                                changeProp: 1 
-                            },
-                            ...currentTraits
-                        ]);
-
-                        // Sinkronisasi isi saat ini ke panel
+                        model.set('traits', [{ type: 'textarea', name: 'content_text', label: 'Edit Teks Disini', changeProp: 1 }, ...currentTraits]);
                         model.set('content_text', model.get('content')); 
-                        
-                        // Listener: Saat panel diketik -> update canvas
-                        model.on('change:content_text', () => {
-                            const newVal = model.get('content_text');
-                            model.components(newVal); 
-                        });
+                        model.on('change:content_text', () => { model.components(model.get('content_text')); });
                     }
                 });
 
-                // --- TOOLBAR CONFIG (PASTE INSIDE IS BACK) ---
+                // Config Toolbar
                 window.editor.on('component:selected', (c) => { 
                     c.set('toolbar', [
                         { attributes: { class: 'fa' }, command: 'tlb-move', label: '<i class="ph ph-arrows-out-cardinal text-lg"></i>' },
@@ -589,11 +615,7 @@
                         { attributes: { class: 'fa' }, command: e => { e.runCommand('core:copy'); e.getSelected().remove(); }, label: '<i class="ph ph-scissors text-lg text-yellow-300"></i>' },
                         { attributes: { class: 'fa' }, command: e => e.runCommand('core:copy'), label: '<i class="ph ph-copy text-lg text-blue-300"></i>' },
                         { attributes: { class: 'fa' }, command: e => e.runCommand('core:paste'), label: '<i class="ph ph-clipboard-text text-lg text-green-300"></i>' },
-                        { attributes: { class: 'fa', title: 'Paste Inside' }, command: e => { 
-                            const selected = e.getSelected();
-                            const clipboard = e.Models.Clipboard && e.Models.Clipboard.get ? e.Models.Clipboard.get() : null;
-                            if(selected && clipboard) selected.append(clipboard);
-                        }, label: '<i class="ph ph-arrow-elbow-down-right text-lg text-purple-400"></i>' },
+                        { attributes: { class: 'fa', title: 'Paste Inside' }, command: e => { const selected = e.getSelected(); const clipboard = e.Models.Clipboard && e.Models.Clipboard.get ? e.Models.Clipboard.get() : null; if(selected && clipboard) selected.append(clipboard); }, label: '<i class="ph ph-arrow-elbow-down-right text-lg text-purple-400"></i>' },
                         { attributes: { class: 'fa' }, command: 'tlb-delete', label: '<i class="ph ph-trash text-lg text-red-400"></i>' }
                     ]);
                 });
