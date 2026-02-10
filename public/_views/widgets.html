@@ -48,6 +48,9 @@
                         <input type="text" x-model="search" placeholder="Cari widget..." class="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm dark:text-white shadow-sm">
                     </div>
                     <div class="flex gap-2">
+                        <button @click="clearCache()" class="px-4 py-2 bg-purple-100 text-purple-700 border border-purple-200 font-bold rounded-lg text-sm hover:bg-purple-200 transition flex items-center gap-2">
+                            <i class="ph ph-broom-fill"></i> Reset Cache
+                        </button>
                         <button @click="injectFromCDN()" class="px-4 py-2 bg-amber-100 text-amber-700 border border-amber-200 font-bold rounded-lg text-sm hover:bg-amber-200 transition flex items-center gap-2">
                             <i class="ph ph-cloud-arrow-down-fill"></i> Import dari JSON
                         </button>
@@ -184,6 +187,29 @@
                         if (res.ok) this.widgets = await res.json();
                     } catch (e) { console.error(e); }
                     this.loading = false;
+                },
+
+                // --- FUNGSI HAPUS CACHE KV ---
+                async clearCache() {
+                    const token = localStorage.getItem('auth_token');
+                    Swal.fire({ title: 'Membersihkan Cache KV...', didOpen: () => Swal.showLoading() });
+                    
+                    try {
+                        const res = await fetch('/api/admin/cache/widgets', {
+                            method: 'DELETE',
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+
+                        if(res.ok) {
+                            const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+                            Toast.fire({ icon: 'success', title: 'Cache WIDGET_CACHE diperbarui!' });
+                            await this.fetchWidgets();
+                        } else {
+                            throw new Error('Gagal akses endpoint cache');
+                        }
+                    } catch(e) {
+                        Swal.fire({ title: 'Gagal', text: e.message, icon: 'error' });
+                    }
                 },
 
                 // --- INJECT FROM CDN (EXTERNAL SOURCE) ---
