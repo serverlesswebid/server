@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - Fix Color Picker & Full Config</title>
+    <title>LandingBuilder Pro - Fix Syntax & Full Config</title>
     
     <script>
+        // Mematikan peringatan Tailwind production yang mengganggu konsol
         (function() {
             const originalWarn = console.warn;
             console.warn = function(...args) {
@@ -45,7 +46,7 @@
         
         .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; }
         
-        /* STICKY TOOLBAR: Tetap di atas pojok kiri canvas */
+        /* STICKY TOOLBAR: Dibawah bar ikon preview */
         .gjs-toolbar { 
             position: fixed !important; 
             top: 60px !important; 
@@ -83,9 +84,8 @@
         .block-card:hover { border-color: #6366f1; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15); transform: translateY(-2px); }
         .block-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #4b5563; text-align: center; }
         
-        /* --- FIX COLOR PICKER PALETTE (Sangat Penting) --- */
+        /* COLOR PICKER FIX */
         .sp-container { z-index: 1000000 !important; position: fixed !important; }
-        .gjs-field-colorp-c { position: relative; z-index: 10; }
         .gjs-field-color-picker { width: 100%; height: 24px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
@@ -125,7 +125,6 @@
                     <div id="blocks-custom-renderer" class="space-y-2">
                         <div class="text-center py-10 text-gray-400 text-xs animate-pulse">Memuat Widget...</div>
                     </div>
-                    <div id="blocks-container" class="hidden"></div> 
                 </div>
                 <div x-show="tab=='styles'" class="h-full pb-20"><div id="selectors-container" class="p-3 bg-gray-50 border-b"></div><div id="styles-container" class="p-1"></div></div>
                 <div x-show="tab=='traits'" class="h-full pb-20"><div id="traits-container" class="p-4"></div></div>
@@ -168,19 +167,19 @@
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">SEO Browser Title</label><input x-model="page.config.settings.seo_title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none" placeholder="Judul di Google"></div>
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Meta Description</label><textarea x-model="page.config.settings.seo_description" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm h-24 outline-none resize-none"></textarea></div>
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Favicon URL</label><input x-model="page.config.settings.favicon" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Social Share Image (OG)</label><input x-model="page.config.settings.og_image" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Social Share Image</label><input x-model="page.config.settings.og_image" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
                 </div>
 
                 <div x-show="settingsTab === 'advanced'" class="space-y-6">
                     <div class="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 space-y-4">
                         <h4 class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Pixels & Analytics</h4>
-                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">Facebook Pixel ID</label><input x-model="page.config.settings.fb_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none"></div>
+                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">FB Pixel ID</label><input x-model="page.config.settings.fb_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none"></div>
                         <div><label class="text-[9px] font-bold text-indigo-400 uppercase">TikTok Pixel ID</label><input x-model="page.config.settings.tiktok_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none"></div>
-                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">Google Analytics ID</label><input x-model="page.config.settings.ga_id" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none"></div>
+                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">GA4 ID</label><input x-model="page.config.settings.ga_id" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none"></div>
                     </div>
                     <div class="space-y-4">
-                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Header Script</label><textarea x-model="page.config.settings.scripts_header" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none" placeholder="<script>...</script>"></textarea></div>
-                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Footer Script</label><textarea x-model="page.config.settings.scripts_footer" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none" placeholder="Sebelum </body>"></textarea></div>
+                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Header Script</label><textarea x-model="page.config.settings.scripts_header" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none"></textarea></div>
+                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Footer Script</label><textarea x-model="page.config.settings.scripts_footer" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none"></textarea></div>
                     </div>
                 </div>
             </div>
@@ -209,8 +208,8 @@
     </div>
 
     <script>
-    // DEKLARASI GLOBAL - HANYA SEKALI
-    let appBuilderCache = {};
+    // DEKLARASI GLOBAL WIDGET CACHE
+    let globalBuilderCache = {};
 
     (function(){
         let activeModel = null; const modal = document.getElementById('iconify-picker-modal'); const input = document.getElementById('iconify-picker-search'); const results = document.getElementById('iconify-picker-results');
@@ -230,9 +229,9 @@
         return {
             device: 'desktop', tab: 'blocks', settingsTab: 'commerce', showSettings: false, loading: false, notifications: [],
             paymentProviders: [
-                { slug: 'paspay', name: 'QRIS & E-Wallet' },
-                { slug: 'midtrans', name: 'Midtrans' },
-                { slug: 'flashpay-bri', name: 'Virtual Account' }
+                { slug: 'paspay', name: 'Paspay QRIS' },
+                { slug: 'paspay-va', name: 'Paspay VA' },
+                { slug: 'midtrans', name: 'Midtrans' }
             ],
             page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, active_payments: [], settings: { seo_title:'', seo_description:'', favicon:'', og_image:'', fb_pixel:'', tiktok_pixel:'', ga_id:'', scripts_header:'', scripts_footer:'' } } },
 
@@ -247,11 +246,11 @@
                 setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); 
             },
 
-            // --- DINAMIS: TAMBAHKAN WIDGET DENGAN DATA-GJS-TYPE ---
             addWidgetToCanvas(id) {
-                const w = appBuilderCache[id];
+                const w = globalBuilderCache[id];
                 if (w) {
                     let html = w.content;
+                    // Force data-gjs-type agar script otomatis jalan
                     if(w.script) {
                         const div = document.createElement('div'); div.innerHTML = html;
                         const root = div.firstElementChild;
@@ -260,7 +259,7 @@
                             html = div.innerHTML;
                         }
                     }
-                    window.editor.addComponents(html);
+                    try { window.editor.addComponents(html); } catch(e) { console.error('Component Add Error', e); }
                 }
             },
 
@@ -268,7 +267,6 @@
                 this.loading = true;
                 try {
                     const res = await fetch(`/api/admin/pages/${slug}`);
-                    if(!res.ok) throw new Error('Data not found');
                     const data = await res.json();
                     this.page.id = data.id; this.page.slug = data.slug; this.page.title = data.title || '';
                     if (data.product_config_json) { 
@@ -276,22 +274,22 @@
                         this.page.config = { ...this.page.config, ...conf }; 
                     }
                     if (window.editor) {
-                        if (data.html_content) window.editor.setComponents(data.html_content);
-                        if (data.css_content) window.editor.setStyle(data.css_content);
+                        window.editor.setComponents(data.html_content || '');
+                        window.editor.setStyle(data.css_content || '');
                         
-                        // --- AUTO OPEN ACCORDION KHUSUS EDITOR ---
+                        // AUTO OPEN ACCORDION UNTUK EDITOR
                         setTimeout(() => {
                             window.editor.getWrapper().find('details').forEach(d => d.addAttributes({ open: 'true' }));
-                        }, 500);
+                        }, 600);
                     }
-                } catch (e) { this.notify('Error', e.message, 'error'); }
+                } catch (e) { this.notify('Error', 'Gagal memuat halaman', 'error'); }
                 this.loading = false;
             },
 
             async savePage() {
                 this.loading = true;
                 try {
-                    // --- AUTO CLOSE ACCORDION SEBELUM SIMPAN ---
+                    // AUTO CLOSE ACCORDION SEBELUM SAVE
                     window.editor.getWrapper().find('details').forEach(d => d.addAttributes({ open: null }));
 
                     const payload = {
@@ -300,34 +298,24 @@
                         css: window.editor.getCss(), product_config: this.page.config
                     };
                     const res = await fetch('/api/admin/pages', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
-                    if(res.ok) this.notify('Sukses', 'Landing Page Berhasil Dipublish!'); else throw new Error('Simpan gagal');
+                    if(res.ok) this.notify('Sukses', 'Publish Berhasil!'); else throw new Error('Simpan gagal');
                 } catch (e) { this.notify('Gagal', e.message, 'error'); }
                 this.loading = false;
             },
 
             setDevice(d) { this.device = d; if (window.editor) window.editor.setDevice(d); },
-            cmd(c) { window.editor.runCommand(c); },
 
             initGrapes() {
                 const bridgeCSS = `
-                    body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; } 
+                    body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; padding-top: 65px !important; } 
                     img { max-width: 100% !important; height: auto !important; display: block; }
-                    /* CANVAS SPACING AGAR TIDAK TERTUTUP TOOLBAR STICKY */
-                    body { padding-top: 65px !important; padding-bottom: 100px; } 
-                    /* Fix Accordion Editor: Selalu terbuka saat ngedit */
                     details > :not(summary) { display: block !important; opacity: 1 !important; height: auto !important; padding-top: 10px; border-top: 1px dashed #e5e7eb; }
                 `; 
 
                 window.editor = grapesjs.init({
-                    container: '#gjs', 
-                    height: '100%', 
-                    width: 'auto',
-                    storageManager: false, 
-                    panels: { defaults: [] },
-                    allowScripts: 1, 
-                    
+                    container: '#gjs', height: '100%', width: 'auto', storageManager: false, panels: { defaults: [] }, allowScripts: 1,
                     assetManager: {
-                        uploadText: 'Klik atau seret gambar',
+                        uploadText: 'Seret gambar ke sini',
                         uploadFile: async (e) => {
                             const file = e.dataTransfer ? e.dataTransfer.files[0] : e.target.files[0];
                             if(!file) return;
@@ -336,89 +324,28 @@
                                 const b64 = await toBase64(file);
                                 const res = await fetch('/api/admin/upload-image', { method: 'POST', body: JSON.stringify({ image: b64, filename: file.name }) });
                                 const d = await res.json();
-                                if(d.data) { window.editor.AssetManager.add(d.data); this.notify('Sukses', 'Gambar diupload!'); }
-                            } catch(err) { this.notify('Gagal', 'Upload gagal', 'error'); }
+                                if(d.data) { window.editor.AssetManager.add(d.data); this.notify('Sukses', 'Gambar terupload'); }
+                            } catch(err) { this.notify('Gagal', 'Upload error', 'error'); }
                         }
                     },
-
                     canvas: {
                         scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
                         styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
-                        content: `
-                            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-                            <script>
-                                console.warn = function() {}; 
-                                tailwind.config = {
-                                    darkMode: 'class',
-                                    theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { theme: { 50:'#eef2ff', 600:'#4f46e5' } } } }
-                                }
-                            <\/script>
-                            <style>${bridgeCSS}</style>
-                        `
+                        content: `<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"><script>console.warn=function(){};<\/script><style>${bridgeCSS}</style>`
                     },
-                    
-                    plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-custom-code', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg'],
+                    plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg'],
                     deviceManager: { devices: [{ id: 'desktop', width: '' }, { id: 'tablet', width: '768px' }, { id: 'mobile', width: '375px' }] },
-                    blockManager: { appendTo: '#blocks-container' },
-                    layerManager: { appendTo: '#layers-container' },
-                    selectorManager: { appendTo: '#selectors-container' },
                     traitManager: { appendTo: '#traits-container' },
                     styleManager: { 
                         appendTo: '#styles-container', 
                         sectors: [
-                            {
-                                name: 'Typography', open: 1, 
-                                buildProps: ['font-family', 'font-size', 'font-weight', 'letter-spacing', 'line-height', 'color', 'text-align', 'text-decoration', 'font-style', 'text-transform', 'text-shadow'],
-                                properties: [{ name: 'Font', property: 'font-family', defaults: 'Inter, sans-serif', list: [ { value: 'Inter, sans-serif', name: 'Inter' }, { value: 'Arial, Helvetica, sans-serif', name: 'Arial' }, { value: 'Times New Roman, serif', name: 'Times' } ] }]
-                            }, 
+                            { name: 'Typography', open: 1, buildProps: ['font-family', 'font-size', 'font-weight', 'letter-spacing', 'line-height', 'color', 'text-align', 'text-decoration', 'font-style', 'text-transform', 'text-shadow'] }, 
                             { name: 'Layout', open: 0, buildProps: ['width', 'height', 'padding', 'margin', 'display', 'flex-direction', 'justify-content', 'align-items', 'position', 'top', 'bottom', 'left', 'right', 'z-index'] },
                             { name: 'Background', open: 0, buildProps: ['background-color', 'background-image', 'background-repeat', 'background-size', 'background-position'] },
-                            { name: 'Border', open: 0, buildProps: ['border', 'border-radius', 'box-shadow', 'opacity', 'cursor', 'overflow'] }
+                            { name: 'Border & Effects', open: 0, buildProps: ['border', 'border-radius', 'box-shadow', 'opacity', 'cursor', 'overflow'] }
                         ] 
                     }
                 });
-
-                const domc = window.editor.DomComponents;
-                const tm = window.editor.Traits;
-
-                // --- SMART TOOLBAR LOGIC (STICKY & HIDE ON EDIT) ---
-                window.editor.on('rte:enable', () => {
-                    document.querySelectorAll('.gjs-toolbar').forEach(t => t.classList.add('ghost-mode'));
-                    const frameBody = window.editor.Canvas.getBody();
-                    if(frameBody) {
-                        const style = document.createElement('style'); style.id = 'ghost-toolbar-style';
-                        style.innerHTML = '.gjs-toolbar { opacity: 0 !important; visibility: hidden !important; }';
-                        frameBody.appendChild(style);
-                    }
-                });
-                window.editor.on('rte:disable', () => {
-                    document.querySelectorAll('.gjs-toolbar').forEach(t => t.classList.remove('ghost-mode'));
-                    const frameBody = window.editor.Canvas.getBody();
-                    const style = frameBody.querySelector('#ghost-toolbar-style');
-                    if(style) style.remove();
-                });
-
-                // REGISTER TRAIT TEXTAREA
-                tm.addType('textarea', {
-                    createInput({ trait }) {
-                        const el = document.createElement('textarea');
-                        el.className = 'w-full p-2 text-xs border border-gray-300 rounded bg-gray-50 text-gray-800 focus:outline-none focus:border-indigo-500 transition';
-                        el.style.minHeight = '80px';
-                        el.addEventListener('input', (e) => this.onChange(e));
-                        return el;
-                    },
-                    onUpdate({ elInput, component }) {
-                        const val = component.get(this.model.get('name')) || component.get('content');
-                        elInput.value = val || '';
-                    },
-                });
-
-                domc.addType('link', { model: { defaults: { traits: ['href', 'target'] } } });
-                domc.addType('iconify-icon', { 
-                    model: { defaults: { tagName: 'iconify-icon', resizable: true, stylable: true, attributes: { icon: 'ph:star-fill', width: '24' }, traits: [{ type: 'button', text: 'Ganti Icon', command: (ed, t) => window.openIconifyPicker(t.target) }] } } 
-                });
-
-                window.editor.Commands.add('open-icon-picker', { run(ed) { window.openIconifyPicker(ed.getSelected()); } });
 
                 // --- DINAMIS: AUTO REGISTER SEMUA WIDGET DARI DATABASE ---
                 fetch('/api/widgets').then(res => res.json()).then(widgets => {
@@ -426,18 +353,22 @@
                     renderer.innerHTML = ''; const groups = {};
                     
                     widgets.forEach(w => {
-                        appBuilderCache[w.id] = w;
+                        globalBuilderCache[w.id] = w;
 
                         // DAFTARKAN TIPE JIKA ADA SCRIPT
                         if (w.script && w.script.trim() !== "") {
-                            window.editor.DomComponents.addType(w.id, {
-                                model: {
-                                    defaults: {
-                                        script: new Function(w.script),
-                                        attributes: { 'data-gjs-type': w.id }
+                            try {
+                                // Bersihkan script dari karakter liar di awal/akhir
+                                const cleanScript = w.script.trim();
+                                window.editor.DomComponents.addType(w.id, {
+                                    model: {
+                                        defaults: {
+                                            script: new Function(cleanScript),
+                                            attributes: { 'data-gjs-type': w.id }
+                                        }
                                     }
-                                }
-                            });
+                                });
+                            } catch(e) { console.error('Script Register Error widget:', w.id, e); }
                         }
 
                         if (w.category !== 'System') {
@@ -462,16 +393,37 @@
                     });
                 });
 
+                // SMART TOOLBAR LOGIC
+                window.editor.on('rte:enable', () => document.querySelectorAll('.gjs-toolbar').forEach(t => t.classList.add('ghost-mode')));
+                window.editor.on('rte:disable', () => document.querySelectorAll('.gjs-toolbar').forEach(t => t.classList.remove('ghost-mode')));
+
+                // TRAIT TEXTAREA
+                window.editor.Traits.addType('textarea', {
+                    createInput({ trait }) {
+                        const el = document.createElement('textarea');
+                        el.className = 'w-full p-2 text-xs border border-gray-300 rounded bg-gray-50 text-gray-800 focus:outline-none focus:border-indigo-500 transition';
+                        el.style.minHeight = '80px';
+                        el.addEventListener('input', (e) => this.onChange(e));
+                        return el;
+                    },
+                    onUpdate({ elInput, component }) {
+                        const val = component.get(this.model.get('name')) || component.get('content');
+                        elInput.value = val || '';
+                    },
+                });
+
+                // PANEL EDIT TEKS LOGIC
                 window.editor.on('component:selected', (model) => {
                     const el = model.getEl();
                     if (el && el.innerText && el.childElementCount === 0) {
                         const currentTraits = model.get('traits').filter(t => t.name !== 'content_text');
-                        model.set('traits', [{ type: 'textarea', name: 'content_text', label: 'Edit Teks Di Sini', changeProp: 1 }, ...currentTraits]);
+                        model.set('traits', [{ type: 'textarea', name: 'content_text', label: 'Edit Teks', changeProp: 1 }, ...currentTraits]);
                         model.set('content_text', model.get('content')); 
                         model.on('change:content_text', () => { model.components(model.get('content_text')); });
                     }
                 });
 
+                // CUSTOM TOOLBAR
                 window.editor.on('component:selected', (c) => { 
                     c.set('toolbar', [
                         { attributes: { class: 'fa' }, command: 'tlb-move', label: '<i class="ph ph-arrows-out-cardinal text-lg"></i>' },
