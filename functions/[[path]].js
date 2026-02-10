@@ -401,39 +401,79 @@ app.delete('/api/admin/pages/:id', async (c) => {
 });
 
 // ===========================================
-// MODULE: WIDGETS MANAGEMENT (Single Source)
+// MODULE: WIDGETS MANAGEMENT (WITH KV CACHE)
 // ===========================================
+const WIDGET_CACHE_KEY = 'widgets_data_full';
 
-// 1. GET ALL WIDGETS (Dipanggil oleh Editor & Frontend Logic)
+// 1. GET ALL WIDGETS (Read KV -> Fallback DB -> Write KV)
 app.get('/api/widgets', async (c) => {
     try {
+        // A. Cek Cache KV dulu
+        if (c.env.KV) {
+            const cachedData = await c.env.KV.get(WIDGET_CACHE_KEY);
+            if (cachedData) {
+                return c.json(JSON.parse(cachedData));
+            }
+        }
+
+        // B. Jika Cache Kosong, Ambil dari DB via Module
         const widgets = await widgetModule.getWidgets(c.env);
+
+        // C. Simpan ke KV (TTL 1 Jam atau sesuai kebutuhan)
+        if (c.env.KV && widgets.length > 0) {
+            await c.env.KV.put(WIDGET_CACHE_KEY, JSON.stringify(widgets), { expirationTtl: 3600 });
+        }
+
         return c.json(widgets);
     } catch (e) {
         return c.json({ success: false, error: e.message }, 500);
     }
 });
 
-// 2. SAVE WIDGET (Dipanggil saat Admin menambah/edit widget)
+// 2. SAVE WIDGET (Save DB -> Clear KV)
 app.post('/api/admin/widgets', async (c) => {
     try {
         const body = await c.req.json();
-        // Validasi sederhana
         if (!body.id || !body.content) return c.json({ error: 'ID and Content required' }, 400);
         
+        // Simpan ke DB
         await widgetModule.saveWidget(c.env, body);
-        return c.json({ success: true, message: 'Widget Saved & Cache Purged' });
+        
+        // HAPUS CACHE KV (Supaya data baru muncul)
+        if (c.env.KV) await c.env.KV.delete(WIDGET_CACHE_KEY);
+
+        return c.json({ success: true, message: 'Widget Saved & Cache Invalidated' });
     } catch (e) {
         return c.json({ success: false, error: e.message }, 500);
     }
 });
 
-// 3. DELETE WIDGET
+// 3. DELETE WIDGET (Delete DB -> Clear KV)
 app.delete('/api/admin/widgets/:id', async (c) => {
     try {
         const id = c.req.param('id');
+        
+        // Hapus dari DB
         await widgetModule.deleteWidget(c.env, id);
-        return c.json({ success: true, message: 'Widget Deleted' });
+
+        // HAPUS CACHE KV
+        if (c.env.KV) await c.env.KV.delete(WIDGET_CACHE_KEY);
+
+        return c.json({ success: true, message: 'Widget Deleted & Cache Invalidated' });
+    } catch (e) {
+        return c.json({ success: false, error: e.message }, 500);
+    }
+});
+
+// 4. MANUAL CLEAR CACHE (Endpoint Tombol Reset)
+app.delete('/api/admin/cache/widgets', async (c) => {
+    try {
+        if (!c.env.KV) {
+            return c.json({ success: false, message: "KV Binding (c.env.KV) tidak ditemukan di Worker." }, 500);
+        }
+
+        await c.env.KV.delete(WIDGET_CACHE_KEY);
+        return c.json({ success: true, message: "KV Widget Cache Berhasil Dihapus!" });
     } catch (e) {
         return c.json({ success: false, error: e.message }, 500);
     }
