@@ -152,9 +152,10 @@
 
                         <div x-show="codeTab==='js'" class="flex-1 flex flex-col">
                             <div class="p-2 bg-yellow-900/20 text-yellow-200 text-[10px] border-b border-yellow-900/50 px-4">
-                                <i class="ph ph-warning"></i> Gunakan <code>this</code> untuk merujuk ke elemen widget. Jangan gunakan <code>document.getElementById</code>.
+                                <i class="ph ph-warning"></i> Gunakan <code>this</code> untuk merujuk ke elemen. Script akan dieksekusi otomatis di preview.
                             </div>
                             <textarea x-model="form.script" 
+                                      @input.debounce.1000ms="renderPreview()"
                                       class="flex-1 w-full p-4 code-input outline-none resize-none" 
                                       spellcheck="false" 
                                       placeholder="// Contoh: const btn = this.querySelector('button'); btn.onclick = ..."></textarea>
@@ -164,7 +165,7 @@
                     <div class="w-full md:w-1/2 bg-gray-100 flex flex-col relative">
                         <div class="bg-white border-b px-4 py-2 flex justify-between items-center text-xs font-bold text-gray-500 shadow-sm z-10">
                             <span>LIVE PREVIEW (Tailwind Ready)</span>
-                            <span class="bg-green-100 text-green-600 px-2 py-0.5 rounded">Iframe Isolated</span>
+                            <span class="bg-green-100 text-green-600 px-2 py-0.5 rounded">CSS & JS Injected</span>
                         </div>
                         <div class="flex-1 relative overflow-hidden bg-[url('https://t3.ftcdn.net/jpg/05/11/95/62/360_F_511956272_K2j5x5z5x5z5x5z5x5z5x5z5x5z5x5z5.jpg')] bg-repeat opacity-100">
                             <iframe id="previewFrame" class="w-full h-full absolute inset-0"></iframe>
@@ -189,6 +190,26 @@
                 codeTab: 'html', // html | js
                 widgets: [],
                 form: { id: '', label: '', category: 'Custom', content: '', script: '', attributes: {} },
+
+                // --- BRIDGE CSS (SAMA PERSIS DENGAN EDITOR & PUBLIC) ---
+                // Ini yang membuat marquee, carousel, dll bergerak!
+                bridgeCSS: `
+                    body { font-family: 'Inter', sans-serif; padding: 20px; overflow-x: hidden; }
+                    /* Marquee News Flash */
+                    .animate-marquee { display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite; }
+                    @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+                    
+                    /* Carousel / Slider */
+                    .editable-carousel { position: relative; width: 100%; overflow: hidden; aspect-ratio: 21/9; min-height: 200px; background: #eee; }
+                    .editable-carousel .slides { display: flex; width: 100%; height: 100%; transition: transform 0.5s ease-in-out; }
+                    .editable-carousel .slide { min-width: 100%; flex: 0 0 100%; position: relative; height: 100%; }
+                    .editable-carousel .slide img { width: 100%; height: 100%; object-fit: cover; }
+                    .editable-carousel .carousel-controls { position: absolute; inset: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 1rem; pointer-events: none; }
+                    .editable-carousel .carousel-controls button { pointer-events: auto; background: rgba(0,0,0,0.5); color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border:none; }
+                    
+                    /* Countdown */
+                    .countdown-number { font-weight: 900; }
+                `,
 
                 async init() {
                     const token = localStorage.getItem('auth_token');
@@ -216,7 +237,7 @@
                     this.loading = false;
                 },
 
-                // --- CORE: PREVIEW ENGINE (Sama seperti Widget Tester) ---
+                // --- CORE: PREVIEW ENGINE (CSS & JS INJECTION) ---
                 renderPreview() {
                     const frame = document.getElementById('previewFrame');
                     if (!frame) return;
@@ -224,7 +245,26 @@
                     const doc = frame.contentWindow.document;
                     const htmlCode = this.form.content || '<div class="flex items-center justify-center h-full text-gray-400">Mulai ketik HTML...</div>';
                     
-                    // Template Head (Tailwind + Iconify + Fonts)
+                    // Script Execution Logic (Sandbox sederhana)
+                    let scriptInjection = '';
+                    if (this.form.script && this.form.script.trim() !== '') {
+                        scriptInjection = `
+                        <script>
+                            document.addEventListener("DOMContentLoaded", function() {
+                                try {
+                                    // Ambil elemen root pertama dari body (asumsi widget dibungkus 1 container)
+                                    const el = document.body.firstElementChild;
+                                    if(el) {
+                                        // Jalankan script user dengan 'this' mengarah ke elemen tersebut
+                                        (function() { 
+                                            ${this.form.script} 
+                                        }).call(el);
+                                    }
+                                } catch(e) { console.error("Widget Script Error:", e); }
+                            });
+                        <\/script>`;
+                    }
+
                     const fullHTML = `
                         <!DOCTYPE html>
                         <html>
@@ -237,10 +277,11 @@
                             <\/script>
                             <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"><\/script>
                             <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-                            <style>body { font-family: 'Inter', sans-serif; padding: 20px; }</style>
+                            <style>${this.bridgeCSS}</style>
                         </head>
                         <body>
                             ${htmlCode}
+                            ${scriptInjection}
                         </body>
                         </html>
                     `;
