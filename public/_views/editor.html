@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - Pure DB</title>
+    <title>LandingBuilder Pro - DB Driven</title>
     
     <script>
         (function() {
@@ -71,21 +71,44 @@
             .mobile-overlay.show { display: block; }
         }
 
+        /* HIDE GRAPESJS DEFAULT PANELS */
         .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; width: 0 !important; }
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
 
-        .gjs-blocks-c { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 4px !important; padding: 6px !important; }
-        .gjs-block { width: 100% !important; min-height: 45px !important; padding: 4px !important; background: #fff; border: 1px solid #e5e7eb; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; transition: 0.2s; }
+        /* ULTRA COMPACT WIDGET BUTTONS */
+        .gjs-blocks-c { 
+            display: grid !important; 
+            grid-template-columns: repeat(3, 1fr) !important; 
+            gap: 4px !important; 
+            padding: 6px !important; 
+        }
+        .gjs-block { 
+            width: 100% !important; 
+            min-height: 45px !important;
+            padding: 4px !important; 
+            background: #fff; 
+            border: 1px solid #e5e7eb; 
+            border-radius: 6px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 2px; 
+            cursor: pointer; 
+            transition: 0.2s;
+        }
         .gjs-block-label { font-size: 7px !important; font-weight: 800; text-transform: uppercase; color: #4b5563; text-align: center; }
         .gjs-block i, .gjs-block iconify-icon { font-size: 14px !important; color: #6366f1; }
 
         .custom-scroll { overflow-y: auto; height: 100%; -webkit-overflow-scrolling: touch; }
         .gjs-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px; }
 
+        /* Toolbar Vertikal */
         .gjs-toolbar { background-color: #1f2937 !important; border-radius: 6px !important; border: 1px solid #ffffff33 !important; box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important; display: flex !important; flex-direction: column !important; gap: 5px !important; padding: 6px 0 !important; position: absolute !important; top: 10px !important; left: auto !important; right: 10px !important; width: 36px !important; height: auto !important; z-index: 99999 !important; transform: none !important; }
         .gjs-toolbar-item { color: white !important; width: 100% !important; height: 26px !important; display: flex !important; align-items: center; justify-content: center !important; cursor: pointer !important; transition: 0.2s !important; }
         .gjs-toolbar-item:hover { color: #818cf8 !important; transform: scale(1.1); background: rgba(255,255,255,0.1); }
         
+        /* Color Picker Fixes */
         .gjs-field-color-picker { width: 25px !important; height: 25px !important; flex-shrink: 0 !important; border: 1px solid #ccc !important; border-radius: 4px !important; cursor: pointer !important; display: inline-block !important; }
         .gjs-field-color { display: flex !important; align-items: center !important; gap: 8px !important; overflow: visible !important; }
         .sp-container { z-index: 999999 !important; position: fixed !important; transform: translateX(-235px) !important; background: #ffffff !important; border: 1px solid #ddd !important; box-shadow: -5px 5px 20px rgba(0,0,0,0.3) !important; padding: 8px !important; }
@@ -233,6 +256,7 @@
     </div>
 
     <script>
+    // --- 1. ICONIFY PICKER LOGIC ---
     (function(){
         let activeModel = null; 
         const modal = document.getElementById('iconify-picker-modal'); 
@@ -260,6 +284,7 @@
         }
     })();
 
+    // --- 2. MAIN EDITOR APP ---
     function editorApp() {
         return {
             device: 'desktop', tab: 'blocks', settingsTab: 'commerce', clipboard: null, mobileMenuOpen: false, showSettings: false, loading: false, notifications: [], paymentProviders: [],
@@ -404,7 +429,8 @@
                                 bm.add(w.id, {
                                     label: w.label,
                                     category: w.category,
-                                    content: blockContent
+                                    content: blockContent,
+                                    attributes: { 'data-id': w.id }
                                 });
                             }
                         });
@@ -425,23 +451,28 @@
                     ]);
                 });
                 
-                // --- ADD CLICK EVENT ---
-                setTimeout(() => {
-                    const container = document.getElementById('blocks-container');
-                    if (container) {
-                        container.addEventListener('click', (e) => {
-                            const blockEl = e.target.closest('.gjs-block');
-                            if (blockEl) {
-                                const id = blockEl.getAttribute('title') || blockEl.innerText.trim();
+                // --- ADD CLICK EVENT (FIXED) ---
+                const container = document.getElementById('blocks-container');
+                if (container) {
+                    container.addEventListener('click', (e) => {
+                        const blockEl = e.target.closest('.gjs-block');
+                        if (blockEl) {
+                            // AMBIL ID DARI DATA-ATTRIBUTE (BUKAN DARI TITLE/LABEL)
+                            const id = blockEl.getAttribute('data-id');
+                            if (id) {
                                 const block = window.editor.BlockManager.get(id);
                                 if (block) {
                                     window.editor.addComponents(block.get('content'));
                                     if(window.innerWidth < 768) this.mobileMenuOpen = false;
+                                } else {
+                                    console.error('Block not found for ID:', id);
                                 }
+                            } else {
+                                console.error('No data-id found on block element');
                             }
-                        });
-                    }
-                }, 1500);
+                        }
+                    });
+                }
             } // END INIT GRAPES
         }; // END RETURN
     } // END EDITOR APP
