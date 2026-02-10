@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - Full Fixed</title>
+    <title>LandingBuilder Pro - Final Fixed</title>
     
     <script>
         (function() {
@@ -45,21 +45,12 @@
         
         .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; }
         
-        /* TOOLBAR FIX: Ghost Mode & Anti-Halang */
+        /* TOOLBAR FIX: Ghost Mode & Jarak dari Objek */
         .gjs-toolbar { 
-            background-color: #1f2937 !important; 
-            border-radius: 6px !important; 
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2) !important;
-            display: flex !important; 
-            gap: 5px !important; 
-            padding: 4px 8px !important;
-            position: absolute !important; 
-            top: -45px !important; 
-            left: 0 !important; 
-            transform: translateY(0) !important;
-            z-index: 9999 !important; 
-            border: 1px solid rgba(255,255,255,0.2) !important;
-            opacity: 1;
+            background-color: #1f2937 !important; border-radius: 6px !important; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2) !important;
+            display: flex !important; gap: 5px !important; padding: 4px 8px !important;
+            position: absolute !important; top: -45px !important; left: 0 !important; transform: translateY(0) !important;
+            z-index: 9999 !important; border: 1px solid rgba(255,255,255,0.2) !important;
             transition: opacity 0.2s, visibility 0.2s;
         }
         .gjs-toolbar.ghost-mode { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; }
@@ -78,7 +69,6 @@
         .block-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #4b5563; text-align: center; }
         
         .sp-container { z-index: 100000 !important; }
-        .gjs-field-color-picker { width: 100%; height: 25px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body x-data="editorApp()">
@@ -104,7 +94,6 @@
 
     <div class="workspace">
         <div id="gjs"></div>
-        
         <div class="sidebar-panel">
             <div class="flex border-b border-gray-200 bg-white shrink-0">
                 <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-squares-four text-xl"></i></button>
@@ -112,7 +101,7 @@
                 <button @click="tab='traits'" :class="tab=='traits'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-sliders text-xl"></i></button>
                 <button @click="tab='layers'" :class="tab=='layers'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-stack text-xl"></i></button>
             </div>
-            <div class="flex-1 bg-white custom-scroll relative w-full overflow-y-auto">
+            <div class="flex-1 bg-white relative w-full overflow-y-auto">
                 <div x-show="tab=='blocks'" class="h-full pb-20">
                     <div id="blocks-custom-renderer" class="p-2 space-y-2">
                         <div class="text-center py-10 text-gray-400 text-xs animate-pulse">Memuat Widget...</div>
@@ -141,7 +130,7 @@
 
             <div class="flex-1 overflow-y-auto p-6 space-y-6">
                 <div x-show="settingsTab === 'commerce'" class="space-y-4">
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Nama Halaman</label><input x-model="page.title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500 transition" placeholder="Judul Halaman"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Nama Halaman</label><input x-model="page.title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500 transition"></div>
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">URL Slug</label><input x-model="page.slug" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500 transition"></div>
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tipe Produk</label><select x-model="page.product_type" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm"><option value="physical">Physical Product</option><option value="digital">Digital Product</option></select></div>
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Base Price (Rp)</label><input type="number" x-model="page.config.price" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
@@ -158,31 +147,31 @@
 
                 <div x-show="settingsTab === 'seo'" class="space-y-4">
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">SEO Title</label><input x-model="page.config.settings.seo_title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none" placeholder="Judul di Google"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Meta Description</label><textarea x-model="page.config.settings.seo_description" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm h-24 outline-none resize-none" placeholder="Deskripsi pencarian..."></textarea></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Meta Description</label><textarea x-model="page.config.settings.seo_description" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm h-24 outline-none resize-none"></textarea></div>
                     <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
                         <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Favicon URL</label>
                         <div class="flex gap-2 mt-2"><input x-model="page.config.settings.favicon" class="flex-1 px-4 py-2 bg-white border rounded-lg text-xs outline-none" placeholder="https://..."><div class="w-10 h-10 bg-white border rounded flex items-center justify-center overflow-hidden shrink-0"><template x-if="page.config.settings.favicon"><img :src="page.config.settings.favicon" class="w-6 h-6 object-contain"></template></div></div>
                     </div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Social Share Image (OG)</label><input x-model="page.config.settings.og_image" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none" placeholder="https://..."></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Social Share Image</label><input x-model="page.config.settings.og_image" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none" placeholder="https://..."></div>
                 </div>
 
                 <div x-show="settingsTab === 'advanced'" class="space-y-6">
                     <div class="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 space-y-4">
                         <h4 class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Pixels & Analytics</h4>
-                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">Facebook Pixel ID</label><input x-model="page.config.settings.fb_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none" placeholder="123456789"></div>
-                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">TikTok Pixel ID</label><input x-model="page.config.settings.tiktok_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none" placeholder="C12345"></div>
-                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">Google Analytics ID</label><input x-model="page.config.settings.ga_id" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none" placeholder="G-XXXXX"></div>
+                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">Facebook Pixel ID</label><input x-model="page.config.settings.fb_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none"></div>
+                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">TikTok Pixel ID</label><input x-model="page.config.settings.tiktok_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none"></div>
+                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">Google Analytics ID</label><input x-model="page.config.settings.ga_id" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none"></div>
                     </div>
                     <div class="space-y-4">
-                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Header Script</label><textarea x-model="page.config.settings.scripts_header" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none" placeholder="<script>...</script>"></textarea></div>
-                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Footer Script</label><textarea x-model="page.config.settings.scripts_footer" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none" placeholder="Sebelum </body>"></textarea></div>
+                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Header Script</label><textarea x-model="page.config.settings.scripts_header" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none"></textarea></div>
+                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Footer Script</label><textarea x-model="page.config.settings.scripts_footer" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none"></textarea></div>
                     </div>
                 </div>
             </div>
 
             <div class="p-4 border-t bg-gray-50 flex justify-end gap-3">
                 <button @click="showSettings=false" class="px-5 py-2 text-xs font-bold text-gray-500">BATAL</button>
-                <button @click="savePage(); showSettings=false" class="px-8 py-2 bg-indigo-600 text-white text-xs font-black rounded-xl shadow-lg shadow-indigo-200 active:scale-95 transition-all">SIMPAN</button>
+                <button @click="savePage(); showSettings=false" class="px-8 py-2 bg-indigo-600 text-white text-xs font-black rounded-xl shadow-lg active:scale-95 transition-all">SIMPAN</button>
             </div>
         </div>
     </div>
@@ -196,7 +185,7 @@
 
     <div class="fixed bottom-5 left-5 z-[100000] flex flex-col gap-2 pointer-events-none">
         <template x-for="n in notifications" :key="n.id">
-            <div x-show="n.show" x-transition class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-l-4 bg-white min-w-[280px]" :class="n.type==='success'?'border-green-500':'border-red-500'">
+            <div x-show="n.show" class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-l-4 bg-white min-w-[280px]" :class="n.type==='success'?'border-green-500':'border-red-500'">
                 <i class="ph text-2xl" :class="n.type==='success'?'ph-check-circle text-green-500':'ph-warning-circle text-red-500'"></i>
                 <div><h4 class="text-xs font-bold text-gray-800 uppercase" x-text="n.title"></h4><p class="text-[10px] text-gray-500 font-medium" x-text="n.msg"></p></div>
             </div>
@@ -204,6 +193,7 @@
     </div>
 
     <script>
+    // DEKLARASI GLOBAL (HANYA SEKALI!)
     let widgetCache = {};
 
     (function(){
@@ -288,7 +278,6 @@
                     body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; } 
                     .editable-carousel { min-height: 200px; background: #eee; }
                     body { padding-bottom: 50px; } 
-                    /* Fix Accordion Editor */
                     details > :not(summary) { display: block !important; opacity: 1 !important; height: auto !important; padding-top: 10px; border-top: 1px dashed #e5e7eb; }
                 `; 
 
@@ -352,7 +341,7 @@
                 const domc = window.editor.DomComponents;
                 const tm = window.editor.Traits;
 
-                // SMART TOOLBAR LOGIC
+                // LOGIC SMART TOOLBAR (Mencegah Halang)
                 window.editor.on('rte:enable', () => {
                     document.querySelectorAll('.gjs-toolbar').forEach(t => t.classList.add('ghost-mode'));
                     const frameBody = window.editor.Canvas.getBody();
@@ -370,7 +359,7 @@
                     if(style) style.remove();
                 });
 
-                // TRAIT TEXTAREA
+                // REGISTER TRAIT TEXTAREA
                 tm.addType('textarea', {
                     createInput({ trait }) {
                         const el = document.createElement('textarea');
@@ -393,917 +382,7 @@
 
                 window.editor.Commands.add('open-icon-picker', { run(ed) { window.openIconifyPicker(ed.getSelected()); } });
 
-                // WIDGET LOADER
-                fetch('/api/widgets').then(res => res.json()).then(widgets => {
-                    const renderer = document.getElementById('blocks-custom-renderer');
-                    renderer.innerHTML = ''; const groups = {};
-                    widgets.forEach(w => {
-                        if (w.attributes && w.attributes !== 'null' && w.id !== 'iconify-icon') {
-                            try {
-                                const defaults = typeof w.attributes === 'string' ? JSON.parse(w.attributes) : w.attributes;
-                                if(w.script) defaults.script = new Function(w.script);
-                                const typeMatch = w.content.match(/data-gjs-type=["']([^"']+)["']/);
-                                const typeName = (typeMatch && typeMatch[1]) ? typeMatch[1] : w.id;
-                                domc.addType(typeName, { model: { defaults } });
-                            } catch(e) {}
-                        }
-                        if (w.category !== 'System') {
-                            widgetCache[w.id] = w;
-                            if (!groups[w.category]) groups[w.category] = [];
-                            groups[w.category].push(w);
-                        }
-                    });
-                    Object.keys(groups).sort().forEach(catName => {
-                        const details = document.createElement('details'); details.className = 'group border border-gray-200 rounded-lg bg-white overflow-hidden mb-2'; details.open = true;
-                        const summary = document.createElement('summary'); summary.className = 'p-3 bg-gray-50 text-xs font-bold text-gray-700 cursor-pointer flex justify-between items-center hover:bg-gray-100 select-none'; summary.innerHTML = `<span>${catName}</span> <i class="ph ph-caret-down group-open:rotate-180 transition"></i>`;
-                        const contentDiv = document.createElement('div'); contentDiv.className = 'grid grid-cols-3 gap-2 p-2 bg-white';
-                        groups[catName].forEach(w => {
-                            const btn = document.createElement('div'); btn.className = 'block-card'; btn.title = w.label; 
-                            btn.setAttribute('x-on:click', `addWidgetToCanvas('${w.id}')`);
-                            btn.innerHTML = `<div class="text-indigo-600 mb-1"><i class="ph ph-cube text-xl"></i></div><div class="block-label">${w.label}</div>`; 
-                            contentDiv.appendChild(btn);
-                        });
-                        details.appendChild(summary); details.appendChild(contentDiv); renderer.appendChild(details);
-                    });
-                });
-
-                window.editor.on('component:selected', (model) => {
-                    const el = model.getEl();
-                    if (el && el.innerText && el.childElementCount === 0) {
-                        const currentTraits = model.get('traits').filter(t => t.name !== 'content_text');
-                        model.set('traits', [{ type: 'textarea', name: 'content_text', label: 'Edit Teks Disini', changeProp: 1 }, ...currentTraits]);
-                        model.set('content_text', model.get('content')); 
-                        model.on('change:content_text', () => { model.components(model.get('content_text')); });
-                    }
-                });
-
-                window.editor.on('component:selected', (c) => { 
-                    c.set('toolbar', [
-                        { attributes: { class: 'fa' }, command: 'tlb-move', label: '<i class="ph ph-arrows-out-cardinal text-lg"></i>' },
-                        { attributes: { class: 'fa' }, command: e => e.runCommand('core:component-exit'), label: '<i class="ph ph-arrow-fat-up text-lg"></i>' },
-                        { attributes: { class: 'fa' }, command: e => { e.runCommand('core:copy'); e.getSelected().remove(); }, label: '<i class="ph ph-scissors text-lg text-yellow-300"></i>' },
-                        { attributes: { class: 'fa' }, command: e => e.runCommand('core:copy'), label: '<i class="ph ph-copy text-lg text-blue-300"></i>' },
-                        { attributes: { class: 'fa' }, command: e => e.runCommand('core:paste'), label: '<i class="ph ph-clipboard-text text-lg text-green-300"></i>' },
-                        { attributes: { class: 'fa', title: 'Paste Inside' }, command: e => { const selected = e.getSelected(); const clipboard = e.Models.Clipboard && e.Models.Clipboard.get ? e.Models.Clipboard.get() : null; if(selected && clipboard) selected.append(clipboard); }, label: '<i class="ph ph-arrow-elbow-down-right text-lg text-purple-400"></i>' },
-                        { attributes: { class: 'fa' }, command: 'tlb-delete', label: '<i class="ph ph-trash text-lg text-red-400"></i>' }
-                    ]);
-                });
-            }
-        };
-    }
-    </script>
-</body>
-</html><!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - Full Fixed</title>
-    
-    <script>
-        (function() {
-            const originalWarn = console.warn;
-            console.warn = function(...args) {
-                if (args[0] && typeof args[0] === 'string' && (args[0].includes('cdn.tailwindcss.com') || args[0].includes('production'))) return;
-                originalWarn.apply(console, args);
-            };
-        })();
-    </script>
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    
-    <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.2/dist/css/grapes.min.css">
-    <script src="https://unpkg.com/grapesjs@0.21.2/dist/grapes.min.js"></script>
-    <script src="https://unpkg.com/grapesjs-blocks-basic@1.0.1"></script>
-    <script src="https://unpkg.com/grapesjs-plugin-forms@2.0.5"></script> 
-    <script src="https://unpkg.com/grapesjs-navbar@1.0.1"></script>
-    <script src="https://unpkg.com/grapesjs-tabs@1.0.6"></script>
-    <script src="https://unpkg.com/grapesjs-custom-code@1.0.1"></script>
-    <script src="https://unpkg.com/grapesjs-tooltip@0.1.7"></script>
-    <script src="https://unpkg.com/grapesjs-blocks-flexbox@0.1.1"></script>
-    <script src="https://unpkg.com/grapesjs-plugin-export@1.0.11"></script>
-    <script src="https://unpkg.com/grapesjs-typed@1.0.5"></script>
-    <script src="https://unpkg.com/grapesjs-style-bg@2.0.1"></script>
-
-    <style>
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: #fff; }
-        [x-cloak] { display: none !important; }
-
-        header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
-        
-        .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; }
-        
-        #gjs { flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; position: relative; }
-        
-        .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; }
-        
-        /* TOOLBAR FIX: Ghost Mode & Anti-Halang */
-        .gjs-toolbar { 
-            background-color: #1f2937 !important; 
-            border-radius: 6px !important; 
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2) !important;
-            display: flex !important; 
-            gap: 5px !important; 
-            padding: 4px 8px !important;
-            position: absolute !important; 
-            top: -45px !important; 
-            left: 0 !important; 
-            transform: translateY(0) !important;
-            z-index: 9999 !important; 
-            border: 1px solid rgba(255,255,255,0.2) !important;
-            opacity: 1;
-            transition: opacity 0.2s, visibility 0.2s;
-        }
-        .gjs-toolbar.ghost-mode { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; }
-        .gjs-toolbar-item { color: white !important; width: 28px !important; height: 28px !important; display: flex !important; align-items: center; justify-content: center !important; cursor: pointer !important; }
-        .gjs-toolbar-item:hover { background-color: #4f46e5 !important; }
-
-        .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; }
-        .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
-        .gjs-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px; }
-        
-        details.group > summary { list-style: none; }
-        details.group > summary::-webkit-details-marker { display: none; }
-        .block-card { cursor: pointer; background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: all 0.2s; user-select: none; }
-        .block-card:hover { border-color: #6366f1; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15); transform: translateY(-2px); }
-        .block-card:active { transform: scale(0.95); }
-        .block-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #4b5563; text-align: center; }
-        
-        .sp-container { z-index: 100000 !important; }
-        .gjs-field-color-picker { width: 100%; height: 25px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
-    </style>
-</head>
-<body x-data="editorApp()">
-
-    <header>
-        <div class="flex items-center gap-3 overflow-hidden w-full max-w-[250px]">
-            <a href="/admin/pages" class="text-gray-400 hover:text-indigo-600 transition p-1.5 rounded shrink-0"><i class="ph ph-arrow-left text-xl"></i></a>
-            <div class="flex-1 min-w-0">
-                <input x-model="page.title" class="bg-transparent font-bold text-xs text-gray-800 outline-none w-full truncate" placeholder="Nama Halaman">
-                <div class="flex items-center gap-1"><span class="text-[8px] font-black text-gray-300 uppercase shrink-0">Slug:</span><input x-model="page.slug" class="bg-transparent font-mono text-[9px] text-gray-400 outline-none w-full truncate"></div>
-            </div>
-        </div>
-        <div class="hidden md:flex absolute left-1/2 transform -translate-x-1/2 items-center bg-gray-100 rounded-lg p-1 border shadow-sm">
-            <button @click="setDevice('desktop')" :class="device=='desktop'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-desktop text-lg"></i></button>
-            <button @click="setDevice('tablet')" :class="device=='tablet'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-tablet text-lg"></i></button>
-            <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile text-lg"></i></button>
-        </div>
-        <div class="flex items-center gap-2">
-            <button @click="showSettings=true" class="bg-white text-gray-600 px-3 py-2 rounded-lg text-xs font-bold border border-gray-200 hover:bg-gray-50 transition">Config</button>
-            <button @click="savePage" :disabled="loading" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-lg"><span x-text="loading ? 'SAVING...' : 'PUBLISH'"></span></button>
-        </div>
-    </header>
-
-    <div class="workspace">
-        <div id="gjs"></div>
-        
-        <div class="sidebar-panel">
-            <div class="flex border-b border-gray-200 bg-white shrink-0">
-                <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-squares-four text-xl"></i></button>
-                <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-paint-brush text-xl"></i></button>
-                <button @click="tab='traits'" :class="tab=='traits'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-sliders text-xl"></i></button>
-                <button @click="tab='layers'" :class="tab=='layers'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-stack text-xl"></i></button>
-            </div>
-            <div class="flex-1 bg-white custom-scroll relative w-full overflow-y-auto">
-                <div x-show="tab=='blocks'" class="h-full pb-20">
-                    <div id="blocks-custom-renderer" class="p-2 space-y-2">
-                        <div class="text-center py-10 text-gray-400 text-xs animate-pulse">Memuat Widget...</div>
-                    </div>
-                    <div id="blocks-container" class="hidden"></div> 
-                </div>
-                <div x-show="tab=='styles'" class="h-full pb-20"><div id="selectors-container" class="p-3 bg-gray-50 border-b"></div><div id="styles-container" class="p-1"></div></div>
-                <div x-show="tab=='traits'" class="h-full pb-20"><div id="traits-container" class="p-4"></div></div>
-                <div x-show="tab=='layers'" class="h-full pb-20"><div id="layers-container"></div></div>
-            </div>
-        </div>
-    </div>
-
-    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[400] bg-slate-900/50 backdrop-blur-sm flex justify-end" @click.self="showSettings = false">
-        <div class="w-full md:w-[480px] h-full bg-white shadow-2xl flex flex-col border-l border-gray-200">
-            <div class="p-5 border-b flex justify-between items-center bg-gray-50">
-                <h2 class="font-bold text-gray-800 flex items-center gap-2"><i class="ph ph-faders text-indigo-600 text-xl"></i> Page Settings</h2>
-                <button @click="showSettings = false" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button>
-            </div>
-            
-            <div class="flex border-b text-[11px] font-black uppercase bg-white">
-                <button @click="settingsTab='commerce'" :class="settingsTab==='commerce'?'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 py-4">Commerce</button>
-                <button @click="settingsTab='seo'" :class="settingsTab==='seo'?'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 py-4">SEO</button>
-                <button @click="settingsTab='advanced'" :class="settingsTab==='advanced'?'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 py-4">Scripts</button>
-            </div>
-
-            <div class="flex-1 overflow-y-auto p-6 space-y-6">
-                <div x-show="settingsTab === 'commerce'" class="space-y-4">
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Nama Halaman</label><input x-model="page.title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500 transition" placeholder="Judul Halaman"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">URL Slug</label><input x-model="page.slug" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500 transition"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tipe Produk</label><select x-model="page.product_type" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm"><option value="physical">Physical Product</option><option value="digital">Digital Product</option></select></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Base Price (Rp)</label><input type="number" x-model="page.config.price" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
-                    <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Metode Pembayaran</label>
-                        <div class="grid grid-cols-2 gap-2 mt-3">
-                            <label class="flex items-center gap-2 p-2 bg-white border rounded-lg cursor-pointer"><input type="checkbox" value="whatsapp" x-model="page.config.active_payments" class="w-4 h-4 rounded text-indigo-600"><span class="text-[11px] font-medium text-gray-700">WhatsApp</span></label>
-                            <template x-for="p in paymentProviders" :key="p.slug">
-                                <label class="flex items-center gap-2 p-2 bg-white border rounded-lg cursor-pointer"><input type="checkbox" :value="p.slug" x-model="page.config.active_payments" class="w-4 h-4 rounded text-indigo-600"><span class="text-[11px] font-medium text-gray-700" x-text="p.name"></span></label>
-                            </template>
-                        </div>
-                    </div>
-                </div>
-
-                <div x-show="settingsTab === 'seo'" class="space-y-4">
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">SEO Title</label><input x-model="page.config.settings.seo_title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none" placeholder="Judul di Google"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Meta Description</label><textarea x-model="page.config.settings.seo_description" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm h-24 outline-none resize-none" placeholder="Deskripsi pencarian..."></textarea></div>
-                    <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                        <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Favicon URL</label>
-                        <div class="flex gap-2 mt-2"><input x-model="page.config.settings.favicon" class="flex-1 px-4 py-2 bg-white border rounded-lg text-xs outline-none" placeholder="https://..."><div class="w-10 h-10 bg-white border rounded flex items-center justify-center overflow-hidden shrink-0"><template x-if="page.config.settings.favicon"><img :src="page.config.settings.favicon" class="w-6 h-6 object-contain"></template></div></div>
-                    </div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Social Share Image (OG)</label><input x-model="page.config.settings.og_image" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none" placeholder="https://..."></div>
-                </div>
-
-                <div x-show="settingsTab === 'advanced'" class="space-y-6">
-                    <div class="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 space-y-4">
-                        <h4 class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Pixels & Analytics</h4>
-                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">Facebook Pixel ID</label><input x-model="page.config.settings.fb_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none" placeholder="123456789"></div>
-                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">TikTok Pixel ID</label><input x-model="page.config.settings.tiktok_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none" placeholder="C12345"></div>
-                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">Google Analytics ID</label><input x-model="page.config.settings.ga_id" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none" placeholder="G-XXXXX"></div>
-                    </div>
-                    <div class="space-y-4">
-                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Header Script</label><textarea x-model="page.config.settings.scripts_header" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none" placeholder="<script>...</script>"></textarea></div>
-                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Footer Script</label><textarea x-model="page.config.settings.scripts_footer" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none" placeholder="Sebelum </body>"></textarea></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="p-4 border-t bg-gray-50 flex justify-end gap-3">
-                <button @click="showSettings=false" class="px-5 py-2 text-xs font-bold text-gray-500">BATAL</button>
-                <button @click="savePage(); showSettings=false" class="px-8 py-2 bg-indigo-600 text-white text-xs font-black rounded-xl shadow-lg shadow-indigo-200 active:scale-95 transition-all">SIMPAN</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="iconify-picker-modal" class="fixed inset-0 hidden z-[99999] bg-black/40 flex items-start justify-center p-6 backdrop-blur-sm">
-        <div class="bg-white rounded-xl w-full max-w-xl shadow-2xl mt-10 overflow-hidden">
-            <div class="flex items-center justify-between p-4 border-b bg-gray-50"><input id="iconify-picker-search" placeholder="Cari icon..." class="w-full bg-transparent outline-none text-sm" /><button id="iconify-picker-close"><i class="ph ph-x text-lg"></i></button></div>
-            <div id="iconify-picker-results" class="p-4 grid grid-cols-6 gap-3 max-h-[300px] overflow-y-auto"></div>
-        </div>
-    </div>
-
-    <div class="fixed bottom-5 left-5 z-[100000] flex flex-col gap-2 pointer-events-none">
-        <template x-for="n in notifications" :key="n.id">
-            <div x-show="n.show" x-transition class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-l-4 bg-white min-w-[280px]" :class="n.type==='success'?'border-green-500':'border-red-500'">
-                <i class="ph text-2xl" :class="n.type==='success'?'ph-check-circle text-green-500':'ph-warning-circle text-red-500'"></i>
-                <div><h4 class="text-xs font-bold text-gray-800 uppercase" x-text="n.title"></h4><p class="text-[10px] text-gray-500 font-medium" x-text="n.msg"></p></div>
-            </div>
-        </template>
-    </div>
-
-    <script>
-    let widgetCache = {};
-
-    (function(){
-        let activeModel = null; const modal = document.getElementById('iconify-picker-modal'); const input = document.getElementById('iconify-picker-search'); const results = document.getElementById('iconify-picker-results');
-        window.openIconifyPicker = function(model) { activeModel = model; modal.classList.remove('hidden'); input.value = ''; input.focus(); searchIcons('star'); };
-        document.getElementById('iconify-picker-close').onclick = () => modal.classList.add('hidden'); 
-        input.oninput = (e) => searchIcons(e.target.value);
-        async function searchIcons(q) { 
-            if(!q) return; 
-            try { 
-                const res = await fetch(`https://api.iconify.design/search?query=${q}&limit=30`); const data = await res.json(); results.innerHTML = ''; 
-                if(data.icons) data.icons.forEach(icon => { const btn = document.createElement('button'); btn.className = 'p-2 hover:bg-indigo-50 rounded flex flex-col items-center gap-1 transition'; btn.innerHTML = `<iconify-icon icon="${icon}" width="24"></iconify-icon><span class="text-[9px] text-gray-400 truncate w-full text-center">${icon.split(':')[1]}</span>`; btn.onclick = () => { if(activeModel) activeModel.setAttributes({ icon: icon }); modal.classList.add('hidden'); }; results.appendChild(btn); }); 
-            } catch(e) {} 
-        }
-    })();
-
-    function editorApp() {
-        return {
-            device: 'desktop', tab: 'blocks', settingsTab: 'commerce', showSettings: false, loading: false, notifications: [], paymentProviders: [
-                { slug: 'paspay', name: 'QRIS & E-Wallet' },
-                { slug: 'midtrans', name: 'Midtrans' },
-                { slug: 'flashpay-bri', name: 'Virtual Account' }
-            ],
-            page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, active_payments: [], settings: { seo_title:'', seo_description:'', favicon:'', og_image:'', fb_pixel:'', tiktok_pixel:'', ga_id:'', scripts_header:'', scripts_footer:'' } } },
-
-            async init() {
-                this.initGrapes();
-                const slug = new URLSearchParams(window.location.search).get('slug');
-                if (slug) await this.loadPageData(slug);
-            },
-
-            notify(title, msg, type = 'success') { 
-                const id = Date.now(); this.notifications.push({ id, title, msg, type, show: true }); 
-                setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); 
-            },
-
-            addWidgetToCanvas(id) {
-                const widgetData = widgetCache[id];
-                if (widgetData) { window.editor.addComponents(widgetData.content); }
-                else { this.notify('Error', 'Widget tidak ditemukan', 'error'); }
-            },
-
-            async loadPageData(slug) {
-                this.loading = true;
-                try {
-                    const res = await fetch(`/api/admin/pages/${slug}`);
-                    if(!res.ok) throw new Error('Data tidak ditemukan');
-                    const data = await res.json();
-                    this.page.id = data.id; this.page.slug = data.slug; this.page.title = data.title || '';
-                    if (data.product_config_json) { 
-                        const conf = typeof data.product_config_json === 'string' ? JSON.parse(data.product_config_json) : data.product_config_json;
-                        this.page.config = { ...this.page.config, ...conf }; 
-                        if(!this.page.config.settings) this.page.config.settings = {}; 
-                    }
-                    if (window.editor) {
-                        if (data.html_content) window.editor.setComponents(data.html_content);
-                        if (data.css_content) window.editor.setStyle(data.css_content);
-                    }
-                } catch (e) { this.notify('Error', e.message, 'error'); }
-                this.loading = false;
-            },
-
-            async savePage() {
-                this.loading = true;
-                try {
-                    const payload = {
-                        id: this.page.id, slug: this.page.slug, title: this.page.title,
-                        html: `${window.editor.getHtml()}<script>${window.editor.getJs()}<\/script>`,
-                        css: window.editor.getCss(), product_config: this.page.config
-                    };
-                    const res = await fetch('/api/admin/pages', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
-                    if(res.ok) this.notify('Sukses', 'Berhasil disimpan!'); else throw new Error('Gagal menyimpan');
-                } catch (e) { this.notify('Gagal', e.message, 'error'); }
-                this.loading = false;
-            },
-
-            setDevice(d) { this.device = d; if (window.editor) window.editor.setDevice(d); },
-            cmd(c) { window.editor.runCommand(c); },
-
-            initGrapes() {
-                const bridgeCSS = `
-                    body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; } 
-                    .editable-carousel { min-height: 200px; background: #eee; }
-                    body { padding-bottom: 50px; } 
-                    /* Fix Accordion Editor */
-                    details > :not(summary) { display: block !important; opacity: 1 !important; height: auto !important; padding-top: 10px; border-top: 1px dashed #e5e7eb; }
-                `; 
-
-                window.editor = grapesjs.init({
-                    container: '#gjs', 
-                    height: '100%', 
-                    width: 'auto',
-                    storageManager: false, 
-                    panels: { defaults: [] },
-                    allowScripts: 1, 
-                    assetManager: {
-                        uploadText: 'Upload Gambar',
-                        uploadFile: async (e) => {
-                            const file = e.dataTransfer ? e.dataTransfer.files[0] : e.target.files[0];
-                            if(!file) return;
-                            const toBase64 = f => new Promise((r,j)=>{const x=new FileReader();x.onload=()=>r(x.result);x.readAsDataURL(f)});
-                            try {
-                                const b64 = await toBase64(file);
-                                const res = await fetch('/api/admin/upload-image', { method: 'POST', body: JSON.stringify({ image: b64, filename: file.name }) });
-                                const d = await res.json();
-                                if(d.data) window.editor.AssetManager.add(d.data);
-                            } catch(err) { alert('Upload gagal'); }
-                        }
-                    },
-                    canvas: {
-                        scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
-                        styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
-                        content: `
-                            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-                            <script>
-                                console.warn = function() {}; 
-                                tailwind.config = {
-                                    darkMode: 'class',
-                                    theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { theme: { 50:'#eef2ff', 600:'#4f46e5' } } } }
-                                }
-                            <\/script>
-                            <style>${bridgeCSS}</style>
-                        `
-                    },
-                    plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-custom-code', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg'],
-                    deviceManager: { devices: [{ id: 'desktop', width: '' }, { id: 'tablet', width: '768px' }, { id: 'mobile', width: '375px' }] },
-                    blockManager: { appendTo: '#blocks-container' },
-                    layerManager: { appendTo: '#layers-container' },
-                    selectorManager: { appendTo: '#selectors-container' },
-                    traitManager: { appendTo: '#traits-container' },
-                    styleManager: { 
-                        appendTo: '#styles-container', 
-                        sectors: [
-                            {
-                                name: 'Typography', open: 1, 
-                                buildProps: ['font-family', 'font-size', 'font-weight', 'letter-spacing', 'line-height', 'color', 'text-align', 'text-decoration', 'font-style', 'text-transform', 'text-shadow'],
-                                properties: [{ name: 'Font', property: 'font-family', defaults: 'Inter, sans-serif', list: [ { value: 'Inter, sans-serif', name: 'Inter' }, { value: 'Arial, Helvetica, sans-serif', name: 'Arial' }, { value: 'Times New Roman, serif', name: 'Times' } ] }]
-                            }, 
-                            { name: 'Layout', open: 0, buildProps: ['width', 'height', 'padding', 'margin', 'display', 'flex-direction', 'justify-content', 'align-items', 'position', 'top', 'bottom', 'left', 'right', 'z-index'] },
-                            { name: 'Background', open: 0, buildProps: ['background-color', 'background-image', 'background-repeat', 'background-size', 'background-position'] },
-                            { name: 'Border', open: 0, buildProps: ['border', 'border-radius', 'box-shadow', 'opacity', 'cursor', 'overflow'] }
-                        ] 
-                    }
-                });
-
-                const domc = window.editor.DomComponents;
-                const tm = window.editor.Traits;
-
-                // SMART TOOLBAR LOGIC
-                window.editor.on('rte:enable', () => {
-                    document.querySelectorAll('.gjs-toolbar').forEach(t => t.classList.add('ghost-mode'));
-                    const frameBody = window.editor.Canvas.getBody();
-                    if(frameBody) {
-                        const style = document.createElement('style'); style.id = 'ghost-toolbar-style';
-                        style.innerHTML = '.gjs-toolbar { opacity: 0 !important; visibility: hidden !important; }';
-                        frameBody.appendChild(style);
-                    }
-                });
-
-                window.editor.on('rte:disable', () => {
-                    document.querySelectorAll('.gjs-toolbar').forEach(t => t.classList.remove('ghost-mode'));
-                    const frameBody = window.editor.Canvas.getBody();
-                    const style = frameBody.querySelector('#ghost-toolbar-style');
-                    if(style) style.remove();
-                });
-
-                // TRAIT TEXTAREA
-                tm.addType('textarea', {
-                    createInput({ trait }) {
-                        const el = document.createElement('textarea');
-                        el.className = 'w-full p-2 text-xs border border-gray-300 rounded bg-gray-50 text-gray-800 focus:outline-none focus:border-indigo-500 transition';
-                        el.style.minHeight = '80px';
-                        el.placeholder = 'Ketik teks disini...';
-                        el.addEventListener('input', (e) => this.onChange(e));
-                        return el;
-                    },
-                    onUpdate({ elInput, component }) {
-                        const val = component.get(this.model.get('name')) || component.get('content');
-                        elInput.value = val || '';
-                    },
-                });
-
-                domc.addType('link', { model: { defaults: { traits: ['href', 'target'] } } });
-                domc.addType('iconify-icon', { 
-                    model: { defaults: { tagName: 'iconify-icon', resizable: true, stylable: true, attributes: { icon: 'ph:star-fill', width: '24' }, traits: [{ type: 'button', text: 'Ganti Icon', command: (ed, t) => window.openIconifyPicker(t.target) }] } } 
-                });
-
-                window.editor.Commands.add('open-icon-picker', { run(ed) { window.openIconifyPicker(ed.getSelected()); } });
-
-                // WIDGET LOADER
-                fetch('/api/widgets').then(res => res.json()).then(widgets => {
-                    const renderer = document.getElementById('blocks-custom-renderer');
-                    renderer.innerHTML = ''; const groups = {};
-                    widgets.forEach(w => {
-                        if (w.attributes && w.attributes !== 'null' && w.id !== 'iconify-icon') {
-                            try {
-                                const defaults = typeof w.attributes === 'string' ? JSON.parse(w.attributes) : w.attributes;
-                                if(w.script) defaults.script = new Function(w.script);
-                                const typeMatch = w.content.match(/data-gjs-type=["']([^"']+)["']/);
-                                const typeName = (typeMatch && typeMatch[1]) ? typeMatch[1] : w.id;
-                                domc.addType(typeName, { model: { defaults } });
-                            } catch(e) {}
-                        }
-                        if (w.category !== 'System') {
-                            widgetCache[w.id] = w;
-                            if (!groups[w.category]) groups[w.category] = [];
-                            groups[w.category].push(w);
-                        }
-                    });
-                    Object.keys(groups).sort().forEach(catName => {
-                        const details = document.createElement('details'); details.className = 'group border border-gray-200 rounded-lg bg-white overflow-hidden mb-2'; details.open = true;
-                        const summary = document.createElement('summary'); summary.className = 'p-3 bg-gray-50 text-xs font-bold text-gray-700 cursor-pointer flex justify-between items-center hover:bg-gray-100 select-none'; summary.innerHTML = `<span>${catName}</span> <i class="ph ph-caret-down group-open:rotate-180 transition"></i>`;
-                        const contentDiv = document.createElement('div'); contentDiv.className = 'grid grid-cols-3 gap-2 p-2 bg-white';
-                        groups[catName].forEach(w => {
-                            const btn = document.createElement('div'); btn.className = 'block-card'; btn.title = w.label; 
-                            btn.setAttribute('x-on:click', `addWidgetToCanvas('${w.id}')`);
-                            btn.innerHTML = `<div class="text-indigo-600 mb-1"><i class="ph ph-cube text-xl"></i></div><div class="block-label">${w.label}</div>`; 
-                            contentDiv.appendChild(btn);
-                        });
-                        details.appendChild(summary); details.appendChild(contentDiv); renderer.appendChild(details);
-                    });
-                });
-
-                window.editor.on('component:selected', (model) => {
-                    const el = model.getEl();
-                    if (el && el.innerText && el.childElementCount === 0) {
-                        const currentTraits = model.get('traits').filter(t => t.name !== 'content_text');
-                        model.set('traits', [{ type: 'textarea', name: 'content_text', label: 'Edit Teks Disini', changeProp: 1 }, ...currentTraits]);
-                        model.set('content_text', model.get('content')); 
-                        model.on('change:content_text', () => { model.components(model.get('content_text')); });
-                    }
-                });
-
-                window.editor.on('component:selected', (c) => { 
-                    c.set('toolbar', [
-                        { attributes: { class: 'fa' }, command: 'tlb-move', label: '<i class="ph ph-arrows-out-cardinal text-lg"></i>' },
-                        { attributes: { class: 'fa' }, command: e => e.runCommand('core:component-exit'), label: '<i class="ph ph-arrow-fat-up text-lg"></i>' },
-                        { attributes: { class: 'fa' }, command: e => { e.runCommand('core:copy'); e.getSelected().remove(); }, label: '<i class="ph ph-scissors text-lg text-yellow-300"></i>' },
-                        { attributes: { class: 'fa' }, command: e => e.runCommand('core:copy'), label: '<i class="ph ph-copy text-lg text-blue-300"></i>' },
-                        { attributes: { class: 'fa' }, command: e => e.runCommand('core:paste'), label: '<i class="ph ph-clipboard-text text-lg text-green-300"></i>' },
-                        { attributes: { class: 'fa', title: 'Paste Inside' }, command: e => { const selected = e.getSelected(); const clipboard = e.Models.Clipboard && e.Models.Clipboard.get ? e.Models.Clipboard.get() : null; if(selected && clipboard) selected.append(clipboard); }, label: '<i class="ph ph-arrow-elbow-down-right text-lg text-purple-400"></i>' },
-                        { attributes: { class: 'fa' }, command: 'tlb-delete', label: '<i class="ph ph-trash text-lg text-red-400"></i>' }
-                    ]);
-                });
-            }
-        };
-    }
-    </script>
-</body>
-</html><!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - Full Fixed</title>
-    
-    <script>
-        (function() {
-            const originalWarn = console.warn;
-            console.warn = function(...args) {
-                if (args[0] && typeof args[0] === 'string' && (args[0].includes('cdn.tailwindcss.com') || args[0].includes('production'))) return;
-                originalWarn.apply(console, args);
-            };
-        })();
-    </script>
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    
-    <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.2/dist/css/grapes.min.css">
-    <script src="https://unpkg.com/grapesjs@0.21.2/dist/grapes.min.js"></script>
-    <script src="https://unpkg.com/grapesjs-blocks-basic@1.0.1"></script>
-    <script src="https://unpkg.com/grapesjs-plugin-forms@2.0.5"></script> 
-    <script src="https://unpkg.com/grapesjs-navbar@1.0.1"></script>
-    <script src="https://unpkg.com/grapesjs-tabs@1.0.6"></script>
-    <script src="https://unpkg.com/grapesjs-custom-code@1.0.1"></script>
-    <script src="https://unpkg.com/grapesjs-tooltip@0.1.7"></script>
-    <script src="https://unpkg.com/grapesjs-blocks-flexbox@0.1.1"></script>
-    <script src="https://unpkg.com/grapesjs-plugin-export@1.0.11"></script>
-    <script src="https://unpkg.com/grapesjs-typed@1.0.5"></script>
-    <script src="https://unpkg.com/grapesjs-style-bg@2.0.1"></script>
-
-    <style>
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: #fff; }
-        [x-cloak] { display: none !important; }
-
-        header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
-        
-        .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; }
-        
-        #gjs { flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; position: relative; }
-        
-        .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; }
-        
-        /* TOOLBAR FIX: Ghost Mode & Anti-Halang */
-        .gjs-toolbar { 
-            background-color: #1f2937 !important; 
-            border-radius: 6px !important; 
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2) !important;
-            display: flex !important; 
-            gap: 5px !important; 
-            padding: 4px 8px !important;
-            position: absolute !important; 
-            top: -45px !important; 
-            left: 0 !important; 
-            transform: translateY(0) !important;
-            z-index: 9999 !important; 
-            border: 1px solid rgba(255,255,255,0.2) !important;
-            opacity: 1;
-            transition: opacity 0.2s, visibility 0.2s;
-        }
-        .gjs-toolbar.ghost-mode { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; }
-        .gjs-toolbar-item { color: white !important; width: 28px !important; height: 28px !important; display: flex !important; align-items: center; justify-content: center !important; cursor: pointer !important; }
-        .gjs-toolbar-item:hover { background-color: #4f46e5 !important; }
-
-        .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; }
-        .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
-        .gjs-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px; }
-        
-        details.group > summary { list-style: none; }
-        details.group > summary::-webkit-details-marker { display: none; }
-        .block-card { cursor: pointer; background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: all 0.2s; user-select: none; }
-        .block-card:hover { border-color: #6366f1; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15); transform: translateY(-2px); }
-        .block-card:active { transform: scale(0.95); }
-        .block-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #4b5563; text-align: center; }
-        
-        .sp-container { z-index: 100000 !important; }
-        .gjs-field-color-picker { width: 100%; height: 25px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
-    </style>
-</head>
-<body x-data="editorApp()">
-
-    <header>
-        <div class="flex items-center gap-3 overflow-hidden w-full max-w-[250px]">
-            <a href="/admin/pages" class="text-gray-400 hover:text-indigo-600 transition p-1.5 rounded shrink-0"><i class="ph ph-arrow-left text-xl"></i></a>
-            <div class="flex-1 min-w-0">
-                <input x-model="page.title" class="bg-transparent font-bold text-xs text-gray-800 outline-none w-full truncate" placeholder="Nama Halaman">
-                <div class="flex items-center gap-1"><span class="text-[8px] font-black text-gray-300 uppercase shrink-0">Slug:</span><input x-model="page.slug" class="bg-transparent font-mono text-[9px] text-gray-400 outline-none w-full truncate"></div>
-            </div>
-        </div>
-        <div class="hidden md:flex absolute left-1/2 transform -translate-x-1/2 items-center bg-gray-100 rounded-lg p-1 border shadow-sm">
-            <button @click="setDevice('desktop')" :class="device=='desktop'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-desktop text-lg"></i></button>
-            <button @click="setDevice('tablet')" :class="device=='tablet'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-tablet text-lg"></i></button>
-            <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile text-lg"></i></button>
-        </div>
-        <div class="flex items-center gap-2">
-            <button @click="showSettings=true" class="bg-white text-gray-600 px-3 py-2 rounded-lg text-xs font-bold border border-gray-200 hover:bg-gray-50 transition">Config</button>
-            <button @click="savePage" :disabled="loading" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-lg"><span x-text="loading ? 'SAVING...' : 'PUBLISH'"></span></button>
-        </div>
-    </header>
-
-    <div class="workspace">
-        <div id="gjs"></div>
-        
-        <div class="sidebar-panel">
-            <div class="flex border-b border-gray-200 bg-white shrink-0">
-                <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-squares-four text-xl"></i></button>
-                <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-paint-brush text-xl"></i></button>
-                <button @click="tab='traits'" :class="tab=='traits'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-sliders text-xl"></i></button>
-                <button @click="tab='layers'" :class="tab=='layers'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-stack text-xl"></i></button>
-            </div>
-            <div class="flex-1 bg-white custom-scroll relative w-full overflow-y-auto">
-                <div x-show="tab=='blocks'" class="h-full pb-20">
-                    <div id="blocks-custom-renderer" class="p-2 space-y-2">
-                        <div class="text-center py-10 text-gray-400 text-xs animate-pulse">Memuat Widget...</div>
-                    </div>
-                    <div id="blocks-container" class="hidden"></div> 
-                </div>
-                <div x-show="tab=='styles'" class="h-full pb-20"><div id="selectors-container" class="p-3 bg-gray-50 border-b"></div><div id="styles-container" class="p-1"></div></div>
-                <div x-show="tab=='traits'" class="h-full pb-20"><div id="traits-container" class="p-4"></div></div>
-                <div x-show="tab=='layers'" class="h-full pb-20"><div id="layers-container"></div></div>
-            </div>
-        </div>
-    </div>
-
-    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[400] bg-slate-900/50 backdrop-blur-sm flex justify-end" @click.self="showSettings = false">
-        <div class="w-full md:w-[480px] h-full bg-white shadow-2xl flex flex-col border-l border-gray-200">
-            <div class="p-5 border-b flex justify-between items-center bg-gray-50">
-                <h2 class="font-bold text-gray-800 flex items-center gap-2"><i class="ph ph-faders text-indigo-600 text-xl"></i> Page Settings</h2>
-                <button @click="showSettings = false" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button>
-            </div>
-            
-            <div class="flex border-b text-[11px] font-black uppercase bg-white">
-                <button @click="settingsTab='commerce'" :class="settingsTab==='commerce'?'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 py-4">Commerce</button>
-                <button @click="settingsTab='seo'" :class="settingsTab==='seo'?'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 py-4">SEO</button>
-                <button @click="settingsTab='advanced'" :class="settingsTab==='advanced'?'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 py-4">Scripts</button>
-            </div>
-
-            <div class="flex-1 overflow-y-auto p-6 space-y-6">
-                <div x-show="settingsTab === 'commerce'" class="space-y-4">
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Nama Halaman</label><input x-model="page.title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500 transition" placeholder="Judul Halaman"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">URL Slug</label><input x-model="page.slug" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500 transition"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tipe Produk</label><select x-model="page.product_type" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm"><option value="physical">Physical Product</option><option value="digital">Digital Product</option></select></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Base Price (Rp)</label><input type="number" x-model="page.config.price" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
-                    <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Metode Pembayaran</label>
-                        <div class="grid grid-cols-2 gap-2 mt-3">
-                            <label class="flex items-center gap-2 p-2 bg-white border rounded-lg cursor-pointer"><input type="checkbox" value="whatsapp" x-model="page.config.active_payments" class="w-4 h-4 rounded text-indigo-600"><span class="text-[11px] font-medium text-gray-700">WhatsApp</span></label>
-                            <template x-for="p in paymentProviders" :key="p.slug">
-                                <label class="flex items-center gap-2 p-2 bg-white border rounded-lg cursor-pointer"><input type="checkbox" :value="p.slug" x-model="page.config.active_payments" class="w-4 h-4 rounded text-indigo-600"><span class="text-[11px] font-medium text-gray-700" x-text="p.name"></span></label>
-                            </template>
-                        </div>
-                    </div>
-                </div>
-
-                <div x-show="settingsTab === 'seo'" class="space-y-4">
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">SEO Title</label><input x-model="page.config.settings.seo_title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none" placeholder="Judul di Google"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Meta Description</label><textarea x-model="page.config.settings.seo_description" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm h-24 outline-none resize-none" placeholder="Deskripsi pencarian..."></textarea></div>
-                    <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                        <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Favicon URL</label>
-                        <div class="flex gap-2 mt-2"><input x-model="page.config.settings.favicon" class="flex-1 px-4 py-2 bg-white border rounded-lg text-xs outline-none" placeholder="https://..."><div class="w-10 h-10 bg-white border rounded flex items-center justify-center overflow-hidden shrink-0"><template x-if="page.config.settings.favicon"><img :src="page.config.settings.favicon" class="w-6 h-6 object-contain"></template></div></div>
-                    </div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Social Share Image (OG)</label><input x-model="page.config.settings.og_image" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none" placeholder="https://..."></div>
-                </div>
-
-                <div x-show="settingsTab === 'advanced'" class="space-y-6">
-                    <div class="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 space-y-4">
-                        <h4 class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Pixels & Analytics</h4>
-                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">Facebook Pixel ID</label><input x-model="page.config.settings.fb_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none" placeholder="123456789"></div>
-                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">TikTok Pixel ID</label><input x-model="page.config.settings.tiktok_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none" placeholder="C12345"></div>
-                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">Google Analytics ID</label><input x-model="page.config.settings.ga_id" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none" placeholder="G-XXXXX"></div>
-                    </div>
-                    <div class="space-y-4">
-                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Header Script</label><textarea x-model="page.config.settings.scripts_header" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none" placeholder="<script>...</script>"></textarea></div>
-                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Footer Script</label><textarea x-model="page.config.settings.scripts_footer" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none" placeholder="Sebelum </body>"></textarea></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="p-4 border-t bg-gray-50 flex justify-end gap-3">
-                <button @click="showSettings=false" class="px-5 py-2 text-xs font-bold text-gray-500">BATAL</button>
-                <button @click="savePage(); showSettings=false" class="px-8 py-2 bg-indigo-600 text-white text-xs font-black rounded-xl shadow-lg shadow-indigo-200 active:scale-95 transition-all">SIMPAN</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="iconify-picker-modal" class="fixed inset-0 hidden z-[99999] bg-black/40 flex items-start justify-center p-6 backdrop-blur-sm">
-        <div class="bg-white rounded-xl w-full max-w-xl shadow-2xl mt-10 overflow-hidden">
-            <div class="flex items-center justify-between p-4 border-b bg-gray-50"><input id="iconify-picker-search" placeholder="Cari icon..." class="w-full bg-transparent outline-none text-sm" /><button id="iconify-picker-close"><i class="ph ph-x text-lg"></i></button></div>
-            <div id="iconify-picker-results" class="p-4 grid grid-cols-6 gap-3 max-h-[300px] overflow-y-auto"></div>
-        </div>
-    </div>
-
-    <div class="fixed bottom-5 left-5 z-[100000] flex flex-col gap-2 pointer-events-none">
-        <template x-for="n in notifications" :key="n.id">
-            <div x-show="n.show" x-transition class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-l-4 bg-white min-w-[280px]" :class="n.type==='success'?'border-green-500':'border-red-500'">
-                <i class="ph text-2xl" :class="n.type==='success'?'ph-check-circle text-green-500':'ph-warning-circle text-red-500'"></i>
-                <div><h4 class="text-xs font-bold text-gray-800 uppercase" x-text="n.title"></h4><p class="text-[10px] text-gray-500 font-medium" x-text="n.msg"></p></div>
-            </div>
-        </template>
-    </div>
-
-    <script>
-    let widgetCache = {};
-
-    (function(){
-        let activeModel = null; const modal = document.getElementById('iconify-picker-modal'); const input = document.getElementById('iconify-picker-search'); const results = document.getElementById('iconify-picker-results');
-        window.openIconifyPicker = function(model) { activeModel = model; modal.classList.remove('hidden'); input.value = ''; input.focus(); searchIcons('star'); };
-        document.getElementById('iconify-picker-close').onclick = () => modal.classList.add('hidden'); 
-        input.oninput = (e) => searchIcons(e.target.value);
-        async function searchIcons(q) { 
-            if(!q) return; 
-            try { 
-                const res = await fetch(`https://api.iconify.design/search?query=${q}&limit=30`); const data = await res.json(); results.innerHTML = ''; 
-                if(data.icons) data.icons.forEach(icon => { const btn = document.createElement('button'); btn.className = 'p-2 hover:bg-indigo-50 rounded flex flex-col items-center gap-1 transition'; btn.innerHTML = `<iconify-icon icon="${icon}" width="24"></iconify-icon><span class="text-[9px] text-gray-400 truncate w-full text-center">${icon.split(':')[1]}</span>`; btn.onclick = () => { if(activeModel) activeModel.setAttributes({ icon: icon }); modal.classList.add('hidden'); }; results.appendChild(btn); }); 
-            } catch(e) {} 
-        }
-    })();
-
-    function editorApp() {
-        return {
-            device: 'desktop', tab: 'blocks', settingsTab: 'commerce', showSettings: false, loading: false, notifications: [], paymentProviders: [
-                { slug: 'paspay', name: 'QRIS & E-Wallet' },
-                { slug: 'midtrans', name: 'Midtrans' },
-                { slug: 'flashpay-bri', name: 'Virtual Account' }
-            ],
-            page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, active_payments: [], settings: { seo_title:'', seo_description:'', favicon:'', og_image:'', fb_pixel:'', tiktok_pixel:'', ga_id:'', scripts_header:'', scripts_footer:'' } } },
-
-            async init() {
-                this.initGrapes();
-                const slug = new URLSearchParams(window.location.search).get('slug');
-                if (slug) await this.loadPageData(slug);
-            },
-
-            notify(title, msg, type = 'success') { 
-                const id = Date.now(); this.notifications.push({ id, title, msg, type, show: true }); 
-                setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); 
-            },
-
-            addWidgetToCanvas(id) {
-                const widgetData = widgetCache[id];
-                if (widgetData) { window.editor.addComponents(widgetData.content); }
-                else { this.notify('Error', 'Widget tidak ditemukan', 'error'); }
-            },
-
-            async loadPageData(slug) {
-                this.loading = true;
-                try {
-                    const res = await fetch(`/api/admin/pages/${slug}`);
-                    if(!res.ok) throw new Error('Data tidak ditemukan');
-                    const data = await res.json();
-                    this.page.id = data.id; this.page.slug = data.slug; this.page.title = data.title || '';
-                    if (data.product_config_json) { 
-                        const conf = typeof data.product_config_json === 'string' ? JSON.parse(data.product_config_json) : data.product_config_json;
-                        this.page.config = { ...this.page.config, ...conf }; 
-                        if(!this.page.config.settings) this.page.config.settings = {}; 
-                    }
-                    if (window.editor) {
-                        if (data.html_content) window.editor.setComponents(data.html_content);
-                        if (data.css_content) window.editor.setStyle(data.css_content);
-                    }
-                } catch (e) { this.notify('Error', e.message, 'error'); }
-                this.loading = false;
-            },
-
-            async savePage() {
-                this.loading = true;
-                try {
-                    const payload = {
-                        id: this.page.id, slug: this.page.slug, title: this.page.title,
-                        html: `${window.editor.getHtml()}<script>${window.editor.getJs()}<\/script>`,
-                        css: window.editor.getCss(), product_config: this.page.config
-                    };
-                    const res = await fetch('/api/admin/pages', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
-                    if(res.ok) this.notify('Sukses', 'Berhasil disimpan!'); else throw new Error('Gagal menyimpan');
-                } catch (e) { this.notify('Gagal', e.message, 'error'); }
-                this.loading = false;
-            },
-
-            setDevice(d) { this.device = d; if (window.editor) window.editor.setDevice(d); },
-            cmd(c) { window.editor.runCommand(c); },
-
-            initGrapes() {
-                const bridgeCSS = `
-                    body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; } 
-                    .editable-carousel { min-height: 200px; background: #eee; }
-                    body { padding-bottom: 50px; } 
-                    /* Fix Accordion Editor */
-                    details > :not(summary) { display: block !important; opacity: 1 !important; height: auto !important; padding-top: 10px; border-top: 1px dashed #e5e7eb; }
-                `; 
-
-                window.editor = grapesjs.init({
-                    container: '#gjs', 
-                    height: '100%', 
-                    width: 'auto',
-                    storageManager: false, 
-                    panels: { defaults: [] },
-                    allowScripts: 1, 
-                    assetManager: {
-                        uploadText: 'Upload Gambar',
-                        uploadFile: async (e) => {
-                            const file = e.dataTransfer ? e.dataTransfer.files[0] : e.target.files[0];
-                            if(!file) return;
-                            const toBase64 = f => new Promise((r,j)=>{const x=new FileReader();x.onload=()=>r(x.result);x.readAsDataURL(f)});
-                            try {
-                                const b64 = await toBase64(file);
-                                const res = await fetch('/api/admin/upload-image', { method: 'POST', body: JSON.stringify({ image: b64, filename: file.name }) });
-                                const d = await res.json();
-                                if(d.data) window.editor.AssetManager.add(d.data);
-                            } catch(err) { alert('Upload gagal'); }
-                        }
-                    },
-                    canvas: {
-                        scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
-                        styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
-                        content: `
-                            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-                            <script>
-                                console.warn = function() {}; 
-                                tailwind.config = {
-                                    darkMode: 'class',
-                                    theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { theme: { 50:'#eef2ff', 600:'#4f46e5' } } } }
-                                }
-                            <\/script>
-                            <style>${bridgeCSS}</style>
-                        `
-                    },
-                    plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-custom-code', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg'],
-                    deviceManager: { devices: [{ id: 'desktop', width: '' }, { id: 'tablet', width: '768px' }, { id: 'mobile', width: '375px' }] },
-                    blockManager: { appendTo: '#blocks-container' },
-                    layerManager: { appendTo: '#layers-container' },
-                    selectorManager: { appendTo: '#selectors-container' },
-                    traitManager: { appendTo: '#traits-container' },
-                    styleManager: { 
-                        appendTo: '#styles-container', 
-                        sectors: [
-                            {
-                                name: 'Typography', open: 1, 
-                                buildProps: ['font-family', 'font-size', 'font-weight', 'letter-spacing', 'line-height', 'color', 'text-align', 'text-decoration', 'font-style', 'text-transform', 'text-shadow'],
-                                properties: [{ name: 'Font', property: 'font-family', defaults: 'Inter, sans-serif', list: [ { value: 'Inter, sans-serif', name: 'Inter' }, { value: 'Arial, Helvetica, sans-serif', name: 'Arial' }, { value: 'Times New Roman, serif', name: 'Times' } ] }]
-                            }, 
-                            { name: 'Layout', open: 0, buildProps: ['width', 'height', 'padding', 'margin', 'display', 'flex-direction', 'justify-content', 'align-items', 'position', 'top', 'bottom', 'left', 'right', 'z-index'] },
-                            { name: 'Background', open: 0, buildProps: ['background-color', 'background-image', 'background-repeat', 'background-size', 'background-position'] },
-                            { name: 'Border', open: 0, buildProps: ['border', 'border-radius', 'box-shadow', 'opacity', 'cursor', 'overflow'] }
-                        ] 
-                    }
-                });
-
-                const domc = window.editor.DomComponents;
-                const tm = window.editor.Traits;
-
-                // SMART TOOLBAR LOGIC
-                window.editor.on('rte:enable', () => {
-                    document.querySelectorAll('.gjs-toolbar').forEach(t => t.classList.add('ghost-mode'));
-                    const frameBody = window.editor.Canvas.getBody();
-                    if(frameBody) {
-                        const style = document.createElement('style'); style.id = 'ghost-toolbar-style';
-                        style.innerHTML = '.gjs-toolbar { opacity: 0 !important; visibility: hidden !important; }';
-                        frameBody.appendChild(style);
-                    }
-                });
-
-                window.editor.on('rte:disable', () => {
-                    document.querySelectorAll('.gjs-toolbar').forEach(t => t.classList.remove('ghost-mode'));
-                    const frameBody = window.editor.Canvas.getBody();
-                    const style = frameBody.querySelector('#ghost-toolbar-style');
-                    if(style) style.remove();
-                });
-
-                // TRAIT TEXTAREA
-                tm.addType('textarea', {
-                    createInput({ trait }) {
-                        const el = document.createElement('textarea');
-                        el.className = 'w-full p-2 text-xs border border-gray-300 rounded bg-gray-50 text-gray-800 focus:outline-none focus:border-indigo-500 transition';
-                        el.style.minHeight = '80px';
-                        el.placeholder = 'Ketik teks disini...';
-                        el.addEventListener('input', (e) => this.onChange(e));
-                        return el;
-                    },
-                    onUpdate({ elInput, component }) {
-                        const val = component.get(this.model.get('name')) || component.get('content');
-                        elInput.value = val || '';
-                    },
-                });
-
-                domc.addType('link', { model: { defaults: { traits: ['href', 'target'] } } });
-                domc.addType('iconify-icon', { 
-                    model: { defaults: { tagName: 'iconify-icon', resizable: true, stylable: true, attributes: { icon: 'ph:star-fill', width: '24' }, traits: [{ type: 'button', text: 'Ganti Icon', command: (ed, t) => window.openIconifyPicker(t.target) }] } } 
-                });
-
-                window.editor.Commands.add('open-icon-picker', { run(ed) { window.openIconifyPicker(ed.getSelected()); } });
-
-                // WIDGET LOADER
+                // WIDGET LOADER (MENGGUNAKAN GLOBAL widgetCache)
                 fetch('/api/widgets').then(res => res.json()).then(widgets => {
                     const renderer = document.getElementById('blocks-custom-renderer');
                     renderer.innerHTML = ''; const groups = {};
