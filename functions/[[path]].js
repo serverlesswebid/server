@@ -4,6 +4,7 @@ import { setCookie, getCookie, deleteCookie } from 'hono/cookie'
 import { sign, verify } from 'hono/jwt'
 import { encryptJSON, decryptJSON } from '../src/utils'
 import { uploadImage } from '../src/modules/cloudinary'
+import * as widgetModule from '../src/modules/widget'
 
 const app = new Hono()
 const JWT_SECRET = 'BantarCaringin1BantarCaringin2BantarCaringin3'
@@ -53,6 +54,7 @@ async function initDB(db) {
     await db.prepare(`CREATE TABLE IF NOT EXISTS shipping_templates (slug TEXT PRIMARY KEY, name TEXT, api_endpoint TEXT, method TEXT, headers_json TEXT, body_json TEXT, response_mapping TEXT)`).run();
     await db.prepare(`CREATE TABLE IF NOT EXISTS transactions (id INTEGER PRIMARY KEY AUTOINCREMENT, order_id TEXT UNIQUE, page_id INTEGER, amount INTEGER, status TEXT, customer_info TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)`).run();
     await db.prepare(`CREATE TABLE IF NOT EXISTS analytics (id INTEGER PRIMARY KEY AUTOINCREMENT, page_id INTEGER, event_type TEXT, referrer TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)`).run();
+    await widgetModule.initWidgetDB(db);
     
     // Tabel Pesan (Contact Form)
     await db.prepare(`CREATE TABLE IF NOT EXISTS messages (
@@ -398,6 +400,44 @@ app.delete('/api/admin/pages/:id', async (c) => {
     }
 });
 
+// ===========================================
+// MODULE: WIDGETS MANAGEMENT (Single Source)
+// ===========================================
+
+// 1. GET ALL WIDGETS (Dipanggil oleh Editor & Frontend Logic)
+app.get('/api/widgets', async (c) => {
+    try {
+        const widgets = await widgetModule.getWidgets(c.env);
+        return c.json(widgets);
+    } catch (e) {
+        return c.json({ success: false, error: e.message }, 500);
+    }
+});
+
+// 2. SAVE WIDGET (Dipanggil saat Admin menambah/edit widget)
+app.post('/api/admin/widgets', async (c) => {
+    try {
+        const body = await c.req.json();
+        // Validasi sederhana
+        if (!body.id || !body.content) return c.json({ error: 'ID and Content required' }, 400);
+        
+        await widgetModule.saveWidget(c.env, body);
+        return c.json({ success: true, message: 'Widget Saved & Cache Purged' });
+    } catch (e) {
+        return c.json({ success: false, error: e.message }, 500);
+    }
+});
+
+// 3. DELETE WIDGET
+app.delete('/api/admin/widgets/:id', async (c) => {
+    try {
+        const id = c.req.param('id');
+        await widgetModule.deleteWidget(c.env, id);
+        return c.json({ success: true, message: 'Widget Deleted' });
+    } catch (e) {
+        return c.json({ success: false, error: e.message }, 500);
+    }
+});
 // --- MODULE: MESSAGES ---
 app.get('/api/admin/messages', async (c) => {
     try {
