@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - DB Driven</title>
+    <title>LandingBuilder Pro - Final Hybrid</title>
     
     <script>
         (function() {
@@ -268,10 +268,12 @@
                 const bm = window.editor.BlockManager;
                 const cmds = window.editor.Commands;
 
-                // 1. HARDCODED (FRAMEWORK / BASIC) - SESUAI INSTRUKSI
+                // --- 1. HARDCODED FRAMEWORK COMPONENTS (SESUAI INSTRUKSI) ---
+                
+                // Link Basic
                 domc.addType('link', { model: { defaults: { traits: ['href', 'target'] } } });
                 
-                // Iconify System
+                // Iconify System (Framework Core)
                 domc.addType('iconify-icon', { 
                     model: { 
                         defaults: { 
@@ -286,7 +288,8 @@
                 cmds.add('set-img-src', { run(ed) { ed.runCommand('open-assets', { target: ed.getSelected(), onSelect() { const asset = ed.AssetManager.getSelection()[0]; if(asset) { ed.getSelected().addAttributes({'img-src': asset.getSrc()}); ed.getSelected().view.el.querySelector('img').src = asset.getSrc(); } ed.Modal.close(); } }) } });
                 cmds.add('open-icon-picker', { run(ed) { window.openIconifyPicker(ed.getSelected()); } });
 
-                // 2. FETCH FROM DATABASE (UNTUK SEMUA WIDGET LOGIC SEPERTI COUNTDOWN, CAROUSEL, DLL)
+                // --- 2. DYNAMIC DB COMPONENT LOADER ---
+                // Mengambil komponen Logic & Content dari Database
                 fetch('/api/widgets')
                     .then(res => res.json())
                     .then(widgets => {
@@ -295,14 +298,15 @@
                         const groups = {};
 
                         widgets.forEach(w => {
-                            // A. REGISTER COMPONENT TYPE / LOGIC (DINAMIS DARI DB)
-                            // Ini kuncinya: Countdown, Carousel, dll diload dari sini
+                            // A. REGISTER COMPONENT TYPE (LOGIC)
+                            // Jika ada 'attributes' atau 'script', daftarkan sebagai Type baru
+                            // Pengecualian: iconify-icon (sudah dihardcode)
                             if (w.attributes && w.attributes !== 'null' && w.id !== 'iconify-icon') {
                                 try {
                                     const defaults = typeof w.attributes === 'string' ? JSON.parse(w.attributes) : w.attributes;
                                     if(w.script) defaults.script = new Function(w.script);
                                     
-                                    // Deteksi nama tipe
+                                    // Ambil tipe dari data-gjs-type di content HTML, atau gunakan ID
                                     const typeMatch = w.content.match(/data-gjs-type=["']([^"']+)["']/);
                                     const typeName = (typeMatch && typeMatch[1]) ? typeMatch[1] : w.id;
                                     
@@ -310,7 +314,7 @@
                                 } catch(e) { console.error('Error register logic', w.id); }
                             }
 
-                            // B. BUILD SIDEBAR MENU
+                            // B. BUILD SIDEBAR MENU (CONTENT WIDGETS ONLY)
                             if (w.category !== 'System') {
                                 widgetCache[w.id] = w;
                                 if (!groups[w.category]) groups[w.category] = [];
@@ -318,7 +322,7 @@
                             }
                         });
 
-                        // C. RENDER SIDEBAR UI
+                        // C. RENDER SIDEBAR UI (Accordion)
                         Object.keys(groups).sort().forEach(catName => {
                             const details = document.createElement('details');
                             details.className = 'group border border-gray-200 rounded-lg bg-white overflow-hidden mb-2';
