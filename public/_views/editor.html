@@ -58,30 +58,45 @@
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
         .gjs-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px; }
 
-        /* TOOLBAR FIXED TOP (Agar tidak menutupi objek) */
+        /* --- TOOLBAR YANG DIPERBAIKI (JARAK AMAN & LEBIH LEGA) --- */
         .gjs-toolbar { 
             background-color: #1f2937 !important; 
-            border-radius: 6px !important; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+            border-radius: 12px !important; /* Lebih halus */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important; /* Shadow tebal biar kontras */
             display: flex !important;
-            gap: 6px !important;
-            padding: 6px 10px !important;
+            align-items: center !important;
+            gap: 12px !important; /* Jarak antar tombol diperlebar (tidak rapat) */
+            padding: 10px 16px !important; /* Padding diperbesar */
             position: absolute !important;
-            top: -45px !important; 
+            
+            /* KUNCI PERBAIKAN: Geser jauh ke atas agar objel terlihat jelas */
+            top: -70px !important; 
+            
             left: 0 !important;
             transform: none !important;
             z-index: 99999 !important;
             width: max-content !important;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2) !important;
         }
         
         .gjs-toolbar-item { 
             color: white !important; 
-            width: 32px !important; height: 32px !important; 
-            display: flex !important; align-items: center; justify-content: center !important; 
-            cursor: pointer !important; border-radius: 4px !important; transition: 0.2s;
+            width: 36px !important; /* Tombol diperbesar */
+            height: 36px !important; 
+            display: flex !important; 
+            align-items: center; 
+            justify-content: center !important; 
+            cursor: pointer !important; 
+            border-radius: 8px !important; 
+            transition: all 0.2s ease !important;
+            background-color: rgba(255,255,255,0.05); /* Background tipis tiap tombol */
         }
-        .gjs-toolbar-item:hover { background-color: #4f46e5 !important; transform: scale(1.1); }
+        
+        .gjs-toolbar-item:hover { 
+            background-color: #4f46e5 !important; 
+            transform: translateY(-2px) scale(1.1); /* Efek pop-up */
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+        }
 
         /* COLOR PICKER FIXED (Agar muncul paling depan) */
         .sp-container {
