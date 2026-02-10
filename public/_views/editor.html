@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - Smart Save Edition</title>
+    <title>LandingBuilder Pro - Smart Editor Edition</title>
     
     <script>
-        // Mematikan peringatan konsol yang tidak perlu
         (function() {
             const originalWarn = console.warn;
             console.warn = function(...args) {
@@ -46,7 +45,7 @@
         
         .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; }
         
-        /* STICKY TOOLBAR FIX: Dibawah bar ikon preview */
+        /* STICKY TOOLBAR: Tetap di atas pojok kiri canvas */
         .gjs-toolbar { 
             position: fixed !important; 
             top: 60px !important; 
@@ -67,13 +66,13 @@
             transition: opacity 0.2s;
         }
 
-        /* Hilangkan toolbar saat edit teks */
+        /* Sembunyikan toolbar saat edit teks */
         .gjs-toolbar.ghost-mode { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; }
 
-        .gjs-toolbar-item { color: white !important; width: 28px !important; height: 28px !important; display: flex !important; align-items: center; justify-content: center !important; cursor: pointer !important; border-radius: 4px; }
+        .gjs-toolbar-item { color: white !important; width: 30px !important; height: 30px !important; display: flex !important; align-items: center; justify-content: center !important; cursor: pointer !important; border-radius: 4px; }
         .gjs-toolbar-item:hover { background-color: #4f46e5 !important; }
 
-        /* UI Resets */
+        /* GrapesJS UI Reset */
         .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; }
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
         .gjs-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px; }
@@ -150,9 +149,8 @@
             <div class="flex-1 overflow-y-auto p-6 space-y-6">
                 <div x-show="settingsTab === 'commerce'" class="space-y-4">
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Judul Halaman</label><input x-model="page.title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500 transition"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">URL Slug</label><input x-model="page.slug" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tipe Produk</label><select x-model="page.product_type" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm"><option value="physical">Physical Product</option><option value="digital">Digital Product</option></select></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Harga (Rp)</label><input type="number" x-model="page.config.price" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">URL Slug</label><input x-model="page.slug" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500 transition"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Harga Dasar (Rp)</label><input type="number" x-model="page.config.price" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
                     <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
                         <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Metode Pembayaran</label>
                         <div class="grid grid-cols-2 gap-2 mt-3">
@@ -165,22 +163,22 @@
                 </div>
 
                 <div x-show="settingsTab === 'seo'" class="space-y-4">
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">SEO Title</label><input x-model="page.config.settings.seo_title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">SEO Browser Title</label><input x-model="page.config.settings.seo_title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none" placeholder="Judul di Google"></div>
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Meta Description</label><textarea x-model="page.config.settings.seo_description" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm h-24 outline-none resize-none"></textarea></div>
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Favicon URL</label><input x-model="page.config.settings.favicon" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Social Share Image</label><input x-model="page.config.settings.og_image" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Social Share Image (OG)</label><input x-model="page.config.settings.og_image" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
                 </div>
 
                 <div x-show="settingsTab === 'advanced'" class="space-y-6">
                     <div class="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 space-y-4">
                         <h4 class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Pixels & Analytics</h4>
-                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">FB Pixel</label><input x-model="page.config.settings.fb_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none"></div>
-                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">TikTok Pixel</label><input x-model="page.config.settings.tiktok_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none"></div>
-                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">GA ID</label><input x-model="page.config.settings.ga_id" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none"></div>
+                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">FB Pixel ID</label><input x-model="page.config.settings.fb_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none"></div>
+                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">TikTok Pixel ID</label><input x-model="page.config.settings.tiktok_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none"></div>
+                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">GA4 ID</label><input x-model="page.config.settings.ga_id" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none"></div>
                     </div>
                     <div class="space-y-4">
-                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Header Script</label><textarea x-model="page.config.settings.scripts_header" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none"></textarea></div>
-                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Footer Script</label><textarea x-model="page.config.settings.scripts_footer" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none"></textarea></div>
+                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Header Script</label><textarea x-model="page.config.settings.scripts_header" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none" placeholder="<script>...</script>"></textarea></div>
+                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Footer Script</label><textarea x-model="page.config.settings.scripts_footer" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none" placeholder="Sebelum </body>"></textarea></div>
                     </div>
                 </div>
             </div>
@@ -209,8 +207,7 @@
     </div>
 
     <script>
-    // DEKLARASI GLOBAL - HANYA SEKALI
-    let appBuilderCache = {};
+    let globalBuilderCache = {};
 
     (function(){
         let activeModel = null; const modal = document.getElementById('iconify-picker-modal'); const input = document.getElementById('iconify-picker-search'); const results = document.getElementById('iconify-picker-results');
@@ -248,17 +245,17 @@
             },
 
             addWidgetToCanvas(id) {
-                const widgetData = appBuilderCache[id];
+                const widgetData = globalBuilderCache[id];
                 if (widgetData) { 
-                    try { window.editor.addComponents(widgetData.content); } catch(e) { console.error('Error adding widget', e); }
-                } else { this.notify('Error', 'Widget tidak ditemukan', 'error'); }
+                    try { window.editor.addComponents(widgetData.content); } catch(e) { console.error('Add Error', e); }
+                } else { this.notify('Error', 'Widget not found', 'error'); }
             },
 
             async loadPageData(slug) {
                 this.loading = true;
                 try {
                     const res = await fetch(`/api/admin/pages/${slug}`);
-                    if(!res.ok) throw new Error('Data tidak ditemukan');
+                    if(!res.ok) throw new Error('Data not found');
                     const data = await res.json();
                     this.page.id = data.id; this.page.slug = data.slug; this.page.title = data.title || '';
                     if (data.product_config_json) { 
@@ -268,6 +265,15 @@
                     if (window.editor) {
                         if (data.html_content) window.editor.setComponents(data.html_content);
                         if (data.css_content) window.editor.setStyle(data.css_content);
+                        
+                        // --- TRIGGER AUTO-OPEN ACCORDION SAAT LOAD ---
+                        setTimeout(() => {
+                            const wrapper = window.editor.getWrapper();
+                            const details = wrapper.find('details');
+                            details.forEach(det => {
+                                det.addAttributes({ open: 'true' });
+                            });
+                        }, 500);
                     }
                 } catch (e) { this.notify('Error', e.message, 'error'); }
                 this.loading = false;
@@ -276,13 +282,11 @@
             async savePage() {
                 this.loading = true;
                 try {
-                    // --- SMART SAVE FIX (FORCE CLOSE ACCORDIONS) ---
-                    // Mengambil elemen wrapper dari editor
+                    // --- TRIGGER AUTO-CLOSE SEBELUM SAVE ---
                     const wrapper = window.editor.getWrapper();
-                    // Mencari semua elemen 'details' dan menghapus atribut 'open'
                     const allDetails = wrapper.find('details');
                     allDetails.forEach(det => {
-                        det.addAttributes({ open: null }); // NULL di GrapesJS berarti hapus atribut
+                        det.addAttributes({ open: null }); // Hapus atribut open
                     });
 
                     const payload = {
@@ -291,7 +295,7 @@
                         css: window.editor.getCss(), product_config: this.page.config
                     };
                     const res = await fetch('/api/admin/pages', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
-                    if(res.ok) this.notify('Sukses', 'Berhasil disimpan!'); else throw new Error('Gagal menyimpan');
+                    if(res.ok) this.notify('Sukses', 'Berhasil disimpan!'); else throw new Error('Simpan gagal');
                 } catch (e) { this.notify('Gagal', e.message, 'error'); }
                 this.loading = false;
             },
@@ -303,9 +307,7 @@
                 const bridgeCSS = `
                     body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; } 
                     img { max-width: 100% !important; height: auto !important; display: block; }
-                    /* Sticky Toolbar Spacing */
                     body { padding-top: 65px !important; padding-bottom: 100px; } 
-                    /* Fix Accordion Editor: Selalu terbuka saat ngedit */
                     details > :not(summary) { display: block !important; opacity: 1 !important; height: auto !important; padding-top: 10px; border-top: 1px dashed #e5e7eb; }
                 `; 
 
@@ -316,9 +318,8 @@
                     storageManager: false, 
                     panels: { defaults: [] },
                     allowScripts: 1, 
-                    
                     assetManager: {
-                        uploadText: 'Upload Gambar',
+                        uploadText: 'Klik atau seret gambar',
                         uploadFile: async (e) => {
                             const file = e.dataTransfer ? e.dataTransfer.files[0] : e.target.files[0];
                             if(!file) return;
@@ -327,11 +328,10 @@
                                 const b64 = await toBase64(file);
                                 const res = await fetch('/api/admin/upload-image', { method: 'POST', body: JSON.stringify({ image: b64, filename: file.name }) });
                                 const d = await res.json();
-                                if(d.data) { window.editor.AssetManager.add(d.data); this.notify('Sukses', 'Gambar diupload!'); }
-                            } catch(err) { this.notify('Gagal', 'Upload gagal', 'error'); }
+                                if(d.data) { window.editor.AssetManager.add(d.data); this.notify('Sukses', 'Gambar diupload'); }
+                            } catch(err) { this.notify('Gagal', 'Upload error', 'error'); }
                         }
                     },
-
                     canvas: {
                         scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
                         styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
@@ -347,7 +347,6 @@
                             <style>${bridgeCSS}</style>
                         `
                     },
-                    
                     plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-custom-code', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg'],
                     deviceManager: { devices: [{ id: 'desktop', width: '' }, { id: 'tablet', width: '768px' }, { id: 'mobile', width: '375px' }] },
                     blockManager: { appendTo: '#blocks-container' },
@@ -372,7 +371,6 @@
                 const domc = window.editor.DomComponents;
                 const tm = window.editor.Traits;
 
-                // LOGIKA SMART TOOLBAR
                 window.editor.on('rte:enable', () => {
                     document.querySelectorAll('.gjs-toolbar').forEach(t => t.classList.add('ghost-mode'));
                     const frameBody = window.editor.Canvas.getBody();
@@ -382,7 +380,6 @@
                         frameBody.appendChild(style);
                     }
                 });
-
                 window.editor.on('rte:disable', () => {
                     document.querySelectorAll('.gjs-toolbar').forEach(t => t.classList.remove('ghost-mode'));
                     const frameBody = window.editor.Canvas.getBody();
@@ -390,7 +387,6 @@
                     if(style) style.remove();
                 });
 
-                // REGISTER TEXTAREA
                 tm.addType('textarea', {
                     createInput({ trait }) {
                         const el = document.createElement('textarea');
@@ -412,7 +408,6 @@
 
                 window.editor.Commands.add('open-icon-picker', { run(ed) { window.openIconifyPicker(ed.getSelected()); } });
 
-                // LOAD WIDGETS
                 fetch('/api/widgets').then(res => res.json()).then(widgets => {
                     const renderer = document.getElementById('blocks-custom-renderer');
                     renderer.innerHTML = ''; const groups = {};
@@ -427,7 +422,7 @@
                             } catch(e) {}
                         }
                         if (w.category !== 'System') {
-                            appBuilderCache[w.id] = w;
+                            globalBuilderCache[w.id] = w;
                             if (!groups[w.category]) groups[w.category] = [];
                             groups[w.category].push(w);
                         }
