@@ -58,19 +58,23 @@
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
         .gjs-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px; }
 
-        /* --- TOOLBAR YANG DIPERBAIKI (JARAK AMAN & LEBIH LEGA) --- */
+        /* --- TOOLBAR FIXED (KOMPAK & BERJARAK) --- */
         .gjs-toolbar { 
             background-color: #1f2937 !important; 
-            border-radius: 12px !important; /* Lebih halus */
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important; /* Shadow tebal biar kontras */
+            border-radius: 6px !important; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
             display: flex !important;
             align-items: center !important;
-            gap: 12px !important; /* Jarak antar tombol diperlebar (tidak rapat) */
-            padding: 10px 16px !important; /* Padding diperbesar */
+            gap: 6px !important;
+            
+            /* UKURAN: Kompak (Tidak diperbesar) */
+            padding: 4px 8px !important; 
+            height: auto !important;
+            
             position: absolute !important;
             
-            /* KUNCI PERBAIKAN: Geser jauh ke atas agar objel terlihat jelas */
-            top: -70px !important; 
+            /* POSISI: Diberi jarak jauh ke atas agar tidak menutupi objek */
+            top: -60px !important; 
             
             left: 0 !important;
             transform: none !important;
@@ -81,21 +85,21 @@
         
         .gjs-toolbar-item { 
             color: white !important; 
-            width: 36px !important; /* Tombol diperbesar */
-            height: 36px !important; 
+            
+            /* UKURAN ICON: Standar/Kecil */
+            width: 28px !important; 
+            height: 28px !important; 
+            
             display: flex !important; 
             align-items: center; 
             justify-content: center !important; 
             cursor: pointer !important; 
-            border-radius: 8px !important; 
+            border-radius: 4px !important; 
             transition: all 0.2s ease !important;
-            background-color: rgba(255,255,255,0.05); /* Background tipis tiap tombol */
         }
         
         .gjs-toolbar-item:hover { 
             background-color: #4f46e5 !important; 
-            transform: translateY(-2px) scale(1.1); /* Efek pop-up */
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
         }
 
         /* COLOR PICKER FIXED (Agar muncul paling depan) */
