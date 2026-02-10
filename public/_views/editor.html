@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - Fix Toolbar & Config</title>
+    <title>LandingBuilder Pro - Sticky Toolbar Edition</title>
     
     <script>
-        // Mematikan peringatan yang mengganggu di konsol
+        // Suppress Warnings & Production Alerts
         (function() {
             const originalWarn = console.warn;
             console.warn = function(...args) {
@@ -42,50 +42,50 @@
         
         .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; }
         
-        /* Layout Fix agar Canvas dan Sidebar berdampingan rapi */
         #gjs { flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; position: relative; }
         
         .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; }
         
-        /* TOOLBAR FIX: Jarak jauh (60px) agar tidak menutupi properti objek */
+        /* --- STICKY TOOLBAR FIX --- */
         .gjs-toolbar { 
+            position: fixed !important; 
+            top: 60px !important; /* Tepat di bawah header icon preview */
+            left: 0 !important;
+            right: auto !important;
+            transform: none !important; /* Mematikan kalkulasi posisi otomatis GrapesJS */
+            
             background-color: #1f2937 !important; 
-            border-radius: 6px !important; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.4) !important;
+            border-radius: 0 0 8px 0 !important; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
             display: flex !important; 
             gap: 4px !important; 
-            padding: 4px 8px !important;
-            position: absolute !important; 
-            top: -60px !important; /* Jarak lebih jauh ke atas */
-            left: 0 !important; 
-            transform: translateY(0) !important;
+            padding: 6px 10px !important;
             z-index: 9999 !important; 
-            border: 1px solid rgba(255,255,255,0.2) !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            border-top: none !important;
+            border-left: none !important;
+            
             opacity: 1;
-            transition: opacity 0.2s, visibility 0.2s;
+            transition: opacity 0.2s;
         }
 
-        /* Class untuk menyembunyikan toolbar saat sedang mengetik teks */
-        .gjs-toolbar.ghost-mode { 
-            opacity: 0 !important; 
-            visibility: hidden !important; 
-            pointer-events: none !important; 
-        }
+        /* Hilangkan toolbar saat sedang mengetik teks agar tidak mengganggu pandangan */
+        .gjs-toolbar.ghost-mode { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; }
 
-        .gjs-toolbar-item { color: white !important; width: 28px !important; height: 28px !important; display: flex !important; align-items: center; justify-content: center !important; cursor: pointer !important; }
+        .gjs-toolbar-item { color: white !important; width: 30px !important; height: 30px !important; display: flex !important; align-items: center; justify-content: center !important; cursor: pointer !important; border-radius: 4px; }
         .gjs-toolbar-item:hover { background-color: #4f46e5 !important; }
 
-        /* GrapesJS UI Reset */
+        /* GrapesJS Canvas Adjustment */
         .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; }
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
         .gjs-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px; }
         
-        /* Sidebar Accordion & Cards */
+        /* Sidebar Elements */
         details.group > summary { list-style: none; }
         details.group > summary::-webkit-details-marker { display: none; }
         .block-card { cursor: pointer; background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: all 0.2s; user-select: none; }
         .block-card:hover { border-color: #6366f1; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15); transform: translateY(-2px); }
-        .block-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #4b5563; text-align: center; line-height: 1.2; }
+        .block-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #4b5563; text-align: center; }
         
         .sp-container { z-index: 100000 !important; }
         .gjs-field-color-picker { width: 100%; height: 24px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
@@ -129,7 +129,10 @@
                     </div>
                     <div id="blocks-container" class="hidden"></div> 
                 </div>
-                <div x-show="tab=='styles'" class="h-full pb-20"><div id="selectors-container" class="p-3 bg-gray-50 border-b"></div><div id="styles-container" class="p-1"></div></div>
+                <div x-show="tab=='styles'" class="h-full pb-20">
+                    <div id="selectors-container" class="p-3 bg-gray-50 border-b"></div>
+                    <div id="styles-container" class="p-1"></div>
+                </div>
                 <div x-show="tab=='traits'" class="h-full pb-20"><div id="traits-container" class="p-4"></div></div>
                 <div x-show="tab=='layers'" class="h-full pb-20"><div id="layers-container"></div></div>
             </div>
@@ -152,7 +155,7 @@
             <div class="flex-1 overflow-y-auto p-6 space-y-6">
                 <div x-show="settingsTab === 'commerce'" class="space-y-4">
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Judul Halaman</label><input x-model="page.title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500 transition"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">URL Slug</label><input x-model="page.slug" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500 transition"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">URL Slug</label><input x-model="page.slug" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tipe Produk</label><select x-model="page.product_type" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm"><option value="physical">Physical Product</option><option value="digital">Digital Product</option></select></div>
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Harga Dasar (Rp)</label><input type="number" x-model="page.config.price" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
                     <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
@@ -184,23 +187,16 @@
                         <div><label class="text-[9px] font-bold text-indigo-400 uppercase">GA4 ID</label><input x-model="page.config.settings.ga_id" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none"></div>
                     </div>
                     <div class="space-y-4">
-                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Header Script</label><textarea x-model="page.config.settings.scripts_header" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none" placeholder="<script>...</script>"></textarea></div>
-                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Footer Script</label><textarea x-model="page.config.settings.scripts_footer" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none" placeholder="Sebelum </body>"></textarea></div>
+                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Header Script</label><textarea x-model="page.config.settings.scripts_header" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none"></textarea></div>
+                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Footer Script</label><textarea x-model="page.config.settings.scripts_footer" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none"></textarea></div>
                     </div>
                 </div>
             </div>
 
             <div class="p-4 border-t bg-gray-50 flex justify-end gap-3">
                 <button @click="showSettings=false" class="px-5 py-2 text-xs font-bold text-gray-500">BATAL</button>
-                <button @click="savePage(); showSettings=false" class="px-8 py-2 bg-indigo-600 text-white text-xs font-black rounded-xl shadow-lg shadow-indigo-200 active:scale-95 transition-all">SIMPAN</button>
+                <button @click="savePage(); showSettings=false" class="px-8 py-2 bg-indigo-600 text-white text-xs font-black rounded-xl shadow-lg active:scale-95 transition-all">SIMPAN</button>
             </div>
-        </div>
-    </div>
-
-    <div id="iconify-picker-modal" class="fixed inset-0 hidden z-[99999] bg-black/40 flex items-start justify-center p-6 backdrop-blur-sm">
-        <div class="bg-white rounded-xl w-full max-w-xl shadow-2xl mt-10 overflow-hidden">
-            <div class="flex items-center justify-between p-4 border-b bg-gray-50"><input id="iconify-picker-search" placeholder="Cari icon..." class="w-full bg-transparent outline-none text-sm" /><button id="iconify-picker-close"><i class="ph ph-x text-lg"></i></button></div>
-            <div id="iconify-picker-results" class="p-4 grid grid-cols-6 gap-3 max-h-[300px] overflow-y-auto"></div>
         </div>
     </div>
 
@@ -213,9 +209,16 @@
         </template>
     </div>
 
+    <div id="iconify-picker-modal" class="fixed inset-0 hidden z-[99999] bg-black/40 flex items-start justify-center p-6 backdrop-blur-sm">
+        <div class="bg-white rounded-xl w-full max-w-xl shadow-2xl mt-10 overflow-hidden">
+            <div class="flex items-center justify-between p-4 border-b bg-gray-50"><input id="iconify-picker-search" placeholder="Cari icon..." class="w-full bg-transparent outline-none text-sm" /><button id="iconify-picker-close"><i class="ph ph-x text-lg"></i></button></div>
+            <div id="iconify-picker-results" class="p-4 grid grid-cols-6 gap-3 max-h-[300px] overflow-y-auto"></div>
+        </div>
+    </div>
+
     <script>
-    // DEKLARASI GLOBAL - HANYA SEKALI
-    let appWidgetCache = {};
+    // DEKLARASI GLOBAL WIDGET CACHE
+    let globalWidgetCache = {};
 
     (function(){
         let activeModel = null; const modal = document.getElementById('iconify-picker-modal'); const input = document.getElementById('iconify-picker-search'); const results = document.getElementById('iconify-picker-results');
@@ -252,9 +255,8 @@
                 setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); 
             },
 
-            // LOGIKA ADD WIDGET YANG BENAR
             addWidgetToCanvas(id) {
-                const widgetData = appWidgetCache[id];
+                const widgetData = globalWidgetCache[id];
                 if (widgetData) { 
                     try { window.editor.addComponents(widgetData.content); } catch(e) { console.error('Error adding widget', e); }
                 } else { this.notify('Error', 'Widget tidak ditemukan', 'error'); }
@@ -298,10 +300,14 @@
             cmd(c) { window.editor.runCommand(c); },
 
             initGrapes() {
+                // --- PERBAIKAN CANVAS DITURUNKAN ---
                 const bridgeCSS = `
                     body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; } 
                     .editable-carousel { min-height: 200px; background: #eee; }
-                    body { padding-bottom: 100px; } 
+                    
+                    /* TURUNKAN CANVAS ISI: Agar elemen paling atas tidak tertutup sticky toolbar (60px) */
+                    body { padding-top: 60px !important; padding-bottom: 100px; } 
+                    
                     /* Fix Accordion Editor */
                     details > :not(summary) { display: block !important; opacity: 1 !important; height: auto !important; padding-top: 10px; border-top: 1px dashed #e5e7eb; }
                 `; 
@@ -373,9 +379,8 @@
                 const domc = window.editor.DomComponents;
                 const tm = window.editor.Traits;
 
-                // LOGIKA SMART TOOLBAR (ANTI MENGHALANGI)
+                // --- SMART TOOLBAR LOGIC (STICKY & HIDE ON EDIT) ---
                 window.editor.on('rte:enable', () => {
-                    // Sembunyikan toolbar komponen di level wrapper luar dan dalam iframe
                     document.querySelectorAll('.gjs-toolbar').forEach(t => t.classList.add('ghost-mode'));
                     const frameBody = window.editor.Canvas.getBody();
                     if(frameBody) {
@@ -415,7 +420,7 @@
 
                 window.editor.Commands.add('open-icon-picker', { run(ed) { window.openIconifyPicker(ed.getSelected()); } });
 
-                // WIDGET LOADER - MENGISI appWidgetCache
+                // WIDGET LOADER
                 fetch('/api/widgets').then(res => res.json()).then(widgets => {
                     const renderer = document.getElementById('blocks-custom-renderer');
                     renderer.innerHTML = ''; const groups = {};
@@ -430,7 +435,7 @@
                             } catch(e) {}
                         }
                         if (w.category !== 'System') {
-                            appWidgetCache[w.id] = w; // Masukkan ke cache global
+                            globalWidgetCache[w.id] = w; // Gunakan Cache Global
                             if (!groups[w.category]) groups[w.category] = [];
                             groups[w.category].push(w);
                         }
@@ -462,7 +467,7 @@
                     }
                 });
 
-                // CUSTOM TOOLBAR (Move, Copy, Delete, Paste Inside)
+                // STICKY TOOLBAR BUTTONS CONFIG
                 window.editor.on('component:selected', (c) => { 
                     c.set('toolbar', [
                         { attributes: { class: 'fa' }, command: 'tlb-move', label: '<i class="ph ph-arrows-out-cardinal text-lg"></i>' },
