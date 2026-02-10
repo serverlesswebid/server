@@ -6,7 +6,6 @@
     <title>LandingBuilder Pro - Fix Syntax & Full Config</title>
     
     <script>
-        // Mematikan peringatan Tailwind production yang mengganggu konsol
         (function() {
             const originalWarn = console.warn;
             console.warn = function(...args) {
@@ -72,12 +71,10 @@
         .gjs-toolbar-item { color: white !important; width: 30px !important; height: 30px !important; display: flex !important; align-items: center; justify-content: center !important; cursor: pointer !important; border-radius: 4px; }
         .gjs-toolbar-item:hover { background-color: #4f46e5 !important; }
 
-        /* GrapesJS UI Reset */
         .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; }
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
         .gjs-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px; }
         
-        /* Sidebar Elements */
         details.group > summary { list-style: none; }
         details.group > summary::-webkit-details-marker { display: none; }
         .block-card { cursor: pointer; background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: all 0.2s; user-select: none; }
@@ -125,6 +122,7 @@
                     <div id="blocks-custom-renderer" class="space-y-2">
                         <div class="text-center py-10 text-gray-400 text-xs animate-pulse">Memuat Widget...</div>
                     </div>
+                    <div id="blocks-container" class="hidden"></div> 
                 </div>
                 <div x-show="tab=='styles'" class="h-full pb-20"><div id="selectors-container" class="p-3 bg-gray-50 border-b"></div><div id="styles-container" class="p-1"></div></div>
                 <div x-show="tab=='traits'" class="h-full pb-20"><div id="traits-container" class="p-4"></div></div>
@@ -167,7 +165,7 @@
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">SEO Browser Title</label><input x-model="page.config.settings.seo_title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none" placeholder="Judul di Google"></div>
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Meta Description</label><textarea x-model="page.config.settings.seo_description" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm h-24 outline-none resize-none"></textarea></div>
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Favicon URL</label><input x-model="page.config.settings.favicon" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Social Share Image</label><input x-model="page.config.settings.og_image" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Social Image (OG)</label><input x-model="page.config.settings.og_image" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
                 </div>
 
                 <div x-show="settingsTab === 'advanced'" class="space-y-6">
@@ -178,8 +176,8 @@
                         <div><label class="text-[9px] font-bold text-indigo-400 uppercase">GA4 ID</label><input x-model="page.config.settings.ga_id" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none"></div>
                     </div>
                     <div class="space-y-4">
-                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Header Script</label><textarea x-model="page.config.settings.scripts_header" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none"></textarea></div>
-                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Footer Script</label><textarea x-model="page.config.settings.scripts_footer" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none"></textarea></div>
+                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Header Script</label><textarea x-model="page.config.settings.scripts_header" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none" placeholder="<script>...</script>"></textarea></div>
+                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Footer Script</label><textarea x-model="page.config.settings.scripts_footer" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none" placeholder="Sebelum </body>"></textarea></div>
                     </div>
                 </div>
             </div>
@@ -250,16 +248,12 @@
                 const w = globalBuilderCache[id];
                 if (w) {
                     let html = w.content;
-                    // Force data-gjs-type agar script otomatis jalan
                     if(w.script) {
                         const div = document.createElement('div'); div.innerHTML = html;
                         const root = div.firstElementChild;
-                        if(root) {
-                            root.setAttribute('data-gjs-type', w.id);
-                            html = div.innerHTML;
-                        }
+                        if(root) { root.setAttribute('data-gjs-type', w.id); html = div.innerHTML; }
                     }
-                    try { window.editor.addComponents(html); } catch(e) { console.error('Component Add Error', e); }
+                    try { window.editor.addComponents(html); } catch(e) { console.error('Add Error', e); }
                 }
             },
 
@@ -276,8 +270,6 @@
                     if (window.editor) {
                         window.editor.setComponents(data.html_content || '');
                         window.editor.setStyle(data.css_content || '');
-                        
-                        // AUTO OPEN ACCORDION UNTUK EDITOR
                         setTimeout(() => {
                             window.editor.getWrapper().find('details').forEach(d => d.addAttributes({ open: 'true' }));
                         }, 600);
@@ -289,9 +281,7 @@
             async savePage() {
                 this.loading = true;
                 try {
-                    // AUTO CLOSE ACCORDION SEBELUM SAVE
                     window.editor.getWrapper().find('details').forEach(d => d.addAttributes({ open: null }));
-
                     const payload = {
                         id: this.page.id, slug: this.page.slug, title: this.page.title,
                         html: `${window.editor.getHtml()}<script>${window.editor.getJs()}<\/script>`,
@@ -315,7 +305,7 @@
                 window.editor = grapesjs.init({
                     container: '#gjs', height: '100%', width: 'auto', storageManager: false, panels: { defaults: [] }, allowScripts: 1,
                     assetManager: {
-                        uploadText: 'Seret gambar ke sini',
+                        uploadText: 'Upload Gambar',
                         uploadFile: async (e) => {
                             const file = e.dataTransfer ? e.dataTransfer.files[0] : e.target.files[0];
                             if(!file) return;
@@ -324,8 +314,8 @@
                                 const b64 = await toBase64(file);
                                 const res = await fetch('/api/admin/upload-image', { method: 'POST', body: JSON.stringify({ image: b64, filename: file.name }) });
                                 const d = await res.json();
-                                if(d.data) { window.editor.AssetManager.add(d.data); this.notify('Sukses', 'Gambar terupload'); }
-                            } catch(err) { this.notify('Gagal', 'Upload error', 'error'); }
+                                if(d.data) { window.editor.AssetManager.add(d.data); this.notify('Sukses', 'Gambar diupload!'); }
+                            } catch(err) { this.notify('Gagal', 'Upload gagal', 'error'); }
                         }
                     },
                     canvas: {
@@ -335,7 +325,6 @@
                     },
                     plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg'],
                     deviceManager: { devices: [{ id: 'desktop', width: '' }, { id: 'tablet', width: '768px' }, { id: 'mobile', width: '375px' }] },
-                    traitManager: { appendTo: '#traits-container' },
                     styleManager: { 
                         appendTo: '#styles-container', 
                         sectors: [
@@ -347,7 +336,7 @@
                     }
                 });
 
-                // --- DINAMIS: AUTO REGISTER SEMUA WIDGET DARI DATABASE ---
+                // --- FIX SYNTAX: DINAMIS REGISTER SEBAGAI STRING (BUKAN FUNCTION) ---
                 fetch('/api/widgets').then(res => res.json()).then(widgets => {
                     const renderer = document.getElementById('blocks-custom-renderer');
                     renderer.innerHTML = ''; const groups = {};
@@ -355,20 +344,19 @@
                     widgets.forEach(w => {
                         globalBuilderCache[w.id] = w;
 
-                        // DAFTARKAN TIPE JIKA ADA SCRIPT
                         if (w.script && w.script.trim() !== "") {
                             try {
-                                // Bersihkan script dari karakter liar di awal/akhir
-                                const cleanScript = w.script.trim();
                                 window.editor.DomComponents.addType(w.id, {
                                     model: {
                                         defaults: {
-                                            script: new Function(cleanScript),
+                                            // MASALAHNYA DISINI: Jangan gunakan new Function() saat mendaftarkan
+                                            // Kirim string mentah, GrapesJS akan menanganinya di iframe
+                                            script: w.script.trim(), 
                                             attributes: { 'data-gjs-type': w.id }
                                         }
                                     }
                                 });
-                            } catch(e) { console.error('Script Register Error widget:', w.id, e); }
+                            } catch(e) { console.warn('Script Error widget:', w.id); }
                         }
 
                         if (w.category !== 'System') {
@@ -393,11 +381,9 @@
                     });
                 });
 
-                // SMART TOOLBAR LOGIC
                 window.editor.on('rte:enable', () => document.querySelectorAll('.gjs-toolbar').forEach(t => t.classList.add('ghost-mode')));
                 window.editor.on('rte:disable', () => document.querySelectorAll('.gjs-toolbar').forEach(t => t.classList.remove('ghost-mode')));
 
-                // TRAIT TEXTAREA
                 window.editor.Traits.addType('textarea', {
                     createInput({ trait }) {
                         const el = document.createElement('textarea');
@@ -406,13 +392,9 @@
                         el.addEventListener('input', (e) => this.onChange(e));
                         return el;
                     },
-                    onUpdate({ elInput, component }) {
-                        const val = component.get(this.model.get('name')) || component.get('content');
-                        elInput.value = val || '';
-                    },
+                    onUpdate({ elInput, component }) { elInput.value = component.get(this.model.get('name')) || component.get('content') || ''; },
                 });
 
-                // PANEL EDIT TEKS LOGIC
                 window.editor.on('component:selected', (model) => {
                     const el = model.getEl();
                     if (el && el.innerText && el.childElementCount === 0) {
@@ -423,7 +405,6 @@
                     }
                 });
 
-                // CUSTOM TOOLBAR
                 window.editor.on('component:selected', (c) => { 
                     c.set('toolbar', [
                         { attributes: { class: 'fa' }, command: 'tlb-move', label: '<i class="ph ph-arrows-out-cardinal text-lg"></i>' },
