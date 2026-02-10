@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - DB Driven</title>
+    <title>LandingBuilder Pro - Pure DB</title>
     
     <script>
         (function() {
@@ -233,7 +233,6 @@
     </div>
 
     <script>
-    // --- 1. ICONIFY PICKER LOGIC ---
     (function(){
         let activeModel = null; 
         const modal = document.getElementById('iconify-picker-modal'); 
@@ -261,7 +260,6 @@
         }
     })();
 
-    // --- 2. MAIN EDITOR APP ---
     function editorApp() {
         return {
             device: 'desktop', tab: 'blocks', settingsTab: 'commerce', clipboard: null, mobileMenuOpen: false, showSettings: false, loading: false, notifications: [], paymentProviders: [],
@@ -350,9 +348,6 @@
 
                 domc.addType('link', { model: { defaults: { traits: ['href', 'target', 'title'] } } });
                 
-                // --- 1. GLOBAL COMMANDS (Infrastructure Only) ---
-                // Command ini bisa dipanggil oleh widget manapun via Traits yang ada di Database
-                
                 cmds.add('set-img-src', {
                     run(editor, sender) {
                         const component = editor.getSelected();
@@ -386,19 +381,15 @@
                             let blockContent = w.content;
                             let componentDefaults = {};
 
-                            // Parsing Attributes (Traits & Defaults) dari DB
                             if (w.attributes && Object.keys(w.attributes).length > 0) {
                                 componentDefaults = { ...w.attributes };
                             }
 
-                            // Parsing Script dari DB (Client-Side Logic)
                             if (w.script) {
                                 componentDefaults.script = new Function(w.script);
                             }
 
-                            // Jika Widget ini punya Logic/Traits khusus, Daftarkan Type-nya
                             if (Object.keys(componentDefaults).length > 0) {
-                                // Gunakan ID widget sebagai nama Type, atau ambil dari data-gjs-type jika ada
                                 const typeMatch = w.content.match(/data-gjs-type=["']([^"']+)["']/);
                                 const typeName = (typeMatch && typeMatch[1]) ? typeMatch[1] : w.id;
 
@@ -409,7 +400,6 @@
                                 });
                             }
                             
-                            // Hanya tambahkan ke Block Manager jika bukan kategori "System"
                             if (w.category !== 'System') {
                                 bm.add(w.id, {
                                     label: w.label,
