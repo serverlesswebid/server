@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - UI Fixed</title>
+    <title>LandingBuilder Pro - Final Ultimate</title>
     
     <script>
         (function() {
@@ -53,11 +53,12 @@
             .mobile-overlay.show { display: block; }
         }
 
+        /* GrapesJS Overrides */
         .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; width: 0 !important; }
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
         .gjs-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px; }
 
-        /* --- 1. FIX TOOLBAR (Floating on Top) --- */
+        /* TOOLBAR FIXED TOP (Agar tidak menutupi objek) */
         .gjs-toolbar { 
             background-color: #1f2937 !important; 
             border-radius: 6px !important; 
@@ -82,10 +83,10 @@
         }
         .gjs-toolbar-item:hover { background-color: #4f46e5 !important; transform: scale(1.1); }
 
-        /* --- 2. FIX COLOR PICKER (Agar Muncul di Atas Sidebar) --- */
+        /* COLOR PICKER FIXED (Agar muncul paling depan) */
         .sp-container {
-            position: fixed !important; /* Wajib Fixed agar lepas dari overflow sidebar */
-            z-index: 1000000 !important; /* Z-Index super tinggi */
+            position: fixed !important; 
+            z-index: 1000000 !important; 
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
@@ -94,7 +95,7 @@
         }
         .gjs-field-color-picker { width: 24px; height: 24px; border: 1px solid #cbd5e1; border-radius: 4px; cursor: pointer; }
 
-        /* Accordion & Card Style */
+        /* Sidebar Accordion */
         details.group > summary { list-style: none; }
         details.group > summary::-webkit-details-marker { display: none; }
         details.group[open] summary ~ * { animation: sweep .3s ease-in-out; }
@@ -163,12 +164,67 @@
 
     <div x-show="showSettings" x-cloak class="fixed inset-0 z-[400] bg-slate-900/50 backdrop-blur-sm flex justify-end" @click.self="showSettings = false">
         <div class="w-full md:w-[480px] h-full bg-white shadow-2xl flex flex-col border-l border-gray-200">
-            <div class="p-5 border-b flex justify-between items-center bg-gray-50"><h2 class="font-bold text-gray-800 flex items-center gap-2"><i class="ph ph-faders text-indigo-600 text-xl"></i> Page Settings</h2><button @click="showSettings = false" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button></div>
-            <div class="flex-1 overflow-y-auto p-6 space-y-6">
-                <div><label class="text-[10px] font-bold text-gray-400 uppercase">Judul</label><input x-model="page.title" class="w-full mt-1 p-2 border rounded"></div>
-                <div><label class="text-[10px] font-bold text-gray-400 uppercase">Harga (Rp)</label><input type="number" x-model="page.config.price" class="w-full mt-1 p-2 border rounded"></div>
+            <div class="p-5 border-b flex justify-between items-center bg-gray-50">
+                <h2 class="font-bold text-gray-800 flex items-center gap-2"><i class="ph ph-faders text-indigo-600 text-xl"></i> Page Settings</h2>
+                <button @click="showSettings = false" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button>
             </div>
-            <div class="p-4 border-t bg-gray-50 flex justify-end gap-3"><button @click="showSettings=false" class="px-5 py-2 text-xs font-bold text-gray-500">BATAL</button><button @click="savePage(); showSettings=false" class="px-8 py-2 bg-indigo-600 text-white text-xs font-black rounded shadow">SIMPAN</button></div>
+            
+            <div class="flex border-b text-[11px] font-black uppercase bg-white">
+                <button @click="settingsTab='commerce'" :class="settingsTab==='commerce'?'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 py-4">Commerce</button>
+                <button @click="settingsTab='seo'" :class="settingsTab==='seo'?'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 py-4">SEO</button>
+                <button @click="settingsTab='advanced'" :class="settingsTab==='advanced'?'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 py-4">Scripts</button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                <div x-show="settingsTab === 'commerce'" class="space-y-4">
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Nama Halaman</label><input x-model="page.title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500 transition" placeholder="Judul Halaman"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">URL Slug</label><input x-model="page.slug" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500 transition"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tipe Produk</label><select x-model="page.product_type" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm"><option value="physical">Physical Product</option><option value="digital">Digital Product</option></select></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Base Price (Rp)</label><input type="number" x-model="page.config.price" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
+                    
+                    <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Metode Pembayaran</label>
+                        <div class="grid grid-cols-2 gap-2 mt-3">
+                            <label class="flex items-center gap-2 p-2 bg-white border rounded-lg cursor-pointer hover:border-indigo-500 transition">
+                                <input type="checkbox" value="whatsapp" x-model="page.config.active_payments" class="w-4 h-4 rounded text-indigo-600"><span class="text-[11px] font-medium text-gray-700">WhatsApp</span>
+                            </label>
+                            <template x-for="p in paymentProviders" :key="p.slug">
+                                <label class="flex items-center gap-2 p-2 bg-white border rounded-lg cursor-pointer hover:border-indigo-500 transition">
+                                    <input type="checkbox" :value="p.slug" x-model="page.config.active_payments" class="w-4 h-4 rounded text-indigo-600"><span class="text-[11px] font-medium text-gray-700" x-text="p.name"></span>
+                                </label>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <div x-show="settingsTab === 'seo'" class="space-y-4">
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">SEO Title</label><input x-model="page.config.settings.seo_title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none" placeholder="Judul di Google"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Meta Description</label><textarea x-model="page.config.settings.seo_description" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm h-24 outline-none resize-none" placeholder="Deskripsi pencarian..."></textarea></div>
+                    <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                        <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Favicon URL</label>
+                        <div class="flex gap-2 mt-2"><input x-model="page.config.settings.favicon" class="flex-1 px-4 py-2 bg-white border rounded-lg text-xs outline-none" placeholder="https://..."><div class="w-10 h-10 bg-white border rounded flex items-center justify-center overflow-hidden shrink-0"><template x-if="page.config.settings.favicon"><img :src="page.config.settings.favicon" class="w-6 h-6 object-contain"></template></div></div>
+                    </div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Social Share Image</label><input x-model="page.config.settings.og_image" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none" placeholder="https://..."></div>
+                </div>
+
+                <div x-show="settingsTab === 'advanced'" class="space-y-6">
+                    <div class="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 space-y-4">
+                        <h4 class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Pixels & Analytics</h4>
+                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">Facebook Pixel ID</label><input x-model="page.config.settings.fb_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none" placeholder="Contoh: 123456789"></div>
+                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">TikTok Pixel ID</label><input x-model="page.config.settings.tiktok_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none" placeholder="Contoh: C123456"></div>
+                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">Google Analytics ID</label><input x-model="page.config.settings.ga_id" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none" placeholder="G-XXXXXXXX"></div>
+                    </div>
+                    <div class="space-y-4">
+                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Header Script</label><textarea x-model="page.config.settings.scripts_header" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none" placeholder="<script>...</script>"></textarea></div>
+                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Footer Script</label><textarea x-model="page.config.settings.scripts_footer" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none" placeholder="Sebelum </body>"></textarea></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t bg-gray-50 flex justify-end gap-3">
+                <button @click="showSettings=false" class="px-5 py-2 text-xs font-bold text-gray-500">BATAL</button>
+                <button @click="savePage(); showSettings=false" class="px-8 py-2 bg-indigo-600 text-white text-xs font-black rounded-xl shadow-lg shadow-indigo-200 active:scale-95 transition-all">SIMPAN</button>
+            </div>
         </div>
     </div>
 
@@ -218,20 +274,38 @@
 
     function editorApp() {
         return {
-            device: 'desktop', tab: 'blocks', mobileMenuOpen: false, showSettings: false, loading: false, notifications: [],
-            page: { id: 0, slug: '', title: '', config: { price: 0, active_payments: [] }, product_type: 'physical', analytics: {}, scripts: {} },
+            device: 'desktop', tab: 'blocks', settingsTab: 'commerce', mobileMenuOpen: false, showSettings: false, loading: false, notifications: [], paymentProviders: [],
+            // STRUKTUR DATA PAGE
+            page: { 
+                id: 0, slug: '', title: '', product_type: 'physical', 
+                config: { 
+                    price: 0, 
+                    active_payments: [], 
+                    // SEO & Scripts masuk ke dalam config.settings agar tersimpan di JSON
+                    settings: { seo_title:'', seo_description:'', favicon:'', og_image:'', fb_pixel:'', tiktok_pixel:'', ga_id:'', scripts_header:'', scripts_footer:'' } 
+                } 
+            },
 
             async init() {
                 this.initGrapes();
                 const slug = new URLSearchParams(window.location.search).get('slug');
                 if (slug) await this.loadPageData(slug);
+                this.loadPaymentProviders();
             },
 
-            // --- NOTIFIKASI TOAST (PENTING: Diaktifkan kembali) ---
             notify(title, msg, type = 'success') { 
                 const id = Date.now(); 
                 this.notifications.push({ id, title, msg, type, show: true }); 
                 setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); 
+            },
+
+            async loadPaymentProviders() {
+                // Bisa diganti fetch API jika mau dinamis
+                this.paymentProviders = [
+                    { slug: 'paspay', name: 'QRIS & E-Wallet' },
+                    { slug: 'midtrans', name: 'Midtrans' },
+                    { slug: 'flashpay-bri', name: 'Virtual Account (Flashpay)' }
+                ];
             },
 
             async loadPageData(slug) {
@@ -250,6 +324,7 @@
                         try {
                             const conf = typeof data.product_config_json === 'string' ? JSON.parse(data.product_config_json) : data.product_config_json;
                             this.page.config = { ...this.page.config, ...conf };
+                            if (!this.page.config.settings) this.page.config.settings = {};
                         } catch(e) {}
                     }
 
@@ -258,7 +333,7 @@
                         if (data.css_content) window.editor.setStyle(data.css_content);
                     }
                 } catch (e) { 
-                    this.notify('Error', e.message, 'error'); // Pakai Toast
+                    this.notify('Error', e.message, 'error'); 
                 }
                 this.loading = false;
             },
@@ -271,10 +346,10 @@
                         product_type: this.page.product_type,
                         html: `${window.editor.getHtml()}<script>${window.editor.getJs()}<\/script>`,
                         css: window.editor.getCss(), 
-                        product_config: this.page.config
+                        product_config: this.page.config // Settings ikut tersimpan disini
                     };
                     const res = await fetch('/api/admin/pages', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
-                    if(res.ok) this.notify('Sukses', 'Halaman berhasil disimpan!'); // Pakai Toast
+                    if(res.ok) this.notify('Sukses', 'Berhasil disimpan!'); 
                     else throw new Error('Gagal menyimpan');
                 } catch (e) { this.notify('Gagal', e.message, 'error'); }
                 this.loading = false;
@@ -298,6 +373,7 @@
 
                 window.editor = grapesjs.init({
                     container: '#gjs', height: '100%', storageManager: false, panels: { defaults: [] },
+                    allowScripts: 1, // PENTING UNTUK JS WIDGET
                     assetManager: {
                         uploadText: 'Upload Gambar',
                         uploadFile: async (e) => {
@@ -330,10 +406,9 @@
                 const bm = window.editor.BlockManager;
                 const cmds = window.editor.Commands;
 
-                // --- 1. COMPONENTS ---
+                // --- COMPONENT TYPES ---
                 domc.addType('link', { model: { defaults: { traits: ['href', 'target'] } } });
                 
-                // ICONIFY (Resizable & Stylable ENABLED)
                 domc.addType('iconify-icon', { 
                     model: { 
                         defaults: { 
@@ -346,11 +421,11 @@
                     } 
                 });
 
-                // Global Commands
+                // --- COMMANDS ---
                 cmds.add('set-img-src', { run(ed) { ed.runCommand('open-assets', { target: ed.getSelected(), onSelect() { const asset = ed.AssetManager.getSelection()[0]; if(asset) { ed.getSelected().addAttributes({'img-src': asset.getSrc()}); ed.getSelected().view.el.querySelector('img').src = asset.getSrc(); } ed.Modal.close(); } }) } });
                 cmds.add('open-icon-picker', { run(ed) { window.openIconifyPicker(ed.getSelected()); } });
 
-                // --- 2. DYNAMIC DB COMPONENT LOADER ---
+                // --- DYNAMIC WIDGETS LOADER ---
                 fetch('/api/widgets')
                     .then(res => res.json())
                     .then(widgets => {
@@ -359,7 +434,6 @@
                         const groups = {};
 
                         widgets.forEach(w => {
-                            // Logic Registration
                             if (w.attributes && w.attributes !== 'null' && w.id !== 'iconify-icon') {
                                 try {
                                     const defaults = typeof w.attributes === 'string' ? JSON.parse(w.attributes) : w.attributes;
@@ -369,7 +443,6 @@
                                     domc.addType(typeName, { model: { defaults } });
                                 } catch(e) { console.error('Reg Error', w.id); }
                             }
-                            // Sidebar Grouping
                             if (w.category !== 'System') {
                                 widgetCache[w.id] = w;
                                 if (!groups[w.category]) groups[w.category] = [];
@@ -377,7 +450,6 @@
                             }
                         });
 
-                        // Render Sidebar
                         Object.keys(groups).sort().forEach(catName => {
                             const details = document.createElement('details');
                             details.className = 'group border border-gray-200 rounded-lg bg-white overflow-hidden mb-2';
@@ -403,7 +475,7 @@
                     })
                     .catch(e => console.error('Load Error', e));
 
-                // TOOLBAR (PASTE INSIDE & INSERT INSIDE DIKEMBALIKAN)
+                // --- TOOLBAR CONFIG (PASTE INSIDE IS BACK) ---
                 editor.on('component:selected', (c) => {
                     c.set('toolbar', [
                         { attributes: { class: 'fa' }, command: 'tlb-move', label: '<i class="ph ph-arrows-out-cardinal text-lg"></i>' },
@@ -411,7 +483,6 @@
                         { attributes: { class: 'fa' }, command: e => { e.runCommand('core:copy'); e.getSelected().remove(); }, label: '<i class="ph ph-scissors text-lg text-yellow-300"></i>' },
                         { attributes: { class: 'fa' }, command: e => e.runCommand('core:copy'), label: '<i class="ph ph-copy text-lg text-blue-300"></i>' },
                         { attributes: { class: 'fa' }, command: e => e.runCommand('core:paste'), label: '<i class="ph ph-clipboard-text text-lg text-green-300"></i>' },
-                        // PASTE INSIDE (Special)
                         { attributes: { class: 'fa', title: 'Paste Inside' }, command: e => { 
                             const selected = e.getSelected();
                             const clipboard = e.Models.Clipboard && e.Models.Clipboard.get ? e.Models.Clipboard.get() : null;
