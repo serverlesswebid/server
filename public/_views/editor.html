@@ -440,7 +440,18 @@
                             groups[w.category].push(w);
                         }
                     });
-                    
+                    Object.keys(groups).sort().forEach(catName => {
+                        const details = document.createElement('details'); details.className = 'group border border-gray-200 rounded-lg bg-white overflow-hidden mb-2'; details.open = true;
+                        const summary = document.createElement('summary'); summary.className = 'p-3 bg-gray-50 text-xs font-bold text-gray-700 cursor-pointer flex justify-between items-center hover:bg-gray-100 select-none'; summary.innerHTML = `<span>${catName}</span> <i class="ph ph-caret-down group-open:rotate-180 transition"></i>`;
+                        const contentDiv = document.createElement('div'); contentDiv.className = 'grid grid-cols-3 gap-2 p-2 bg-white';
+                        groups[catName].forEach(w => {
+                            const btn = document.createElement('div'); btn.className = 'block-card'; btn.title = w.label; 
+                            btn.setAttribute('x-on:click', `addWidgetToCanvas('${w.id}')`);
+                            btn.innerHTML = `<div class="text-indigo-600 mb-1"><i class="ph ph-cube text-xl"></i></div><div class="block-label">${w.label}</div>`; 
+                            contentDiv.appendChild(btn);
+                        });
+                        details.appendChild(summary); details.appendChild(contentDiv); renderer.appendChild(details);
+                    });
                     Object.keys(groups).sort().forEach(catName => {
                         const details = document.createElement('details'); details.className = 'group border border-gray-200 rounded-lg bg-white overflow-hidden mb-2'; details.open = true;
                         const summary = document.createElement('summary'); summary.className = 'p-3 bg-gray-50 text-xs font-bold text-gray-700 cursor-pointer flex justify-between items-center hover:bg-gray-100 select-none'; summary.innerHTML = `<span>${catName}</span> <i class="ph ph-caret-down group-open:rotate-180 transition"></i>`;
