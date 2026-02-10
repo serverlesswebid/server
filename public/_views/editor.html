@@ -388,11 +388,20 @@
             },
 
             initGrapes() {
-                const bridgeCSS = `body { font-family: 'Inter', sans-serif; } .editable-carousel { min-height: 200px; background: #eee; }`; 
+                // 1. UPDATE CSS BRIDGE (Samakan dengan Live)
+                const bridgeCSS = `
+                    body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; } 
+                    .editable-carousel { min-height: 200px; background: #eee; }
+                    /* Fix untuk Scale Transform agar tidak terpotong di editor */
+                    body { padding-bottom: 50px; } 
+                `; 
 
                 window.editor = grapesjs.init({
-                    container: '#gjs', height: '100%', storageManager: false, panels: { defaults: [] },
-                    allowScripts: 1, // PENTING UNTUK JS WIDGET
+                    container: '#gjs', 
+                    height: '100%', 
+                    storageManager: false, 
+                    panels: { defaults: [] },
+                    allowScripts: 1, 
                     assetManager: {
                         uploadText: 'Upload Gambar',
                         uploadFile: async (e) => {
@@ -407,10 +416,31 @@
                             } catch(err) { alert('Upload gagal'); }
                         }
                     },
+                    // 2. CONFIG CANVAS YANG DIPERBAIKI
                     canvas: {
-                        scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
-                        styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
-                        content: `<style>${bridgeCSS}</style>`
+                        scripts: [
+                            'https://cdn.tailwindcss.com', 
+                            'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'
+                        ],
+                        styles: [
+                            'https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'
+                        ],
+                        // INJECT FONT & TAILWIND CONFIG KE DALAM IFRAME EDITOR
+                        content: `
+                            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+                            <script>
+                                tailwind.config = {
+                                    darkMode: 'class',
+                                    theme: {
+                                        extend: {
+                                            fontFamily: { sans: ['Inter', 'sans-serif'] },
+                                            colors: { theme: { 50:'#eef2ff', 600:'#4f46e5' } }
+                                        }
+                                    }
+                                }
+                            </script>
+                            <style>${bridgeCSS}</style>
+                        `
                     },
                     plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-custom-code', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg'],
                     deviceManager: { devices: [{ id: 'desktop', width: '' }, { id: 'tablet', width: '768px' }, { id: 'mobile', width: '375px' }] },
