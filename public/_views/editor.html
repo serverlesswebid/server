@@ -256,7 +256,17 @@
                     body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; } 
                     .editable-carousel { min-height: 200px; background: #eee; }
                     body { padding-bottom: 50px; } 
-                `; 
+                    
+                    /* --- CSS FIX ACCORDION KHUSUS EDITOR --- */
+                    /* Paksa isi accordion terlihat DI EDITOR, meskipun statusnya closed */
+                    details > :not(summary) { 
+                        display: block !important; 
+                        opacity: 1 !important; 
+                        height: auto !important;
+                        padding-top: 10px; /* Biar ada jarak dikit saat ngedit */
+                        border-top: 1px dashed #e5e7eb; /* Penanda visual */
+                    }
+                `;
 
                 window.editor = grapesjs.init({
                     container: '#gjs', 
