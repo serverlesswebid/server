@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - Final Ultimate</title>
+    <title>LandingBuilder Pro - Fix Toolbar & Config</title>
     
     <script>
-        // Suppress Tailwind & Production Warnings
+        // Mematikan peringatan yang mengganggu di konsol
         (function() {
             const originalWarn = console.warn;
             console.warn = function(...args) {
@@ -42,19 +42,36 @@
         
         .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; }
         
+        /* Layout Fix agar Canvas dan Sidebar berdampingan rapi */
         #gjs { flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; position: relative; }
         
         .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; }
         
-        /* TOOLBAR GHOST MODE - Jarak 45px di atas objek agar tidak menghalangi */
+        /* TOOLBAR FIX: Jarak jauh (60px) agar tidak menutupi properti objek */
         .gjs-toolbar { 
-            background-color: #1f2937 !important; border-radius: 6px !important; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3) !important;
-            display: flex !important; gap: 4px !important; padding: 4px 8px !important;
-            position: absolute !important; top: -45px !important; left: 0 !important; transform: translateY(0) !important;
-            z-index: 9999 !important; border: 1px solid rgba(255,255,255,0.15) !important;
-            opacity: 1; transition: opacity 0.2s, visibility 0.2s;
+            background-color: #1f2937 !important; 
+            border-radius: 6px !important; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4) !important;
+            display: flex !important; 
+            gap: 4px !important; 
+            padding: 4px 8px !important;
+            position: absolute !important; 
+            top: -60px !important; /* Jarak lebih jauh ke atas */
+            left: 0 !important; 
+            transform: translateY(0) !important;
+            z-index: 9999 !important; 
+            border: 1px solid rgba(255,255,255,0.2) !important;
+            opacity: 1;
+            transition: opacity 0.2s, visibility 0.2s;
         }
-        .gjs-toolbar.ghost-mode { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; }
+
+        /* Class untuk menyembunyikan toolbar saat sedang mengetik teks */
+        .gjs-toolbar.ghost-mode { 
+            opacity: 0 !important; 
+            visibility: hidden !important; 
+            pointer-events: none !important; 
+        }
+
         .gjs-toolbar-item { color: white !important; width: 28px !important; height: 28px !important; display: flex !important; align-items: center; justify-content: center !important; cursor: pointer !important; }
         .gjs-toolbar-item:hover { background-color: #4f46e5 !important; }
 
@@ -63,7 +80,9 @@
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
         .gjs-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px; }
         
-        /* Custom Block Cards */
+        /* Sidebar Accordion & Cards */
+        details.group > summary { list-style: none; }
+        details.group > summary::-webkit-details-marker { display: none; }
         .block-card { cursor: pointer; background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: all 0.2s; user-select: none; }
         .block-card:hover { border-color: #6366f1; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15); transform: translateY(-2px); }
         .block-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #4b5563; text-align: center; line-height: 1.2; }
@@ -133,7 +152,7 @@
             <div class="flex-1 overflow-y-auto p-6 space-y-6">
                 <div x-show="settingsTab === 'commerce'" class="space-y-4">
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Judul Halaman</label><input x-model="page.title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500 transition"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">URL Slug</label><input x-model="page.slug" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">URL Slug</label><input x-model="page.slug" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500 transition"></div>
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tipe Produk</label><select x-model="page.product_type" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm"><option value="physical">Physical Product</option><option value="digital">Digital Product</option></select></div>
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Harga Dasar (Rp)</label><input type="number" x-model="page.config.price" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
                     <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
@@ -154,15 +173,15 @@
                         <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Favicon URL</label>
                         <div class="flex gap-2 mt-2"><input x-model="page.config.settings.favicon" class="flex-1 px-4 py-2 bg-white border rounded-lg text-xs outline-none" placeholder="https://..."><div class="w-10 h-10 bg-white border rounded flex items-center justify-center overflow-hidden shrink-0"><template x-if="page.config.settings.favicon"><img :src="page.config.settings.favicon" class="w-6 h-6 object-contain"></template></div></div>
                     </div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Social Share Image (OG)</label><input x-model="page.config.settings.og_image" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Social Image (OG)</label><input x-model="page.config.settings.og_image" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none" placeholder="https://..."></div>
                 </div>
 
                 <div x-show="settingsTab === 'advanced'" class="space-y-6">
                     <div class="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 space-y-4">
                         <h4 class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Pixels & Analytics</h4>
-                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">Facebook Pixel ID</label><input x-model="page.config.settings.fb_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none" placeholder="123456789"></div>
-                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">TikTok Pixel ID</label><input x-model="page.config.settings.tiktok_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none" placeholder="C12345"></div>
-                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">Google Analytics ID</label><input x-model="page.config.settings.ga_id" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none" placeholder="G-XXXXX"></div>
+                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">FB Pixel ID</label><input x-model="page.config.settings.fb_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none"></div>
+                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">TikTok Pixel ID</label><input x-model="page.config.settings.tiktok_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none"></div>
+                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">GA4 ID</label><input x-model="page.config.settings.ga_id" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none"></div>
                     </div>
                     <div class="space-y-4">
                         <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Header Script</label><textarea x-model="page.config.settings.scripts_header" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none" placeholder="<script>...</script>"></textarea></div>
@@ -173,7 +192,7 @@
 
             <div class="p-4 border-t bg-gray-50 flex justify-end gap-3">
                 <button @click="showSettings=false" class="px-5 py-2 text-xs font-bold text-gray-500">BATAL</button>
-                <button @click="savePage(); showSettings=false" class="px-8 py-2 bg-indigo-600 text-white text-xs font-black rounded-xl shadow-lg active:scale-95 transition-all">SIMPAN</button>
+                <button @click="savePage(); showSettings=false" class="px-8 py-2 bg-indigo-600 text-white text-xs font-black rounded-xl shadow-lg shadow-indigo-200 active:scale-95 transition-all">SIMPAN</button>
             </div>
         </div>
     </div>
@@ -187,7 +206,7 @@
 
     <div class="fixed bottom-5 left-5 z-[100000] flex flex-col gap-2 pointer-events-none">
         <template x-for="n in notifications" :key="n.id">
-            <div x-show="n.show" class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-l-4 bg-white min-w-[280px]" :class="n.type==='success'?'border-green-500':'border-red-500'">
+            <div x-show="n.show" x-transition class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-l-4 bg-white min-w-[280px]" :class="n.type==='success'?'border-green-500':'border-red-500'">
                 <i class="ph text-2xl" :class="n.type==='success'?'ph-check-circle text-green-500':'ph-warning-circle text-red-500'"></i>
                 <div><h4 class="text-xs font-bold text-gray-800 uppercase" x-text="n.title"></h4><p class="text-[10px] text-gray-500 font-medium" x-text="n.msg"></p></div>
             </div>
@@ -195,10 +214,9 @@
     </div>
 
     <script>
-    // DEKLARASI GLOBAL (PASTIKAN HANYA SEKALI DI FILE INI)
-    let globalWidgetCache = {};
+    // DEKLARASI GLOBAL - HANYA SEKALI
+    let appWidgetCache = {};
 
-    // --- ICON PICKER LOGIC ---
     (function(){
         let activeModel = null; const modal = document.getElementById('iconify-picker-modal'); const input = document.getElementById('iconify-picker-search'); const results = document.getElementById('iconify-picker-results');
         window.openIconifyPicker = function(model) { activeModel = model; modal.classList.remove('hidden'); input.value = ''; input.focus(); searchIcons('star'); };
@@ -234,8 +252,9 @@
                 setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); 
             },
 
+            // LOGIKA ADD WIDGET YANG BENAR
             addWidgetToCanvas(id) {
-                const widgetData = globalWidgetCache[id];
+                const widgetData = appWidgetCache[id];
                 if (widgetData) { 
                     try { window.editor.addComponents(widgetData.content); } catch(e) { console.error('Error adding widget', e); }
                 } else { this.notify('Error', 'Widget tidak ditemukan', 'error'); }
@@ -282,7 +301,7 @@
                 const bridgeCSS = `
                     body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; } 
                     .editable-carousel { min-height: 200px; background: #eee; }
-                    body { padding-bottom: 50px; } 
+                    body { padding-bottom: 100px; } 
                     /* Fix Accordion Editor */
                     details > :not(summary) { display: block !important; opacity: 1 !important; height: auto !important; padding-top: 10px; border-top: 1px dashed #e5e7eb; }
                 `; 
@@ -295,9 +314,9 @@
                     panels: { defaults: [] },
                     allowScripts: 1, 
                     
-                    // --- ASSET MANAGER (UPLOAD FORM) ---
+                    // ASSET MANAGER (FORM UPLOAD)
                     assetManager: {
-                        uploadText: 'Seret gambar ke sini atau klik untuk upload',
+                        uploadText: 'Klik atau seret gambar ke sini untuk upload',
                         uploadFile: async (e) => {
                             const file = e.dataTransfer ? e.dataTransfer.files[0] : e.target.files[0];
                             if(!file) return;
@@ -308,7 +327,7 @@
                                 const d = await res.json();
                                 if(d.data) {
                                     window.editor.AssetManager.add(d.data);
-                                    this.notify('Sukses', 'Gambar diupload!');
+                                    this.notify('Sukses', 'Gambar terupload!');
                                 }
                             } catch(err) { this.notify('Gagal', 'Upload gagal', 'error'); }
                         }
@@ -344,7 +363,7 @@
                                 buildProps: ['font-family', 'font-size', 'font-weight', 'letter-spacing', 'line-height', 'color', 'text-align', 'text-decoration', 'font-style', 'text-transform', 'text-shadow'],
                                 properties: [{ name: 'Font', property: 'font-family', defaults: 'Inter, sans-serif', list: [ { value: 'Inter, sans-serif', name: 'Inter' }, { value: 'Arial, Helvetica, sans-serif', name: 'Arial' }, { value: 'Times New Roman, serif', name: 'Times' } ] }]
                             }, 
-                            { name: 'Layout', open: 0, buildProps: ['width', 'height', 'max-width', 'min-height', 'padding', 'margin', 'display', 'flex-direction', 'justify-content', 'align-items', 'position', 'top', 'bottom', 'left', 'right', 'z-index'] },
+                            { name: 'Layout', open: 0, buildProps: ['width', 'height', 'padding', 'margin', 'display', 'flex-direction', 'justify-content', 'align-items', 'position', 'top', 'bottom', 'left', 'right', 'z-index'] },
                             { name: 'Background', open: 0, buildProps: ['background-color', 'background-image', 'background-repeat', 'background-size', 'background-position'] },
                             { name: 'Border', open: 0, buildProps: ['border', 'border-radius', 'box-shadow', 'opacity', 'cursor', 'overflow'] }
                         ] 
@@ -354,8 +373,9 @@
                 const domc = window.editor.DomComponents;
                 const tm = window.editor.Traits;
 
-                // --- SMART TOOLBAR LOGIC ---
+                // LOGIKA SMART TOOLBAR (ANTI MENGHALANGI)
                 window.editor.on('rte:enable', () => {
+                    // Sembunyikan toolbar komponen di level wrapper luar dan dalam iframe
                     document.querySelectorAll('.gjs-toolbar').forEach(t => t.classList.add('ghost-mode'));
                     const frameBody = window.editor.Canvas.getBody();
                     if(frameBody) {
@@ -372,12 +392,13 @@
                     if(style) style.remove();
                 });
 
-                // --- TRAIT TEXTAREA ---
+                // REGISTER TEXTAREA TRAIT
                 tm.addType('textarea', {
                     createInput({ trait }) {
                         const el = document.createElement('textarea');
                         el.className = 'w-full p-2 text-xs border border-gray-300 rounded bg-gray-50 text-gray-800 focus:outline-none focus:border-indigo-500 transition';
                         el.style.minHeight = '80px';
+                        el.placeholder = 'Edit teks disini...';
                         el.addEventListener('input', (e) => this.onChange(e));
                         return el;
                     },
@@ -387,16 +408,14 @@
                     },
                 });
 
-                // --- CUSTOM COMPONENTS ---
                 domc.addType('link', { model: { defaults: { traits: ['href', 'target'] } } });
                 domc.addType('iconify-icon', { 
                     model: { defaults: { tagName: 'iconify-icon', resizable: true, stylable: true, attributes: { icon: 'ph:star-fill', width: '24' }, traits: [{ type: 'button', text: 'Ganti Icon', command: (ed, t) => window.openIconifyPicker(t.target) }] } } 
                 });
 
-                // --- COMMANDS ---
                 window.editor.Commands.add('open-icon-picker', { run(ed) { window.openIconifyPicker(ed.getSelected()); } });
 
-                // --- WIDGET LOADER ---
+                // WIDGET LOADER - MENGISI appWidgetCache
                 fetch('/api/widgets').then(res => res.json()).then(widgets => {
                     const renderer = document.getElementById('blocks-custom-renderer');
                     renderer.innerHTML = ''; const groups = {};
@@ -411,7 +430,7 @@
                             } catch(e) {}
                         }
                         if (w.category !== 'System') {
-                            globalWidgetCache[w.id] = w; // Gunakan Global
+                            appWidgetCache[w.id] = w; // Masukkan ke cache global
                             if (!groups[w.category]) groups[w.category] = [];
                             groups[w.category].push(w);
                         }
@@ -432,18 +451,18 @@
                     });
                 });
 
-                // --- EDIT TEKS DI PANEL LOGIC ---
+                // PANEL EDIT TEKS LOGIC
                 window.editor.on('component:selected', (model) => {
                     const el = model.getEl();
                     if (el && el.innerText && el.childElementCount === 0) {
                         const currentTraits = model.get('traits').filter(t => t.name !== 'content_text');
-                        model.set('traits', [{ type: 'textarea', name: 'content_text', label: 'Edit Teks Disini', changeProp: 1 }, ...currentTraits]);
+                        model.set('traits', [{ type: 'textarea', name: 'content_text', label: 'Edit Teks Di Sini', changeProp: 1 }, ...currentTraits]);
                         model.set('content_text', model.get('content')); 
                         model.on('change:content_text', () => { model.components(model.get('content_text')); });
                     }
                 });
 
-                // --- TOOLBAR CONFIG (Jarak 45px di atas objek) ---
+                // CUSTOM TOOLBAR (Move, Copy, Delete, Paste Inside)
                 window.editor.on('component:selected', (c) => { 
                     c.set('toolbar', [
                         { attributes: { class: 'fa' }, command: 'tlb-move', label: '<i class="ph ph-arrows-out-cardinal text-lg"></i>' },
