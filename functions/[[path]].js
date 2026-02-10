@@ -462,16 +462,28 @@ app.delete('/api/admin/widgets/:id', async (c) => {
     }
 });
 
-// 4. MANUAL CLEAR CACHE (Tombol Reset)
+// 4. MANUAL CLEAR CACHE (MODE: SAPU BERSIH)
 app.delete('/api/admin/cache/widgets', async (c) => {
     try {
-        // Cek apakah binding WIDGET_CACHE ada
         if (!c.env.WIDGET_CACHE) {
-            return c.json({ success: false, message: "Binding 'WIDGET_CACHE' tidak ditemukan di Wrangler/Worker." }, 500);
+            return c.json({ success: false, message: "Binding 'WIDGET_CACHE' tidak ditemukan." }, 500);
         }
 
-        await c.env.WIDGET_CACHE.delete(WIDGET_CACHE_KEY);
-        return c.json({ success: true, message: "Cache WIDGET_CACHE Berhasil Dihapus!" });
+        // 1. Ambil daftar semua key yang ada di KV ini (termasuk sampah lama)
+        const list = await c.env.WIDGET_CACHE.list();
+        
+        // 2. Hapus satu per satu
+        const deletedKeys = [];
+        for (const key of list.keys) {
+            await c.env.WIDGET_CACHE.delete(key.name);
+            deletedKeys.push(key.name);
+        }
+
+        return c.json({ 
+            success: true, 
+            message: `Berhasil menghapus ${deletedKeys.length} cache item.`,
+            deleted_keys: deletedKeys 
+        });
     } catch (e) {
         return c.json({ success: false, error: e.message }, 500);
     }
