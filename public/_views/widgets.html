@@ -12,52 +12,30 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
         [x-cloak] { display: none !important; }
-        /* Code Editor Style */
         .code-input { font-family: 'Consolas', 'Monaco', monospace; font-size: 12px; background: #1e1e1e; color: #d4d4d4; line-height: 1.5; }
-        /* Preview Frame */
         iframe#previewFrame { background: white; width: 100%; height: 100%; border: none; }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-200" x-data="widgetApp()" x-init="init()" :class="darkMode ? 'dark' : ''">
 
     <div class="flex h-screen overflow-hidden" x-cloak>
-        
-        <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'" 
-               class="fixed inset-y-0 left-0 z-30 w-64 bg-white dark:bg-gray-800 border-r dark:border-gray-700 transition-transform duration-300 ease-in-out md:relative md:flex md:flex-col shadow-xl md:shadow-none">
-            <div class="h-16 flex items-center justify-center border-b dark:border-gray-700 shrink-0">
-                <span class="text-xl font-black text-blue-600 tracking-tighter">BlinkSite</span>
-            </div>
+        <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'" class="fixed inset-y-0 left-0 z-30 w-64 bg-white dark:bg-gray-800 border-r dark:border-gray-700 transition-transform duration-300 md:relative md:flex md:flex-col shadow-xl md:shadow-none">
+            <div class="h-16 flex items-center justify-center border-b dark:border-gray-700 shrink-0"><span class="text-xl font-black text-blue-600 tracking-tighter">BlinkSite</span></div>
             <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-                <a href="/admin/dashboard" class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group">
-                    <i class="ph ph-squares-four text-xl shrink-0"></i><span class="font-medium">Dashboard</span>
-                </a>
-                <a href="/admin/pages" class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group">
-                    <i class="ph ph-files text-xl shrink-0"></i><span class="font-medium">Halaman</span>
-                </a>
-                <a href="/admin/widgets" class="flex items-center gap-3 px-3 py-3 rounded-lg bg-blue-600 text-white shadow-md group">
-                    <i class="ph ph-puzzle-piece text-xl shrink-0"></i><span class="font-medium">Widget Library</span>
-                </a>
-                <a href="/admin/settings" class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group">
-                    <i class="ph ph-gear text-xl shrink-0"></i><span class="font-medium">Settings</span>
-                </a>
+                <a href="/admin/dashboard" class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"><i class="ph ph-squares-four text-xl"></i>Dashboard</a>
+                <a href="/admin/pages" class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"><i class="ph ph-files text-xl"></i>Halaman</a>
+                <a href="/admin/widgets" class="flex items-center gap-3 px-3 py-3 rounded-lg bg-blue-600 text-white shadow-md"><i class="ph ph-puzzle-piece text-xl"></i>Widget Library</a>
+                <a href="/admin/settings" class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"><i class="ph ph-gear text-xl"></i>Settings</a>
             </nav>
-            <div class="p-4 border-t dark:border-gray-700 shrink-0">
-                <button @click="logout()" class="flex items-center gap-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 w-full p-2 rounded-lg transition-colors group">
-                    <i class="ph ph-sign-out text-xl shrink-0"></i><span class="font-medium">Keluar</span>
-                </button>
-            </div>
         </aside>
 
-        <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
-            <header class="h-16 bg-white dark:bg-gray-800 border-b dark:border-gray-700 flex justify-between items-center px-4 shadow-sm z-20 shrink-0">
+        <div class="flex-1 flex flex-col min-w-0">
+            <header class="h-16 bg-white dark:bg-gray-800 border-b dark:border-gray-700 flex justify-between items-center px-4 shadow-sm z-20">
                 <div class="flex items-center gap-4">
-                    <button @click="sidebarOpen = !sidebarOpen" class="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"><i class="ph ph-list text-2xl dark:text-white"></i></button>
-                    <h1 class="font-bold text-lg truncate dark:text-white">Database Widget</h1>
+                    <button @click="sidebarOpen = !sidebarOpen" class="md:hidden p-2 rounded-lg hover:bg-gray-100"><i class="ph ph-list text-2xl dark:text-white"></i></button>
+                    <h1 class="font-bold text-lg truncate dark:text-white">Manajemen Widget (D1 + KV)</h1>
                 </div>
-                <button @click="toggleTheme()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 border dark:border-gray-600">
-                    <i x-show="!darkMode" class="ph ph-moon text-xl text-gray-600"></i>
-                    <i x-show="darkMode" class="ph ph-sun text-xl text-yellow-400"></i>
-                </button>
+                <button @click="toggleTheme()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 border dark:border-gray-600"><i class="ph" :class="darkMode ? 'ph-sun' : 'ph-moon'"></i></button>
             </header>
 
             <main class="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-50 dark:bg-gray-900">
@@ -67,18 +45,18 @@
                         <input type="text" x-model="search" placeholder="Cari widget..." class="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm dark:text-white shadow-sm">
                     </div>
                     <div class="flex gap-2">
-                        <button @click="seedDB()" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-lg text-sm hover:bg-gray-300 transition flex items-center gap-2">
-                            <i class="ph ph-arrows-clockwise"></i> Reset Default
+                        <button @click="injectDefaults()" class="px-4 py-2 bg-amber-100 text-amber-700 border border-amber-200 font-bold rounded-lg text-sm hover:bg-amber-200 transition flex items-center gap-2">
+                            <i class="ph ph-lightning-fill"></i> Inject Default (Frontend)
                         </button>
                         <button @click="openModal()" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg text-sm shadow-lg hover:bg-blue-700 transition flex items-center gap-2">
-                            <i class="ph ph-plus-bold"></i> Tambah Baru
+                            <i class="ph ph-plus-bold"></i> Tambah Manual
                         </button>
                     </div>
                 </div>
 
                 <div x-show="loading" class="text-center py-20">
                     <i class="ph ph-spinner animate-spin text-4xl text-blue-600"></i>
-                    <p class="text-gray-500 mt-2 text-sm">Sinkronisasi Database D1...</p>
+                    <p class="text-gray-500 mt-2 text-sm">Sinkronisasi Database...</p>
                 </div>
 
                 <div x-show="!loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -92,14 +70,14 @@
                                 </div>
                                 <div class="text-gray-300"><i class="ph ph-cube text-2xl"></i></div>
                             </div>
-                            <div class="p-4 flex-1">
-                                <div class="text-xs text-gray-500 dark:text-gray-400 line-clamp-3 font-mono bg-gray-100 dark:bg-gray-900 p-2 rounded border dark:border-gray-700" x-text="widget.content"></div>
+                            <div class="p-4 flex-1 relative group-hover:bg-gray-50 transition">
+                                <div class="text-xs text-gray-500 dark:text-gray-400 line-clamp-3 font-mono bg-gray-100 dark:bg-gray-900 p-2 rounded border dark:border-gray-700 select-none" x-text="widget.content"></div>
                                 <div class="mt-2 flex gap-2">
-                                    <span x-show="widget.script" class="text-[10px] flex items-center gap-1 text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded font-bold"><i class="ph ph-lightning"></i> JS Logic</span>
+                                    <span x-show="widget.script" class="text-[10px] flex items-center gap-1 text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded font-bold border border-yellow-200"><i class="ph ph-code"></i> Has Logic</span>
                                 </div>
                             </div>
-                            <div class="p-3 bg-gray-50 dark:bg-gray-800 border-t dark:border-gray-700 flex gap-2">
-                                <button @click="openModal(widget)" class="flex-1 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-xs font-bold text-gray-700 dark:text-gray-200 hover:text-blue-600 hover:border-blue-600 transition">EDIT & PREVIEW</button>
+                            <div class="p-3 bg-white dark:bg-gray-800 border-t dark:border-gray-700 flex gap-2">
+                                <button @click="openModal(widget)" class="flex-1 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-xs font-bold text-gray-700 dark:text-gray-200 hover:border-blue-500 hover:text-blue-600 transition">EDIT & PREVIEW</button>
                                 <button @click="deleteWidget(widget.id)" class="px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900 rounded text-xs font-bold text-red-600 hover:bg-red-100 transition"><i class="ph ph-trash"></i></button>
                             </div>
                         </div>
@@ -110,13 +88,12 @@
 
         <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" x-cloak>
             <div class="bg-white dark:bg-gray-800 w-full h-full md:h-[95vh] md:w-[95vw] md:rounded-2xl shadow-2xl flex flex-col overflow-hidden relative">
-                
                 <div class="p-4 border-b dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900 shrink-0">
                     <div class="flex items-center gap-4">
                         <h3 class="font-bold text-lg dark:text-white" x-text="isEdit ? 'Edit Widget' : 'Buat Widget Baru'"></h3>
                         <div class="flex gap-2">
                             <input x-model="form.id" :disabled="isEdit" class="px-3 py-1 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded text-sm font-mono focus:border-blue-500 outline-none" placeholder="Widget ID">
-                            <input x-model="form.label" class="px-3 py-1 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded text-sm focus:border-blue-500 outline-none" placeholder="Nama Label">
+                            <input x-model="form.label" class="px-3 py-1 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded text-sm focus:border-blue-500 outline-none" placeholder="Label">
                             <select x-model="form.category" class="px-3 py-1 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded text-sm focus:border-blue-500 outline-none">
                                 <option value="1. Header & Hero">1. Header & Hero</option>
                                 <option value="2. Features">2. Features</option>
@@ -129,55 +106,76 @@
                     </div>
                     <div class="flex gap-3">
                         <button @click="showModal = false" class="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded">Tutup</button>
-                        <button @click="saveWidget()" class="px-6 py-2 bg-blue-600 text-white text-sm font-bold rounded hover:bg-blue-700 transition flex items-center gap-2">
-                            <i class="ph ph-floppy-disk"></i> <span x-text="isSaving ? 'Menyimpan...' : 'SIMPAN'"></span>
-                        </button>
+                        <button @click="saveWidget()" class="px-6 py-2 bg-blue-600 text-white text-sm font-bold rounded hover:bg-blue-700 transition flex items-center gap-2"><i class="ph ph-floppy-disk"></i> <span x-text="isSaving ? 'Menyimpan...' : 'SIMPAN'"></span></button>
                     </div>
                 </div>
-                
                 <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
-                    
                     <div class="w-full md:w-1/2 flex flex-col border-r dark:border-gray-700 bg-[#1e1e1e]">
                         <div class="flex bg-[#252526] text-gray-400 text-xs font-bold border-b border-[#333]">
-                            <button @click="codeTab='html'" class="px-4 py-2 hover:bg-[#3e3e42] transition" :class="codeTab==='html' ? 'bg-[#1e1e1e] text-white border-t-2 border-blue-500' : ''">HTML (Structure)</button>
-                            <button @click="codeTab='js'" class="px-4 py-2 hover:bg-[#3e3e42] transition" :class="codeTab==='js' ? 'bg-[#1e1e1e] text-white border-t-2 border-yellow-500' : ''">Javascript (Action)</button>
+                            <button @click="codeTab='html'" class="px-4 py-2 hover:bg-[#3e3e42] transition" :class="codeTab==='html' ? 'bg-[#1e1e1e] text-white border-t-2 border-blue-500' : ''">HTML</button>
+                            <button @click="codeTab='js'" class="px-4 py-2 hover:bg-[#3e3e42] transition" :class="codeTab==='js' ? 'bg-[#1e1e1e] text-white border-t-2 border-yellow-500' : ''">Javascript Logic</button>
                         </div>
-
-                        <textarea x-show="codeTab==='html'" 
-                                  x-model="form.content" 
-                                  @input.debounce.500ms="renderPreview()"
-                                  class="flex-1 w-full p-4 code-input outline-none resize-none" 
-                                  spellcheck="false" 
-                                  placeholder=""></textarea>
-
+                        <textarea x-show="codeTab==='html'" x-model="form.content" @input.debounce.500ms="renderPreview()" class="flex-1 w-full p-4 code-input outline-none resize-none" spellcheck="false" placeholder=""></textarea>
                         <div x-show="codeTab==='js'" class="flex-1 flex flex-col">
-                            <div class="p-2 bg-yellow-900/20 text-yellow-200 text-[10px] border-b border-yellow-900/50 px-4">
-                                <i class="ph ph-warning"></i> Gunakan <code>this</code> untuk merujuk ke elemen. Script akan dieksekusi otomatis di preview.
-                            </div>
-                            <textarea x-model="form.script" 
-                                      @input.debounce.1000ms="renderPreview()"
-                                      class="flex-1 w-full p-4 code-input outline-none resize-none" 
-                                      spellcheck="false" 
-                                      placeholder="// Contoh: const btn = this.querySelector('button'); btn.onclick = ..."></textarea>
+                            <div class="p-2 bg-yellow-900/20 text-yellow-200 text-[10px] border-b border-yellow-900/50 px-4"><i class="ph ph-warning"></i> Gunakan <code>this</code> untuk merujuk ke elemen.</div>
+                            <textarea x-model="form.script" @input.debounce.1000ms="renderPreview()" class="flex-1 w-full p-4 code-input outline-none resize-none" spellcheck="false" placeholder="// const btn = this.querySelector('button');"></textarea>
                         </div>
                     </div>
-
                     <div class="w-full md:w-1/2 bg-gray-100 flex flex-col relative">
-                        <div class="bg-white border-b px-4 py-2 flex justify-between items-center text-xs font-bold text-gray-500 shadow-sm z-10">
-                            <span>LIVE PREVIEW (Tailwind Ready)</span>
-                            <span class="bg-green-100 text-green-600 px-2 py-0.5 rounded">CSS & JS Injected</span>
-                        </div>
-                        <div class="flex-1 relative overflow-hidden bg-[url('https://t3.ftcdn.net/jpg/05/11/95/62/360_F_511956272_K2j5x5z5x5z5x5z5x5z5x5z5x5z5x5z5.jpg')] bg-repeat opacity-100">
-                            <iframe id="previewFrame" class="w-full h-full absolute inset-0"></iframe>
-                        </div>
+                        <div class="bg-white border-b px-4 py-2 flex justify-between items-center text-xs font-bold text-gray-500 shadow-sm z-10"><span>LIVE PREVIEW</span><span class="bg-green-100 text-green-600 px-2 py-0.5 rounded">Tailwind Ready</span></div>
+                        <div class="flex-1 relative overflow-hidden bg-gray-200"><iframe id="previewFrame" class="w-full h-full absolute inset-0"></iframe></div>
                     </div>
                 </div>
             </div>
         </div>
-
     </div>
 
     <script>
+        // --- MASTER DATA WIDGET (FRONTEND SOURCE) ---
+        // Data ini akan dikirim ke API /api/admin/widgets satu per satu saat tombol "Inject" ditekan.
+        // Tidak ada hardcode di backend!
+        const MASTER_WIDGETS = [
+            {
+                id: 'hero-slider', label: 'Hero Slider (10x)', category: '1. Header & Hero',
+                content: `<div class="editable-carousel group relative w-full overflow-hidden bg-gray-900" style="aspect-ratio: 21/9; min-height: 320px;" data-gjs-type="editable-carousel"><div class="slides flex w-full h-full transition-transform duration-500 ease-in-out"><div class="slide min-w-full relative h-full" data-gjs-type="carousel-slide" img-src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80&sig=1" title-text="PROMO 1"><img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80&sig=1" class="w-full h-full object-cover block pointer-events-none" data-gjs-selectable="false"><div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white p-4 bg-black/30" data-gjs-selectable="false"><h2 class="text-3xl md:text-5xl font-black mb-4 drop-shadow-md">PROMO 1</h2><button class="btn btn-primary rounded-full px-8 shadow-lg">Lihat Detail</button></div></div><div class="slide min-w-full relative h-full" data-gjs-type="carousel-slide" img-src="https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1200&q=80&sig=2" title-text="PROMO 2"><img src="https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1200&q=80&sig=2" class="w-full h-full object-cover block pointer-events-none" data-gjs-selectable="false"><div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white p-4 bg-black/30" data-gjs-selectable="false"><h2 class="text-3xl md:text-5xl font-black mb-4 drop-shadow-md">PROMO 2</h2><button class="btn btn-primary rounded-full px-8 shadow-lg">Lihat Detail</button></div></div></div><div class="carousel-controls absolute inset-0 flex justify-between items-center px-4 pointer-events-none z-10" data-gjs-selectable="false"><button class="prev pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-10 h-10 rounded-full bg-black/30 text-white flex items-center justify-center hover:bg-black/60 cursor-pointer backdrop-blur-sm">❮</button><button class="next pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-10 h-10 rounded-full bg-black/30 text-white flex items-center justify-center hover:bg-black/60 cursor-pointer backdrop-blur-sm">❯</button></div></div>`,
+                script: `const el = this; const slidesContainer = el.querySelector(".slides"); const items = el.querySelectorAll(".slide"); if (!slidesContainer || items.length === 0) return; let idx = 0; const show = (n) => { idx = (n + items.length) % items.length; slidesContainer.style.transform = "translateX(-" + (idx * 100) + "%)"; }; const nextBtn = el.querySelector(".next"); if(nextBtn) nextBtn.onclick = (e) => { e.preventDefault(); show(idx + 1); }; const prevBtn = el.querySelector(".prev"); if(prevBtn) prevBtn.onclick = (e) => { e.preventDefault(); show(idx - 1); }; let interval = setInterval(() => show(idx + 1), 5000); el.onmouseenter = () => clearInterval(interval); el.onmouseleave = () => interval = setInterval(() => show(idx + 1), 5000);`
+            },
+            {
+                id: 'pricing-pro-3col', label: 'Pricing 3-Col', category: '4. Commerce',
+                content: `<section class="py-12 md:py-16 bg-gray-50"><div class="max-w-7xl mx-auto px-6"><div class="grid grid-cols-1 md:grid-cols-3 gap-8"><div class="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm hover:shadow-xl transition flex flex-col h-full"><div class="mb-6 text-center"><h3 class="text-indigo-600 font-bold text-xs mb-2 tracking-widest uppercase">BASIC</h3><span class="text-4xl font-black text-gray-900">Free</span></div><ul class="space-y-4 mb-8 flex-1 text-left text-sm"><li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-green-500 text-xl shrink-0"></iconify-icon><span class="text-gray-600 font-medium">Akses Dashboard Dasar</span></li><li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-green-500 text-xl shrink-0"></iconify-icon><span class="text-gray-600 font-medium">1 Project Aktif</span></li><li class="flex items-start gap-3 opacity-50"><iconify-icon icon="ph:x-circle-fill" class="text-gray-400 text-xl shrink-0"></iconify-icon><span class="text-gray-400 decoration-slate-400">Export Source Code</span></li></ul><a data-gjs-type="link" href="#" class="inline-block w-full py-3 border-2 border-indigo-100 text-indigo-600 font-bold rounded-xl text-sm text-center hover:bg-indigo-50 transition">DAFTAR GRATIS</a></div><div class="bg-indigo-600 p-8 rounded-3xl shadow-2xl text-white text-center md:scale-110 relative border-4 border-indigo-400 flex flex-col h-full z-10"><div class="absolute top-4 right-4 bg-yellow-400 text-indigo-900 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">POPULAR</div><div class="mb-6"><h3 class="text-indigo-200 font-bold text-xs mb-2 tracking-widest uppercase">PRO PLAN</h3><span class="text-5xl font-black">99k</span><span class="text-indigo-200 text-sm">/bln</span></div><ul class="space-y-4 mb-8 flex-1 text-left text-sm"><li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-yellow-400 text-xl shrink-0"></iconify-icon><span class="font-bold text-white">Semua Fitur Basic</span></li><li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-yellow-400 text-xl shrink-0"></iconify-icon><span class="font-bold text-white">Unlimited Projects</span></li><li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-yellow-400 text-xl shrink-0"></iconify-icon><span class="font-bold text-white">Export HTML/CSS</span></li></ul><a data-gjs-type="link" href="#" class="inline-block w-full py-4 bg-white text-indigo-700 font-black rounded-xl text-sm shadow-lg text-center hover:bg-gray-100 transition transform hover:-translate-y-1">AMBIL PROMO</a></div><div class="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm hover:shadow-xl transition flex flex-col h-full"><div class="mb-6 text-center"><h3 class="text-indigo-600 font-bold text-xs mb-2 tracking-widest uppercase">EXPERT</h3><span class="text-4xl font-black text-gray-900">299k</span><span class="text-gray-400 text-sm">/bln</span></div><ul class="space-y-4 mb-8 flex-1 text-left text-sm"><li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-green-500 text-xl shrink-0"></iconify-icon><span class="text-gray-600 font-medium">Semua Fitur Pro</span></li><li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-green-500 text-xl shrink-0"></iconify-icon><span class="text-gray-600 font-medium">Dedicated Server</span></li><li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-green-500 text-xl shrink-0"></iconify-icon><span class="text-gray-600 font-medium">Prioritas Support 24/7</span></li></ul><a data-gjs-type="link" href="#" class="inline-block w-full py-3 border-2 border-indigo-100 text-indigo-600 font-bold rounded-xl text-sm text-center hover:bg-indigo-50 transition">HUBUNGI SALES</a></div></div></div></section>`,
+                script: null
+            },
+            {
+                id: 'hero-simple', label: 'Hero Simple', category: '1. Header & Hero',
+                content: `<section class="py-12 md:py-20 bg-white"><div class="max-w-5xl mx-auto px-6 text-center"><span class="inline-block py-1 px-3 rounded-full bg-indigo-50 text-indigo-600 text-[10px] md:text-xs font-bold tracking-widest mb-4 uppercase">NEW ARRIVAL</span><h1 class="text-3xl md:text-6xl font-black text-gray-900 leading-tight mb-6 px-2">Judul Hero <span class="text-indigo-600">Menarik</span> Disini.</h1><p class="text-base md:text-lg text-gray-500 mb-8 max-w-2xl mx-auto px-4">Deskripsi produk yang fleksibel di semua layar.</p><div class="flex flex-col md:flex-row gap-4 justify-center px-6"><a data-gjs-type="link" href="#" class="inline-block w-full md:w-auto px-8 py-3 bg-indigo-600 text-white font-bold rounded-lg shadow-lg text-center">Mulai Sekarang</a><a data-gjs-type="link" href="#" class="inline-block w-full md:w-auto px-8 py-3 bg-white text-gray-700 font-bold border border-gray-200 rounded-lg text-center">Pelajari Lagi</a></div></div></section>`, script: null
+            },
+            {
+                id: 'countdown-smart', label: 'Countdown Pro', category: '3. Content',
+                content: `<div class="py-8 px-4 bg-gray-900 rounded-2xl text-center max-w-3xl mx-auto my-6" data-gjs-type="countdown-smart" data-expire="2026-12-31T23:59" data-msg="PROMO BERAKHIR"><div class="js-expired-msg hidden animate-fade-in"><h2 class="js-expired-text text-3xl md:text-4xl font-black text-red-500 tracking-widest uppercase animate-pulse">PROMO BERAKHIR</h2><p class="text-gray-400 mt-2 text-sm">Penawaran ini telah ditutup.</p></div><div class="js-countdown-display"><h3 class="text-white text-xs md:text-sm font-bold uppercase tracking-[0.3em] mb-6 text-indigo-400">Penawaran Berakhir Dalam:</h3><div class="flex flex-wrap justify-center gap-3 md:gap-6"><div class="bg-gray-800 border border-gray-700 rounded-xl p-3 w-20 md:w-28 shadow-2xl relative overflow-hidden group"><div class="absolute top-0 left-0 w-full h-1 bg-indigo-500 shadow-[0_0_10px_#6366f1]"></div><div class="countdown-number text-white text-2xl md:text-4xl font-black js-d">00</div><div class="countdown-label text-[9px] md:text-[10px] text-gray-400 font-bold uppercase mt-1 tracking-wider">HARI</div></div><div class="bg-gray-800 border border-gray-700 rounded-xl p-3 w-20 md:w-28 shadow-2xl relative overflow-hidden"><div class="absolute top-0 left-0 w-full h-1 bg-indigo-500 shadow-[0_0_10px_#6366f1]"></div><div class="countdown-number text-white text-2xl md:text-4xl font-black js-h">00</div><div class="countdown-label text-[9px] md:text-[10px] text-gray-400 font-bold uppercase mt-1 tracking-wider">JAM</div></div><div class="bg-gray-800 border border-gray-700 rounded-xl p-3 w-20 md:w-28 shadow-2xl relative overflow-hidden"><div class="absolute top-0 left-0 w-full h-1 bg-indigo-500 shadow-[0_0_10px_#6366f1]"></div><div class="countdown-number text-white text-2xl md:text-4xl font-black js-m">00</div><div class="countdown-label text-[9px] md:text-[10px] text-gray-400 font-bold uppercase mt-1 tracking-wider">MENIT</div></div><div class="bg-gray-800 border border-gray-700 rounded-xl p-3 w-20 md:w-28 shadow-2xl relative overflow-hidden"><div class="absolute top-0 left-0 w-full h-1 bg-red-500 shadow-[0_0_10px_#ef4444]"></div><div class="countdown-number text-red-500 text-2xl md:text-4xl font-black js-s">00</div><div class="countdown-label text-[9px] md:text-[10px] text-red-400 font-bold uppercase mt-1 tracking-wider">DETIK</div></div></div></div></div>`,
+                script: `const el = this; const display = el.querySelector(".js-countdown-display"); const expiredBox = el.querySelector(".js-expired-msg"); const expiredText = el.querySelector(".js-expired-text"); const expireStr = el.getAttribute("data-expire"); const msgStr = el.getAttribute("data-msg") || "PROMO BERAKHIR"; if(!expireStr) return; const update = () => { const now = new Date().getTime(); const distance = new Date(expireStr).getTime() - now; if (distance < 0) { if(display) display.style.display = "none"; if(expiredBox) { expiredBox.style.display = "block"; expiredBox.classList.remove("hidden"); if(expiredText) expiredText.innerText = msgStr; } return; } const d = Math.floor(distance / (1000 * 60 * 60 * 24)); const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)); const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)); const s = Math.floor((distance % (1000 * 60)) / 1000); const setTxt = (sel, val) => { const node = el.querySelector(sel); if(node) node.innerText = val < 10 ? "0"+val : val; }; setTxt(".js-d", d); setTxt(".js-h", h); setTxt(".js-m", m); setTxt(".js-s", s); requestAnimationFrame(update); }; update();`
+            },
+            {
+                id: 'contact-form', label: 'Contact Basic', category: '4. Commerce',
+                content: `<div x-data="{ state: 'idle' }" class="max-w-md mx-auto p-8 bg-white rounded-2xl shadow-xl border border-gray-100" style="min-height:480px"><div x-show="state === 'idle'"><h3 class="text-2xl font-bold text-gray-800 mb-2">Hubungi Kami</h3><p class="text-gray-500 mb-6 text-sm">Isi form di bawah, kami akan membalas secepatnya.</p><form @submit.prevent="state = 'loading'; const fd = new FormData($event.target); setTimeout(() => { state = 'success' }, 1500);" class="space-y-4"><input type="hidden" name="page_id" value="0"><div><label class="font-bold text-xs uppercase text-gray-500">Nama Lengkap</label><input type="text" name="name" required class="w-full p-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="John Doe" /></div><div><label class="font-bold text-xs uppercase text-gray-500">Email</label><input type="email" name="email" required class="w-full p-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="email@anda.com" /></div><div><label class="font-bold text-xs uppercase text-gray-500">Pesan</label><textarea name="message" required class="w-full p-3 h-40 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none resize-none" placeholder="Tulis pesan Anda..."></textarea></div><button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-lg transition transform hover:-translate-y-1">Kirim Pesan <i class="ph ph-paper-plane-right-fill ml-2"></i></button></form></div><div x-show="state === 'loading'" style="display: none;" class="py-20 text-center"><i class="ph ph-spinner animate-spin text-4xl text-indigo-600 mb-4"></i><p class="text-gray-500 font-bold">Mengirim pesan...</p></div><div x-show="state === 'success'" style="display: none;" class="py-10 text-center animate-fade-in"><div class="w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4"><i class="ph ph-check text-3xl font-bold"></i></div><h3 class="text-xl font-black text-gray-800 mb-2">Pesan Terkirim!</h3><p class="text-gray-500 text-sm mb-6">Terima kasih telah menghubungi kami.<br>Tim kami akan segera merespon.</p><button @click="state = 'idle'" class="text-indigo-600 font-bold text-xs hover:underline">Kirim pesan lagi</button></div></div>`, script: null
+            },
+            {
+                id: 'flash-news', label: 'News Flash', category: '3. Content',
+                content: `<div class="bg-gray-900 text-white py-2 overflow-hidden border-b border-gray-800"><div class="animate-marquee inline-block font-mono text-xs font-bold tracking-widest uppercase"><span class="mx-4">🔥 FLASH SALE: DISKON 50% HANYA HARI INI!</span> <span class="mx-4 text-yellow-400">GUNAKAN KODE: SERBU50</span> <span class="mx-4">🚀 GRATIS ONGKIR SELURUH INDONESIA</span></div></div>`, script: null
+            },
+            {
+                id: 'container-800', label: 'Container 800', category: 'Custom',
+                content: `<div class="mx-auto p-4 border-2 border-dashed border-gray-200 min-h-[100px] flex items-center justify-center text-gray-400" style="max-width: 800px; width: 100%;">Container 800px</div>`, script: null
+            },
+            {
+                id: 'container-1000', label: 'Container 1000', category: 'Custom',
+                content: `<div class="mx-auto p-4 border-2 border-dashed border-gray-200 min-h-[100px] flex items-center justify-center text-gray-400" style="max-width: 1000px; width: 100%;">Container 1000px</div>`, script: null
+            },
+            {
+                id: 'container-full', label: 'Container Full', category: 'Custom',
+                content: `<div class="w-full p-4 border-2 border-dashed border-gray-200 min-h-[100px] flex items-center justify-center text-gray-400">Container Full Width</div>`, script: null
+            }
+        ];
+
         function widgetApp() {
             return {
                 sidebarOpen: window.innerWidth > 768,
@@ -187,27 +185,21 @@
                 search: '',
                 showModal: false,
                 isEdit: false,
-                codeTab: 'html', // html | js
+                codeTab: 'html', 
                 widgets: [],
                 form: { id: '', label: '', category: 'Custom', content: '', script: '', attributes: {} },
 
-                // --- BRIDGE CSS (SAMA PERSIS DENGAN EDITOR & PUBLIC) ---
-                // Ini yang membuat marquee, carousel, dll bergerak!
+                // --- BRIDGE CSS UNTUK PREVIEW ---
                 bridgeCSS: `
                     body { font-family: 'Inter', sans-serif; padding: 20px; overflow-x: hidden; }
-                    /* Marquee News Flash */
                     .animate-marquee { display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite; }
                     @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-                    
-                    /* Carousel / Slider */
                     .editable-carousel { position: relative; width: 100%; overflow: hidden; aspect-ratio: 21/9; min-height: 200px; background: #eee; }
                     .editable-carousel .slides { display: flex; width: 100%; height: 100%; transition: transform 0.5s ease-in-out; }
                     .editable-carousel .slide { min-width: 100%; flex: 0 0 100%; position: relative; height: 100%; }
                     .editable-carousel .slide img { width: 100%; height: 100%; object-fit: cover; }
                     .editable-carousel .carousel-controls { position: absolute; inset: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 1rem; pointer-events: none; }
                     .editable-carousel .carousel-controls button { pointer-events: auto; background: rgba(0,0,0,0.5); color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border:none; }
-                    
-                    /* Countdown */
                     .countdown-number { font-weight: 900; }
                 `,
 
@@ -216,7 +208,6 @@
                     if (this.darkMode) document.documentElement.classList.add('dark');
                     await this.fetchWidgets();
                     
-                    // Watcher untuk Render Preview saat modal dibuka
                     this.$watch('showModal', (val) => {
                         if (val) setTimeout(() => this.renderPreview(), 100); 
                     });
@@ -237,7 +228,43 @@
                     this.loading = false;
                 },
 
-                // --- CORE: PREVIEW ENGINE (CSS & JS INJECTION) ---
+                // --- FUNGSI INJECT DARI FRONTEND (Tanpa Manual SQL) ---
+                async injectDefaults() {
+                    const r = await Swal.fire({
+                        title: 'Inject Default Widgets?',
+                        text: `Akan memasukkan ${MASTER_WIDGETS.length} widget ke database via API.`,
+                        icon: 'info',
+                        showCancelButton: true,
+                        confirmButtonText: 'Ya, Inject Sekarang!',
+                        confirmButtonColor: '#d97706'
+                    });
+
+                    if (r.isConfirmed) {
+                        Swal.fire({ title: 'Memproses...', didOpen: () => Swal.showLoading() });
+                        
+                        try {
+                            const token = localStorage.getItem('auth_token');
+                            let successCount = 0;
+
+                            // Loop kirim data satu per satu
+                            for (const w of MASTER_WIDGETS) {
+                                await fetch('/api/admin/widgets', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                                    body: JSON.stringify(w)
+                                });
+                                successCount++;
+                            }
+
+                            await this.fetchWidgets();
+                            Swal.fire('Selesai', `${successCount} Widget berhasil di-inject!`, 'success');
+                        } catch (e) {
+                            Swal.fire('Gagal', 'Terjadi kesalahan saat inject', 'error');
+                        }
+                    }
+                },
+
+                // --- RENDER PREVIEW (Isolated Iframe) ---
                 renderPreview() {
                     const frame = document.getElementById('previewFrame');
                     if (!frame) return;
@@ -245,20 +272,16 @@
                     const doc = frame.contentWindow.document;
                     const htmlCode = this.form.content || '<div class="flex items-center justify-center h-full text-gray-400">Mulai ketik HTML...</div>';
                     
-                    // Script Execution Logic (Sandbox sederhana)
+                    // Script Execution Logic (Sandbox)
                     let scriptInjection = '';
                     if (this.form.script && this.form.script.trim() !== '') {
                         scriptInjection = `
                         <script>
                             document.addEventListener("DOMContentLoaded", function() {
                                 try {
-                                    // Ambil elemen root pertama dari body (asumsi widget dibungkus 1 container)
                                     const el = document.body.firstElementChild;
                                     if(el) {
-                                        // Jalankan script user dengan 'this' mengarah ke elemen tersebut
-                                        (function() { 
-                                            ${this.form.script} 
-                                        }).call(el);
+                                        (function() { ${this.form.script} }).call(el);
                                     }
                                 } catch(e) { console.error("Widget Script Error:", e); }
                             });
@@ -270,11 +293,8 @@
                         <html>
                         <head>
                             <meta charset="UTF-8">
-                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
                             <script src="https://cdn.tailwindcss.com"><\/script>
-                            <script>
-                                tailwind.config = { theme: { extend: { colors: { theme: { 50:'#eef2ff', 600:'#4f46e5' } }, fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
-                            <\/script>
+                            <script>tailwind.config = { theme: { extend: { colors: { theme: { 50:'#eef2ff', 600:'#4f46e5' } }, fontFamily: { sans: ['Inter', 'sans-serif'] } } } }<\/script>
                             <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"><\/script>
                             <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
                             <style>${this.bridgeCSS}</style>
@@ -331,15 +351,6 @@
                             await fetch(`/api/admin/widgets/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
                             await this.fetchWidgets();
                         } catch (e) { Swal.fire('Error', 'Gagal menghapus', 'error'); }
-                    }
-                },
-
-                async seedDB() {
-                    const r = await Swal.fire({ title: 'Reset Default?', text: "Database akan diisi ulang dengan widget bawaan.", icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya, Reset!' });
-                    if (r.isConfirmed) {
-                        const token = localStorage.getItem('auth_token');
-                        await fetch('/api/admin/widgets/seed', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
-                        await this.fetchWidgets();
                     }
                 },
 
