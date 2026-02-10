@@ -2,987 +2,441 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - Fix</title>
-    
-    <script>
-        (function() {
-            const originalWarn = console.warn;
-            console.warn = function(...args) {
-                if (args[0] && typeof args[0] === 'string' && (args[0].includes('cdn.tailwindcss.com') || args[0].includes('production'))) return;
-                originalWarn.apply(console, args);
-            };
-        })();
-    </script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Widget Library - BlinkSite Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    
-    <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.2/dist/css/grapes.min.css">
-    <script src="https://unpkg.com/grapesjs@0.21.2/dist/grapes.min.js"></script>
-    <script src="https://unpkg.com/grapesjs-blocks-basic@1.0.1"></script>
-    <script src="https://unpkg.com/grapesjs-plugin-forms@2.0.5"></script> 
-    <script src="https://unpkg.com/grapesjs-navbar@1.0.1"></script>
-    <script src="https://unpkg.com/grapesjs-tabs@1.0.6"></script>
-    <script src="https://unpkg.com/grapesjs-custom-code@1.0.1"></script>
-    <script src="https://unpkg.com/grapesjs-tooltip@0.1.7"></script>
-    <script src="https://unpkg.com/grapesjs-blocks-flexbox@0.1.1"></script>
-    <script src="https://unpkg.com/grapesjs-plugin-export@1.0.11"></script>
-    <script src="https://unpkg.com/grapesjs-typed@1.0.5"></script>
-    <script src="https://unpkg.com/grapesjs-style-bg@2.0.1"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: #fff; }
+        body { font-family: 'Inter', sans-serif; }
         [x-cloak] { display: none !important; }
-
-        header {
-            height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100;
-            background: white; border-bottom: 1px solid #e2e8f0;
-            display: flex; align-items: center; justify-content: space-between; padding: 0 16px;
-        }
-
-        .mobile-tools {
-            display: none; height: 50px; width: 100%; position: fixed; top: 60px; left: 0; z-index: 90;
-            background: #f8fafc; border-bottom: 1px solid #e2e8f0;
-            align-items: center; justify-content: center; gap: 15px;
-        }
-
-        .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; }
-        #gjs { position: relative !important; flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; }
-
-        .sidebar-panel {
-            position: relative; width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0;
-            z-index: 50; display: flex; flex-direction: column; flex-shrink: 0;
-        }
-
-        @media (max-width: 768px) {
-            .mobile-tools { display: flex; }
-            .workspace { top: 110px; } 
-            #gjs { right: 0 !important; bottom: 60px !important; }
-            .sidebar-panel {
-                position: fixed; right: 0; top: 110px; bottom: 60px; width: 100% !important;
-                z-index: 9999 !important; transform: translateX(100%);
-                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-            .sidebar-panel.open { transform: translateX(0); }
-            .mobile-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 150; top: 110px; bottom: 60px; display: none; }
-            .mobile-overlay.show { display: block; }
-        }
-
-        /* HIDE GRAPESJS DEFAULT PANELS */
-        .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; width: 0 !important; }
-        .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
-
-        /* ULTRA COMPACT WIDGET BUTTONS (3 KOLOM) */
-        .gjs-blocks-c { 
-            display: grid !important; 
-            grid-template-columns: repeat(3, 1fr) !important; 
-            gap: 4px !important; 
-            padding: 6px !important; 
-        }
-        .gjs-block { 
-            width: 100% !important; 
-            min-height: 45px !important; /* Sangat Pendek */
-            padding: 4px !important; 
-            background: #fff; 
-            border: 1px solid #e5e7eb; 
-            border-radius: 6px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            gap: 2px; 
-            cursor: pointer; 
-            transition: 0.2s;
-        }
-        .gjs-block-label { font-size: 7px !important; font-weight: 800; text-transform: uppercase; color: #4b5563; text-align: center; }
-        .gjs-block i, .gjs-block iconify-icon { font-size: 14px !important; color: #6366f1; }
-
-        .custom-scroll { overflow-y: auto; height: 100%; -webkit-overflow-scrolling: touch; }
-        .gjs-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px; }
-
-        /* Toolbar Vertikal - FIX SECTION (Posisi di DALAM Kanan Atas) */
-        .gjs-toolbar { background-color: #1f2937 !important; border-radius: 6px !important; border: 1px solid #ffffff33 !important; box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important; display: flex !important; flex-direction: column !important; gap: 5px !important; padding: 6px 0 !important; position: absolute !important; top: 10px !important; left: auto !important; right: 10px !important; width: 36px !important; height: auto !important; z-index: 99999 !important; transform: none !important; }
-        .gjs-toolbar-item { color: white !important; width: 100% !important; height: 26px !important; display: flex !important; align-items: center; justify-content: center !important; cursor: pointer !important; transition: 0.2s !important; }
-        .gjs-toolbar-item:hover { color: #818cf8 !important; transform: scale(1.1); background: rgba(255,255,255,0.1); }
-        /* Paksa Color Picker GrapesJS muncul di lapisan paling depan */
-        /* 1. Kotak warna di panel Styles (biar tetap kotak mungil, tidak memanjang) */
-    .gjs-field-color-picker {
-        width: 25px !important;
-        height: 25px !important;
-        flex-shrink: 0 !important; /* Kunci biar tidak gepeng/panjang */
-        border: 1px solid #ccc !important;
-        border-radius: 4px !important;
-        cursor: pointer !important;
-        display: inline-block !important;
-    }
-    
-    /* 2. Container input warna */
-    .gjs-field-color {
-        display: flex !important;
-        align-items: center !important;
-        gap: 8px !important;
-        overflow: visible !important; /* WAJIB: biar popup tidak terpotong container sidebar */
-    }
-    
-    /* 3. POPUP PALET WARNA (Spectrum) - Geser ke kiri */
-    .sp-container {
-        z-index: 999999 !important; /* Jauh di atas sidebar 9999 */
-        position: fixed !important; /* Biar posisinya konsisten di layar HP */
-        /* Geser ke kiri sebesar 230px (lebar standar palet) agar tidak tertutup sidebar */
-        transform: translateX(-235px) !important; 
-        background: #ffffff !important;
-        border: 1px solid #ddd !important;
-        box-shadow: -5px 5px 20px rgba(0,0,0,0.3) !important;
-        padding: 8px !important;
-    }
-    
-    /* 4. Memastikan input teks kode warna rapi */
-    .gjs-field-color-input {
-        flex-grow: 1 !important;
-        height: 28px !important;
-    }
+        .code-input { font-family: 'Consolas', 'Monaco', monospace; font-size: 12px; background: #1e1e1e; color: #d4d4d4; line-height: 1.5; }
+        iframe#previewFrame { background: white; width: 100%; height: 100%; border: none; }
     </style>
-    </head>
-    <body x-data="editorApp()">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-200" x-data="widgetApp()" x-init="init()" :class="darkMode ? 'dark' : ''">
 
-    <header>
-        <div class="flex items-center gap-3 overflow-hidden w-full max-w-[250px]">
-            <a href="/admin/pages" class="text-gray-400 hover:text-indigo-600 transition p-1.5 rounded shrink-0"><i class="ph ph-arrow-left text-xl"></i></a>
-            <div class="flex-1 min-w-0">
-                <input x-model="page.title" class="bg-transparent font-bold text-xs text-gray-800 outline-none w-full truncate" placeholder="Nama Halaman">
-                <div class="flex items-center gap-1">
-                    <span class="text-[8px] font-black text-gray-300 uppercase shrink-0">Slug:</span>
-                    <input x-model="page.slug" class="bg-transparent font-mono text-[9px] text-gray-400 outline-none w-full truncate">
-                </div>
-            </div>
-        </div>
-
-        <div class="hidden md:flex absolute left-1/2 transform -translate-x-1/2 items-center bg-gray-100 rounded-lg p-1 border shadow-sm">
-            <button @click="setDevice('desktop')" :class="device=='desktop'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-desktop text-lg"></i></button>
-            <button @click="setDevice('tablet')" :class="device=='tablet'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-tablet text-lg"></i></button>
-            <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile text-lg"></i></button>
-        </div>
-
-        <div class="flex items-center gap-2">
-            <button @click="showSettings=true" class="bg-white text-gray-600 px-3 py-2 rounded-lg text-xs font-bold border border-gray-200 hover:bg-gray-50 transition">Config</button>
-            <button @click="savePage" :disabled="loading" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-lg">
-                <span x-text="loading ? 'SAVING...' : 'PUBLISH'"></span>
-            </button>
-            <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden p-2 rounded-lg border border-gray-200" :class="mobileMenuOpen ? 'bg-indigo-50 text-indigo-600' : 'bg-white'">
-                <i class="ph" :class="mobileMenuOpen ? 'ph-x' : 'ph-list'" style="font-size: 24px;"></i>
-            </button>
-        </div>
-    </header>
-
-    <div class="mobile-tools">
-        <button @click="setDevice('desktop')" :class="device=='desktop'?'text-indigo-600 bg-white shadow-sm':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-desktop text-lg"></i></button>
-        <button @click="setDevice('tablet')" :class="device=='tablet'?'text-indigo-600 bg-white shadow-sm':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-tablet text-lg"></i></button>
-        <button @click="setDevice('mobile')" :class="device=='mobile'?'text-indigo-600 bg-white shadow-sm':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile text-lg"></i></button>
-        <div class="w-px h-4 bg-gray-300"></div>
-        <button @click="cmd('core:undo')" class="text-gray-500"><i class="ph ph-arrow-u-up-left text-lg"></i></button>
-        <button @click="cmd('core:redo')" class="text-gray-500"><i class="ph ph-arrow-u-up-right text-lg"></i></button>
-    </div>
-
-    <div class="workspace">
-        <div id="gjs"></div>
-        <div class="mobile-overlay md:hidden" :class="mobileMenuOpen ? 'show' : ''" @click="mobileMenuOpen = false"></div>
-        <div class="sidebar-panel" :class="mobileMenuOpen ? 'open' : ''">
-            <div class="flex border-b border-gray-200 bg-white shrink-0">
-                <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-squares-four text-xl"></i></button>
-                <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-paint-brush text-xl"></i></button>
-                <button @click="tab='traits'" :class="tab=='traits'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-sliders text-xl"></i></button>
-                <button @click="tab='layers'" :class="tab=='layers'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-stack text-xl"></i></button>
-            </div>
-            <div class="flex-1 bg-white custom-scroll relative w-full">
-                <div x-show="tab=='blocks'" class="h-full pb-20"><div id="blocks-container" class="p-2"></div></div>
-                <div x-show="tab=='styles'" class="h-full pb-20">
-                    <div id="selectors-container" class="p-3 bg-gray-50 border-b"></div>
-                    <div id="styles-container" class="p-1"></div>
-                </div>
-                <div x-show="tab=='traits'" class="h-full pb-20"><div id="traits-container" class="p-4"></div></div>
-                <div x-show="tab=='layers'" class="h-full pb-20"><div id="layers-container"></div></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="md:hidden fixed bottom-0 left-0 w-full h-[60px] bg-white border-t border-gray-200 flex items-center justify-around z-[300] px-2 shadow-lg">
-        <button @click="cmd('core:preview')" class="flex flex-col items-center justify-center w-16 text-gray-500"><i class="ph ph-eye text-2xl"></i><span class="text-[9px] font-bold">View</span></button>
-        <button @click="showSettings=true" class="flex flex-col items-center justify-center w-16 text-gray-500"><i class="ph ph-gear-six text-2xl"></i><span class="text-[9px] font-bold">Config</span></button>
-        <button @click="savePage" :disabled="loading" class="bg-indigo-600 text-white px-6 py-2 rounded-full shadow-lg text-xs font-bold uppercase">Publish</button>
-    </div>
-
-    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[400] bg-slate-900/50 backdrop-blur-sm flex justify-end" @click.self="showSettings = false">
-    <div class="w-full md:w-[480px] h-full bg-white shadow-2xl flex flex-col border-l border-gray-200">
+    <div class="flex h-screen overflow-hidden" x-cloak>
         
-        <div class="p-5 border-b flex justify-between items-center bg-gray-50">
-            <h2 class="font-bold text-gray-800 flex items-center gap-2"><i class="ph ph-faders text-indigo-600 text-xl"></i> Page Settings</h2>
-            <button @click="showSettings = false" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button>
-        </div>
-
-        <div class="flex border-b text-[11px] font-black uppercase bg-white">
-            <button @click="settingsTab='commerce'" :class="settingsTab==='commerce'?'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 py-4">Commerce</button>
-            <button @click="settingsTab='seo'" :class="settingsTab==='seo'?'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 py-4">SEO</button>
-            <button @click="settingsTab='advanced'" :class="settingsTab==='advanced'?'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 py-4">Scripts & Pixel</button>
-        </div>
-
-        <div class="flex-1 overflow-y-auto p-6 space-y-6">
-            <div x-show="settingsTab === 'commerce'" class="space-y-4">
-                <div>
-                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Nama Halaman</label>
-                    <input x-model="page.title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500 transition" placeholder="Judul Halaman">
-                </div>
-                <div>
-                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">URL Slug</label>
-                    <input x-model="page.slug" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500 transition">
-                </div>
-                <div>
-                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tipe Produk</label>
-                    <select x-model="page.product_type" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm">
-                        <option value="physical">Physical Product</option>
-                        <option value="digital">Digital Product</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Base Price (Rp)</label>
-                    <input type="number" x-model="page.config.price" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none">
-                </div>
+        <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'" 
+               class="fixed inset-y-0 left-0 z-30 w-64 bg-white dark:bg-gray-800 border-r dark:border-gray-700 transition-transform duration-300 ease-in-out md:relative md:flex md:flex-col shadow-xl md:shadow-none">
+            <div class="h-16 flex items-center justify-center border-b dark:border-gray-700 shrink-0">
+                <span class="text-xl font-black text-blue-600 tracking-tighter">BlinkSite</span>
             </div>
+            <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+                <a href="/admin/dashboard" class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group">
+                    <i class="ph ph-squares-four text-xl shrink-0"></i><span class="font-medium">Dashboard</span>
+                </a>
+                <a href="/admin/pages" class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group">
+                    <i class="ph ph-files text-xl shrink-0"></i><span class="font-medium">Halaman</span>
+                </a>
+                <a href="/admin/widgets" class="flex items-center gap-3 px-3 py-3 rounded-lg bg-blue-600 text-white shadow-md group">
+                    <i class="ph ph-puzzle-piece text-xl shrink-0"></i><span class="font-medium">Widget Library</span>
+                </a>
+                <a href="/admin/settings" class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group">
+                    <i class="ph ph-gear text-xl shrink-0"></i><span class="font-medium">Settings</span>
+                </a>
+            </nav>
+            <div class="p-4 border-t dark:border-gray-700 shrink-0">
+                <button @click="logout()" class="flex items-center gap-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 w-full p-2 rounded-lg transition-colors group">
+                    <i class="ph ph-sign-out text-xl shrink-0"></i><span class="font-medium">Keluar</span>
+                </button>
+            </div>
+        </aside>
 
-            <div x-show="settingsTab === 'seo'" class="space-y-4">
-                <div>
-                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Meta Description</label>
-                    <textarea x-model="page.meta.description" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm h-24 outline-none resize-none" placeholder="Deskripsi pencarian Google..."></textarea>
+        <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+            <header class="h-16 bg-white dark:bg-gray-800 border-b dark:border-gray-700 flex justify-between items-center px-4 shadow-sm z-20 shrink-0">
+                <div class="flex items-center gap-4">
+                    <button @click="sidebarOpen = !sidebarOpen" class="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"><i class="ph ph-list text-2xl dark:text-white"></i></button>
+                    <h1 class="font-bold text-lg truncate dark:text-white">Manajemen Widget (Database)</h1>
                 </div>
+                <button @click="toggleTheme()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 border dark:border-gray-600">
+                    <i x-show="!darkMode" class="ph ph-moon text-xl text-gray-600"></i>
+                    <i x-show="darkMode" class="ph ph-sun text-xl text-yellow-400"></i>
+                </button>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-50 dark:bg-gray-900">
                 
-                <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Favicon URL</label>
-                    <div class="flex gap-2 mt-2">
-                        <input x-model="page.meta.favicon" class="flex-1 px-4 py-2 bg-white border rounded-lg text-xs outline-none focus:border-indigo-500 transition" placeholder="https://...">
-                        <div class="w-10 h-10 bg-white border rounded flex items-center justify-center overflow-hidden shrink-0">
-                            <template x-if="page.meta.favicon"><img :src="page.meta.favicon" class="w-6 h-6 object-contain"></template>
+                <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                    <div class="relative w-full md:w-96">
+                        <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" x-model="search" placeholder="Cari widget..." class="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm dark:text-white shadow-sm">
+                    </div>
+                    <div class="flex gap-2">
+                        <button @click="injectDefaults()" class="px-4 py-2 bg-amber-100 text-amber-700 border border-amber-200 font-bold rounded-lg text-sm hover:bg-amber-200 transition flex items-center gap-2">
+                            <i class="ph ph-lightning-fill"></i> Inject Default (Fix)
+                        </button>
+                        <button @click="openModal()" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg text-sm shadow-lg hover:bg-blue-700 transition flex items-center gap-2">
+                            <i class="ph ph-plus-bold"></i> Tambah Manual
+                        </button>
+                    </div>
+                </div>
+
+                <div x-show="loading" class="text-center py-20">
+                    <i class="ph ph-spinner animate-spin text-4xl text-blue-600"></i>
+                    <p class="text-gray-500 mt-2 text-sm">Sinkronisasi Database...</p>
+                </div>
+
+                <div x-show="!loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <template x-for="widget in filteredWidgets" :key="widget.id">
+                        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition flex flex-col overflow-hidden group">
+                            <div class="p-4 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex justify-between items-start">
+                                <div>
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-100" x-text="widget.category"></span>
+                                    <h3 class="font-bold text-gray-800 dark:text-white mt-2" x-text="widget.label"></h3>
+                                    <p class="text-xs font-mono text-gray-400 mt-1" x-text="widget.id"></p>
+                                </div>
+                                <div class="text-gray-300"><i class="ph ph-cube text-2xl"></i></div>
+                            </div>
+                            <div class="p-4 flex-1">
+                                <div class="text-xs text-gray-500 dark:text-gray-400 line-clamp-3 font-mono bg-gray-100 dark:bg-gray-900 p-2 rounded border dark:border-gray-700 select-none" x-text="widget.content"></div>
+                                <div class="mt-2 flex gap-2">
+                                    <span x-show="widget.script" class="text-[10px] flex items-center gap-1 text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded font-bold border border-yellow-200"><i class="ph ph-code"></i> Has Logic</span>
+                                </div>
+                            </div>
+                            <div class="p-3 bg-white dark:bg-gray-800 border-t dark:border-gray-700 flex gap-2">
+                                <button @click="openModal(widget)" class="flex-1 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-xs font-bold text-gray-700 dark:text-gray-200 hover:border-blue-500 hover:text-blue-600 transition">EDIT & PREVIEW</button>
+                                <button @click="deleteWidget(widget.id)" class="px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900 rounded text-xs font-bold text-red-600 hover:bg-red-100 transition"><i class="ph ph-trash"></i></button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </main>
+        </div>
+
+        <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" x-cloak>
+            <div class="bg-white dark:bg-gray-800 w-full h-full md:h-[95vh] md:w-[95vw] md:rounded-2xl shadow-2xl flex flex-col overflow-hidden relative">
+                <div class="p-4 border-b dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900 shrink-0">
+                    <div class="flex items-center gap-4">
+                        <h3 class="font-bold text-lg dark:text-white" x-text="isEdit ? 'Edit Widget' : 'Buat Widget Baru'"></h3>
+                        <div class="flex gap-2">
+                            <input x-model="form.id" :disabled="isEdit" class="px-3 py-1 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded text-sm font-mono focus:border-blue-500 outline-none" placeholder="Widget ID">
+                            <input x-model="form.label" class="px-3 py-1 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded text-sm focus:border-blue-500 outline-none" placeholder="Label">
+                            <select x-model="form.category" class="px-3 py-1 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded text-sm focus:border-blue-500 outline-none">
+                                <option value="1. Header & Hero">1. Header & Hero</option>
+                                <option value="2. Features">2. Features</option>
+                                <option value="3. Content">3. Content</option>
+                                <option value="4. Commerce">4. Commerce</option>
+                                <option value="5. Footer">5. Footer</option>
+                                <option value="Custom">Custom</option>
+                            </select>
                         </div>
                     </div>
-                </div>
-
-                <div>
-                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Social Share Image (OG URL)</label>
-                    <input x-model="page.meta.og_image" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500" placeholder="https://...">
-                </div>
-            </div>
-
-            <div x-show="settingsTab === 'advanced'" class="space-y-6">
-                <div class="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 space-y-4">
-                    <h4 class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Tracking Analytics</h4>
-                    <div>
-                        <label class="text-[9px] font-bold text-indigo-400 uppercase">Facebook Pixel ID</label>
-                        <input x-model="page.analytics.fb_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none" placeholder="Contoh: 123456789">
-                    </div>
-                    <div>
-                        <label class="text-[9px] font-bold text-indigo-400 uppercase">TikTok Pixel ID</label>
-                        <input x-model="page.analytics.tiktok_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none" placeholder="Contoh: C123456">
-                    </div>
-                    <div>
-                        <label class="text-[9px] font-bold text-indigo-400 uppercase">Google Analytics ID</label>
-                        <input x-model="page.analytics.ga_id" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none" placeholder="G-XXXXXXXX">
+                    <div class="flex gap-3">
+                        <button @click="showModal = false" class="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded">Tutup</button>
+                        <button @click="saveWidget()" class="px-6 py-2 bg-blue-600 text-white text-sm font-bold rounded hover:bg-blue-700 transition flex items-center gap-2"><i class="ph ph-floppy-disk"></i> <span x-text="isSaving ? 'Menyimpan...' : 'SIMPAN'"></span></button>
                     </div>
                 </div>
-
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Custom Header Script</label>
-                        <textarea x-model="page.scripts.header" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none" placeholder="<script>...</script>"></textarea>
+                <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
+                    <div class="w-full md:w-1/2 flex flex-col border-r dark:border-gray-700 bg-[#1e1e1e]">
+                        <div class="flex bg-[#252526] text-gray-400 text-xs font-bold border-b border-[#333]">
+                            <button @click="codeTab='html'" class="px-4 py-2 hover:bg-[#3e3e42] transition" :class="codeTab==='html' ? 'bg-[#1e1e1e] text-white border-t-2 border-blue-500' : ''">HTML (Structure)</button>
+                            <button @click="codeTab='js'" class="px-4 py-2 hover:bg-[#3e3e42] transition" :class="codeTab==='js' ? 'bg-[#1e1e1e] text-white border-t-2 border-yellow-500' : ''">Javascript (Action)</button>
+                        </div>
+                        <textarea x-show="codeTab==='html'" x-model="form.content" @input.debounce.500ms="renderPreview()" class="flex-1 w-full p-4 code-input outline-none resize-none" spellcheck="false" placeholder=""></textarea>
+                        <div x-show="codeTab==='js'" class="flex-1 flex flex-col">
+                            <div class="p-2 bg-yellow-900/20 text-yellow-200 text-[10px] border-b border-yellow-900/50 px-4"><i class="ph ph-warning"></i> Gunakan <code>this</code> untuk merujuk ke elemen.</div>
+                            <textarea x-model="form.script" @input.debounce.1000ms="renderPreview()" class="flex-1 w-full p-4 code-input outline-none resize-none" spellcheck="false" placeholder="// const btn = this.querySelector('button');"></textarea>
+                        </div>
                     </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Custom Footer Script</label>
-                        <textarea x-model="page.scripts.footer" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none" placeholder="Sebelum </body>"></textarea>
+                    <div class="w-full md:w-1/2 bg-gray-100 flex flex-col relative">
+                        <div class="bg-white border-b px-4 py-2 flex justify-between items-center text-xs font-bold text-gray-500 shadow-sm z-10"><span>LIVE PREVIEW</span><span class="bg-green-100 text-green-600 px-2 py-0.5 rounded">Tailwind Ready</span></div>
+                        <div class="flex-1 relative overflow-hidden bg-[url('https://t3.ftcdn.net/jpg/05/11/95/62/360_F_511956272_K2j5x5z5x5z5x5z5x5z5x5z5x5z5x5z5.jpg')] bg-repeat opacity-100"><iframe id="previewFrame" class="w-full h-full absolute inset-0"></iframe></div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Metode Pembayaran Aktif</label>
-            <div class="grid grid-cols-2 gap-2 mt-3">
-                <label class="flex items-center gap-2 p-2 bg-white border rounded-lg cursor-pointer hover:border-indigo-500 transition">
-                    <input type="checkbox" value="whatsapp" x-model="page.config.active_payments" class="w-4 h-4 rounded text-indigo-600">
-                    <span class="text-[11px] font-medium text-gray-700">WhatsApp</span>
-                </label>
-                <template x-for="p in paymentProviders" :key="p.slug">
-                    <label class="flex items-center gap-2 p-2 bg-white border rounded-lg cursor-pointer hover:border-indigo-500 transition">
-                        <input type="checkbox" :value="p.slug" x-model="page.config.active_payments" class="w-4 h-4 rounded text-indigo-600">
-                        <span class="text-[11px] font-medium text-gray-700" x-text="p.name"></span>
-                    </label>
-                </template>
-            </div>
-        </div>
-        <div class="p-4 border-t bg-gray-50 flex justify-end gap-3">
-            <button @click="showSettings=false" class="px-5 py-2 text-xs font-bold text-gray-500">CANCEL</button>
-            <button @click="savePage(); showSettings=false" class="px-8 py-2 bg-indigo-600 text-white text-xs font-black rounded-xl shadow-lg shadow-indigo-200 active:scale-95 transition-all">SIMPAN PERUBAHAN</button>
-        </div>
-    </div>
-</div>
-
-    <div class="fixed bottom-5 left-5 z-[100000] flex flex-col gap-2 pointer-events-none">
-    <template x-for="n in notifications" :key="n.id">
-        <div x-show="n.show" x-transition class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-l-4 bg-white min-w-[280px] transform transition-all" :class="n.type==='success'?'border-green-500':'border-red-500'">
-            <i class="ph text-2xl" :class="n.type==='success'?'ph-check-circle text-green-500':'ph-warning-circle text-red-500'"></i>
-            <div><h4 class="text-xs font-bold text-gray-800 uppercase" x-text="n.title"></h4><p class="text-[10px] text-gray-500 font-medium" x-text="n.msg"></p></div>
-        </div>
-    </template>
-    </div>
-
-    <div id="iconify-picker-modal" class="fixed inset-0 hidden z-[99999] bg-black/40 flex items-start justify-center p-6 backdrop-blur-sm">
-        <div class="bg-white rounded-xl w-full max-w-xl shadow-2xl mt-10 overflow-hidden">
-            <div class="flex items-center justify-between p-4 border-b bg-gray-50">
-                <input id="iconify-picker-search" placeholder="Cari icon..." class="w-full bg-transparent outline-none text-sm" />
-                <button id="iconify-picker-close"><i class="ph ph-x text-lg"></i></button>
-            </div>
-            <div id="iconify-picker-results" class="p-4 grid grid-cols-6 gap-3 max-h-[300px] overflow-y-auto"></div>
         </div>
     </div>
 
     <script>
-    // --- 1. ICONIFY PICKER LOGIC ---
-    (function(){
-        let activeModel = null; 
-        const modal = document.getElementById('iconify-picker-modal'); 
-        const input = document.getElementById('iconify-picker-search'); 
-        const results = document.getElementById('iconify-picker-results');
+        // --- MASTER DATA WIDGET (SUMBER KEBENARAN DARI EDITOR.HTML) ---
+        // Data ini diekstrak dari domc.addType dan bm.add di editor.html
+        // Saya sudah FIX Pricing yang sebelumnya "ompong" agar memiliki checklist lengkap.
         
-        window.openIconifyPicker = function(model) { 
-            activeModel = model; 
-            modal.classList.remove('hidden'); 
-            input.value = ''; 
-            input.focus(); 
-            searchIcons('star'); 
-        };
-        
-        document.getElementById('iconify-picker-close').onclick = () => modal.classList.add('hidden'); 
-        input.oninput = (e) => searchIcons(e.target.value);
-        
-        async function searchIcons(q) { 
-            if(!q) return; 
-            try { 
-                const res = await fetch(`https://api.iconify.design/search?query=${q}&limit=30`); 
-                const data = await res.json(); 
-                results.innerHTML = ''; 
-                if(data.icons) { 
-                    data.icons.forEach(icon => { 
-                        const btn = document.createElement('button'); 
-                        btn.className = 'p-2 hover:bg-indigo-50 rounded flex flex-col items-center gap-1 transition'; 
-                        btn.innerHTML = `<iconify-icon icon="${icon}" width="24"></iconify-icon><span class="text-[9px] text-gray-400 truncate w-full text-center">${icon.split(':')[1]}</span>`; 
-                        btn.onclick = () => { 
-                            if(activeModel) activeModel.setAttributes({ icon: icon }); 
-                            modal.classList.add('hidden'); 
-                        }; 
-                        results.appendChild(btn); 
-                    }); 
-                } 
-            } catch(e) { console.error(e); } 
-        }
-    })();
-
-    // --- 2. MAIN EDITOR APP (ALPINE JS) ---
-    function editorApp() {
-        return {
-            // STATE VARIABLES
-            device: 'desktop', 
-            tab: 'blocks', 
-            settingsTab: 'commerce', 
-            clipboard: null, 
-            mobileMenuOpen: false, 
-            showSettings: false, 
-            loading: false, 
-            notifications: [], 
-            paymentProviders: [],
-            
-            // PAGE DATA
-            page: { 
-                id: 0, 
-                slug: '', 
-                title: '', 
-                product_type: 'physical', 
-                slug_payment: 'whatsapp',
-                meta: { description: '', keywords: '', og_image: '', favicon: '' },
-                analytics: { fb_pixel: '', ga_id: '', tiktok_pixel: '' },
-                scripts: { header: '', footer: '' },
-                config: { 
-                    price: 0, 
-                    active_payments: [], 
-                    variants: [], 
-                    shipping: { weight: 1000, cod: false }, 
-                    order_bump: { active: false }, 
-                    coupons: [], 
-                    settings: {} 
-                } 
+        const MASTER_WIDGETS = [
+            // 1. HERO SLIDER (Dengan Script Carousel)
+            {
+                id: 'hero-slider', label: 'Hero Slider (10x)', category: '1. Header & Hero',
+                content: `<div class="editable-carousel group relative w-full overflow-hidden bg-gray-900" style="aspect-ratio: 21/9; min-height: 320px;" data-gjs-type="editable-carousel"><div class="slides flex w-full h-full transition-transform duration-500 ease-in-out"><div class="slide min-w-full relative h-full" data-gjs-type="carousel-slide" img-src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80&sig=1" title-text="PROMO 1"><img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80&sig=1" class="w-full h-full object-cover block pointer-events-none" data-gjs-selectable="false"><div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white p-4 bg-black/30" data-gjs-selectable="false"><h2 class="text-3xl md:text-5xl font-black mb-4 drop-shadow-md">PROMO 1</h2><button class="btn btn-primary rounded-full px-8 shadow-lg">Lihat Detail</button></div></div><div class="slide min-w-full relative h-full" data-gjs-type="carousel-slide" img-src="https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1200&q=80&sig=2" title-text="PROMO 2"><img src="https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1200&q=80&sig=2" class="w-full h-full object-cover block pointer-events-none" data-gjs-selectable="false"><div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white p-4 bg-black/30" data-gjs-selectable="false"><h2 class="text-3xl md:text-5xl font-black mb-4 drop-shadow-md">PROMO 2</h2><button class="btn btn-primary rounded-full px-8 shadow-lg">Lihat Detail</button></div></div></div><div class="carousel-controls absolute inset-0 flex justify-between items-center px-4 pointer-events-none z-10" data-gjs-selectable="false"><button class="prev pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-10 h-10 rounded-full bg-black/30 text-white flex items-center justify-center hover:bg-black/60 cursor-pointer backdrop-blur-sm">❮</button><button class="next pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-10 h-10 rounded-full bg-black/30 text-white flex items-center justify-center hover:bg-black/60 cursor-pointer backdrop-blur-sm">❯</button></div></div>`,
+                script: `const el = this; const slidesContainer = el.querySelector(".slides"); const items = el.querySelectorAll(".slide"); if (!slidesContainer || items.length === 0) return; let idx = 0; const show = (n) => { idx = (n + items.length) % items.length; slidesContainer.style.transform = "translateX(-" + (idx * 100) + "%)"; }; const nextBtn = el.querySelector(".next"); if(nextBtn) nextBtn.onclick = (e) => { e.preventDefault(); show(idx + 1); }; const prevBtn = el.querySelector(".prev"); if(prevBtn) prevBtn.onclick = (e) => { e.preventDefault(); show(idx - 1); }; let interval = setInterval(() => show(idx + 1), 5000); el.onmouseenter = () => clearInterval(interval); el.onmouseleave = () => interval = setInterval(() => show(idx + 1), 5000);`
             },
-
-            // --- INITIALIZATION ---
-            async init() {
-                this.initGrapes();
-                const slug = new URLSearchParams(window.location.search).get('slug');
-                if (slug) await this.loadPageData(slug);
-                else { 
-                    this.page.slug = 'halaman-' + Date.now(); 
-                    this.page.title = 'Halaman Baru'; 
-                }
+            // 2. PRICING 3-COL (FIXED: Dengan Checklist & Cakra)
+            {
+                id: 'pricing-pro-3col', label: 'Pricing 3-Col', category: '4. Commerce',
+                content: `<section class="py-12 md:py-16 bg-gray-50"><div class="max-w-7xl mx-auto px-6"><div class="grid grid-cols-1 md:grid-cols-3 gap-8"><div class="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm hover:shadow-xl transition flex flex-col h-full"><div class="mb-6 text-center"><h3 class="text-indigo-600 font-bold text-xs mb-2 tracking-widest uppercase">BASIC</h3><span class="text-4xl font-black text-gray-900">Free</span></div><ul class="space-y-4 mb-8 flex-1 text-left text-sm"><li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-green-500 text-xl shrink-0"></iconify-icon><span class="text-gray-600 font-medium">Akses Dashboard Dasar</span></li><li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-green-500 text-xl shrink-0"></iconify-icon><span class="text-gray-600 font-medium">1 Project Aktif</span></li><li class="flex items-start gap-3 opacity-50"><iconify-icon icon="ph:x-circle-fill" class="text-gray-400 text-xl shrink-0"></iconify-icon><span class="text-gray-400 decoration-slate-400">Export Source Code</span></li></ul><a data-gjs-type="link" href="#" class="inline-block w-full py-3 border-2 border-indigo-100 text-indigo-600 font-bold rounded-xl text-sm text-center hover:bg-indigo-50 transition">DAFTAR GRATIS</a></div><div class="bg-indigo-600 p-8 rounded-3xl shadow-2xl text-white text-center md:scale-110 relative border-4 border-indigo-400 flex flex-col h-full z-10"><div class="absolute top-4 right-4 bg-yellow-400 text-indigo-900 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">POPULAR</div><div class="mb-6"><h3 class="text-indigo-200 font-bold text-xs mb-2 tracking-widest uppercase">PRO PLAN</h3><span class="text-5xl font-black">99k</span><span class="text-indigo-200 text-sm">/bln</span></div><ul class="space-y-4 mb-8 flex-1 text-left text-sm"><li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-yellow-400 text-xl shrink-0"></iconify-icon><span class="font-bold text-white">Semua Fitur Basic</span></li><li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-yellow-400 text-xl shrink-0"></iconify-icon><span class="font-bold text-white">Unlimited Projects</span></li><li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-yellow-400 text-xl shrink-0"></iconify-icon><span class="font-bold text-white">Export HTML/CSS</span></li></ul><a data-gjs-type="link" href="#" class="inline-block w-full py-4 bg-white text-indigo-700 font-black rounded-xl text-sm shadow-lg text-center hover:bg-gray-100 transition transform hover:-translate-y-1">AMBIL PROMO</a></div><div class="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm hover:shadow-xl transition flex flex-col h-full"><div class="mb-6 text-center"><h3 class="text-indigo-600 font-bold text-xs mb-2 tracking-widest uppercase">EXPERT</h3><span class="text-4xl font-black text-gray-900">299k</span><span class="text-gray-400 text-sm">/bln</span></div><ul class="space-y-4 mb-8 flex-1 text-left text-sm"><li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-green-500 text-xl shrink-0"></iconify-icon><span class="text-gray-600 font-medium">Semua Fitur Pro</span></li><li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-green-500 text-xl shrink-0"></iconify-icon><span class="text-gray-600 font-medium">Dedicated Server</span></li><li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-green-500 text-xl shrink-0"></iconify-icon><span class="text-gray-600 font-medium">Prioritas Support 24/7</span></li></ul><a data-gjs-type="link" href="#" class="inline-block w-full py-3 border-2 border-indigo-100 text-indigo-600 font-bold rounded-xl text-sm text-center hover:bg-indigo-50 transition">HUBUNGI SALES</a></div></div></div></section>`,
+                script: null
             },
-
-            // --- LOAD DATA ---
-            async loadPageData(slug) {
-                this.loading = true;
-                try {
-                    const res = await fetch(`/api/admin/pages/${slug}`, { credentials: 'same-origin' });
-                    if(res.ok) {
-                        const data = await res.json();
-                        if (data) {
-                            this.page.id = data.id || 0; 
-                            this.page.slug = data.slug || slug; 
-                            this.page.title = data.title || '';
-                            if (data.meta) this.page.meta = typeof data.meta === 'string' ? JSON.parse(data.meta) : data.meta;
-                            
-                            // Load Config
-                            try {
-                                const c = JSON.parse(data.product_config_json || '{}');
-                                this.page.config = { ...this.page.config, ...c };
-                            } catch(e) {}
-
-                            // Load Content to Editor
-                            if (window.editor) {
-                                if (data.html_content) window.editor.setComponents(data.html_content);
-                                if (data.css_content) window.editor.setStyle(data.css_content);
-                            }
-                        }
-                    }
-                } catch (e) { this.notify('Error', 'Gagal memuat data', 'error'); }
-                this.loading = false;
+            {
+                id: 'hero-simple', label: 'Hero Simple', category: '1. Header & Hero',
+                content: `<section class="py-12 md:py-20 bg-white"><div class="max-w-5xl mx-auto px-6 text-center"><span class="inline-block py-1 px-3 rounded-full bg-indigo-50 text-indigo-600 text-[10px] md:text-xs font-bold tracking-widest mb-4 uppercase">NEW ARRIVAL</span><h1 class="text-3xl md:text-6xl font-black text-gray-900 leading-tight mb-6 px-2">Judul Hero <span class="text-indigo-600">Menarik</span> Disini.</h1><p class="text-base md:text-lg text-gray-500 mb-8 max-w-2xl mx-auto px-4">Deskripsi produk yang fleksibel di semua layar.</p><div class="flex flex-col md:flex-row gap-4 justify-center px-6"><a data-gjs-type="link" href="#" class="inline-block w-full md:w-auto px-8 py-3 bg-indigo-600 text-white font-bold rounded-lg shadow-lg text-center">Mulai Sekarang</a><a data-gjs-type="link" href="#" class="inline-block w-full md:w-auto px-8 py-3 bg-white text-gray-700 font-bold border border-gray-200 rounded-lg text-center">Pelajari Lagi</a></div></div></section>`, script: null
             },
-
-            // --- SAVE DATA ---
-            async savePage() {
-                this.loading = true;
-                try {
-                    const payload = {
-                        id: this.page.id, 
-                        slug: this.page.slug, 
-                        title: this.page.title,
-                        html: `${window.editor.getHtml()}<script>${window.editor.getJs()}<\/script>`,
-                        css: window.editor.getCss(), 
-                        meta: this.page.meta, 
-                        product_config: this.page.config
-                    };
-                    const res = await fetch('/api/admin/pages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    this.notify(res.ok ? 'Sukses' : 'Error', res.ok ? 'Berhasil disimpan!' : 'Gagal menyimpan', res.ok ? 'success' : 'error');
-                } catch (e) { this.notify('Error', 'Masalah koneksi', 'error'); }
-                this.loading = false;
+            {
+                id: 'hero-beautiful', label: 'Hero Beautiful', category: '1. Header & Hero',
+                content: `<section class="relative py-20 md:py-32 flex items-center justify-center overflow-hidden"><div class="absolute inset-0 z-0"><img src="https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1600&q=80" class="w-full h-full object-cover" /><div class="absolute inset-0 bg-gradient-to-b from-gray-900/90 via-gray-900/70 to-gray-900/90"></div></div><div class="relative z-10 max-w-4xl mx-auto px-6 text-center"><h1 class="text-4xl md:text-7xl font-black text-white mb-6 leading-tight">Buat Website <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">Menakjubkan</span></h1><a data-gjs-type="link" href="#" class="inline-block w-full md:w-auto px-10 py-4 bg-white text-gray-900 font-black rounded-full shadow-2xl text-center">BERGABUNG SEKARANG</a></div></section>`, script: null
             },
-
-            // --- UTILS ---
-            notify(title, msg, type = 'success') { 
-                const id = Date.now(); 
-                this.notifications.push({ id, title, msg, type, show: true }); 
-                setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); 
+            {
+                id: 'hero-split', label: 'Hero Split', category: '1. Header & Hero',
+                content: `<section class="py-12 md:py-16 bg-gray-50"><div class="max-w-7xl mx-auto px-6"><div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center"><div class="order-2 md:order-1 text-center md:text-left"><h1 class="text-3xl md:text-5xl font-black text-gray-900 mb-6 leading-tight">Solusi Cerdas <span class="text-blue-600">Bisnis Digital</span></h1><p class="text-gray-600 text-base md:text-lg mb-8">Kelola bisnis online Anda dengan mudah dan cepat.</p><div class="flex flex-col md:flex-row gap-4"><a data-gjs-type="link" href="#" class="px-8 py-3 bg-blue-600 text-white rounded-lg font-bold shadow-lg text-center">Coba Gratis</a></div></div><div class="order-1 md:order-2 relative px-4"><img src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=1000&q=80" class="relative rounded-3xl shadow-xl w-full object-cover transform -rotate-2" /></div></div></div></section>`, script: null
             },
-            setDevice(d) { this.device = d; if (window.editor) window.editor.setDevice(d); },
-            cmd(c) { window.editor.runCommand(c); },
+            {
+                id: 'header-sticky', label: 'Header Sticky', category: '1. Header & Hero',
+                content: `<header class="sticky top-0 z-[999] bg-white/90 backdrop-blur-md border-b border-gray-100"><div class="max-w-7xl mx-auto px-4 h-14 md:h-16 flex items-center justify-between"><div class="font-bold text-xl md:text-2xl text-indigo-600 tracking-tighter">BRAND.</div><nav class="hidden md:flex gap-8 text-sm font-medium text-gray-600"><a data-gjs-type="link" href="#">Home</a><a data-gjs-type="link" href="#">Features</a></nav><a data-gjs-type="link" href="#" class="bg-indigo-600 text-white px-5 py-2 rounded-full text-[10px] md:text-xs font-bold">LOGIN</a></div></header>`, script: null
+            },
+            {
+                id: 'countdown-smart', label: 'Countdown Pro', category: '3. Content',
+                content: `<div class="py-8 px-4 bg-gray-900 rounded-2xl text-center max-w-3xl mx-auto my-6" data-gjs-type="countdown-smart" data-expire="2026-12-31T23:59" data-msg="PROMO BERAKHIR"><div class="js-expired-msg hidden animate-fade-in"><h2 class="js-expired-text text-3xl md:text-4xl font-black text-red-500 tracking-widest uppercase animate-pulse">PROMO BERAKHIR</h2><p class="text-gray-400 mt-2 text-sm">Penawaran ini telah ditutup.</p></div><div class="js-countdown-display"><h3 class="text-white text-xs md:text-sm font-bold uppercase tracking-[0.3em] mb-6 text-indigo-400">Penawaran Berakhir Dalam:</h3><div class="flex flex-wrap justify-center gap-3 md:gap-6"><div class="bg-gray-800 border border-gray-700 rounded-xl p-3 w-20 md:w-28 shadow-2xl relative overflow-hidden group"><div class="absolute top-0 left-0 w-full h-1 bg-indigo-500 shadow-[0_0_10px_#6366f1]"></div><div class="countdown-number text-white text-2xl md:text-4xl font-black js-d">00</div><div class="countdown-label text-[9px] md:text-[10px] text-gray-400 font-bold uppercase mt-1 tracking-wider">HARI</div></div><div class="bg-gray-800 border border-gray-700 rounded-xl p-3 w-20 md:w-28 shadow-2xl relative overflow-hidden"><div class="absolute top-0 left-0 w-full h-1 bg-indigo-500 shadow-[0_0_10px_#6366f1]"></div><div class="countdown-number text-white text-2xl md:text-4xl font-black js-h">00</div><div class="countdown-label text-[9px] md:text-[10px] text-gray-400 font-bold uppercase mt-1 tracking-wider">JAM</div></div><div class="bg-gray-800 border border-gray-700 rounded-xl p-3 w-20 md:w-28 shadow-2xl relative overflow-hidden"><div class="absolute top-0 left-0 w-full h-1 bg-indigo-500 shadow-[0_0_10px_#6366f1]"></div><div class="countdown-number text-white text-2xl md:text-4xl font-black js-m">00</div><div class="countdown-label text-[9px] md:text-[10px] text-gray-400 font-bold uppercase mt-1 tracking-wider">MENIT</div></div><div class="bg-gray-800 border border-gray-700 rounded-xl p-3 w-20 md:w-28 shadow-2xl relative overflow-hidden"><div class="absolute top-0 left-0 w-full h-1 bg-red-500 shadow-[0_0_10px_#ef4444]"></div><div class="countdown-number text-red-500 text-2xl md:text-4xl font-black js-s">00</div><div class="countdown-label text-[9px] md:text-[10px] text-red-400 font-bold uppercase mt-1 tracking-wider">DETIK</div></div></div></div></div>`,
+                script: `const el = this; const display = el.querySelector(".js-countdown-display"); const expiredBox = el.querySelector(".js-expired-msg"); const expiredText = el.querySelector(".js-expired-text"); const expireStr = el.getAttribute("data-expire"); const msgStr = el.getAttribute("data-msg") || "PROMO BERAKHIR"; if(!expireStr) return; const update = () => { const now = new Date().getTime(); const distance = new Date(expireStr).getTime() - now; if (distance < 0) { if(display) display.style.display = "none"; if(expiredBox) { expiredBox.style.display = "block"; expiredBox.classList.remove("hidden"); if(expiredText) expiredText.innerText = msgStr; } return; } const d = Math.floor(distance / (1000 * 60 * 60 * 24)); const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)); const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)); const s = Math.floor((distance % (1000 * 60)) / 1000); const setTxt = (sel, val) => { const node = el.querySelector(sel); if(node) node.innerText = val < 10 ? "0"+val : val; }; setTxt(".js-d", d); setTxt(".js-h", h); setTxt(".js-m", m); setTxt(".js-s", s); requestAnimationFrame(update); }; update();`
+            },
+            {
+                id: 'contact-form', label: 'Contact Basic', category: '4. Commerce',
+                content: `<div x-data="{ state: 'idle' }" class="max-w-md mx-auto p-8 bg-white rounded-2xl shadow-xl border border-gray-100" style="min-height:480px"><div x-show="state === 'idle'"><h3 class="text-2xl font-bold text-gray-800 mb-2">Hubungi Kami</h3><p class="text-gray-500 mb-6 text-sm">Isi form di bawah, kami akan membalas secepatnya.</p><form @submit.prevent="state = 'loading'; const fd = new FormData($event.target); setTimeout(() => { state = 'success' }, 1500);" class="space-y-4"><input type="hidden" name="page_id" value="0"><div><label class="font-bold text-xs uppercase text-gray-500">Nama Lengkap</label><input type="text" name="name" required class="w-full p-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="John Doe" /></div><div><label class="font-bold text-xs uppercase text-gray-500">Email</label><input type="email" name="email" required class="w-full p-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="email@anda.com" /></div><div><label class="font-bold text-xs uppercase text-gray-500">Pesan</label><textarea name="message" required class="w-full p-3 h-40 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none resize-none" placeholder="Tulis pesan Anda..."></textarea></div><button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-lg transition transform hover:-translate-y-1">Kirim Pesan <i class="ph ph-paper-plane-right-fill ml-2"></i></button></form></div><div x-show="state === 'loading'" style="display: none;" class="py-20 text-center"><i class="ph ph-spinner animate-spin text-4xl text-indigo-600 mb-4"></i><p class="text-gray-500 font-bold">Mengirim pesan...</p></div><div x-show="state === 'success'" style="display: none;" class="py-10 text-center animate-fade-in"><div class="w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4"><i class="ph ph-check text-3xl font-bold"></i></div><h3 class="text-xl font-black text-gray-800 mb-2">Pesan Terkirim!</h3><p class="text-gray-500 text-sm mb-6">Terima kasih telah menghubungi kami.<br>Tim kami akan segera merespon.</p><button @click="state = 'idle'" class="text-indigo-600 font-bold text-xs hover:underline">Kirim pesan lagi</button></div></div>`, script: null
+            },
+            {
+                id: 'flash-news', label: 'News Flash', category: '3. Content',
+                content: `<div class="bg-gray-900 text-white py-2 overflow-hidden border-b border-gray-800"><div class="animate-marquee inline-block font-mono text-xs font-bold tracking-widest uppercase"><span class="mx-4">🔥 FLASH SALE: DISKON 50% HANYA HARI INI!</span> <span class="mx-4 text-yellow-400">GUNAKAN KODE: SERBU50</span> <span class="mx-4">🚀 GRATIS ONGKIR SELURUH INDONESIA</span></div></div>`, script: null
+            },
+            {
+                id: 'container-800', label: 'Container 800', category: 'Custom',
+                content: `<div class="mx-auto p-4 border-2 border-dashed border-gray-200 min-h-[100px] flex items-center justify-center text-gray-400" style="max-width: 800px; width: 100%;">Container 800px</div>`, script: null
+            },
+            {
+                id: 'container-1000', label: 'Container 1000', category: 'Custom',
+                content: `<div class="mx-auto p-4 border-2 border-dashed border-gray-200 min-h-[100px] flex items-center justify-center text-gray-400" style="max-width: 1000px; width: 100%;">Container 1000px</div>`, script: null
+            },
+            {
+                id: 'container-1200', label: 'Container 1200', category: 'Custom',
+                content: `<div class="mx-auto p-4 border-2 border-dashed border-gray-200 min-h-[100px] flex items-center justify-center text-gray-400" style="max-width: 1200px; width: 100%;">Container 1200px</div>`, script: null
+            },
+            {
+                id: 'container-full', label: 'Container Full', category: 'Custom',
+                content: `<div class="w-full p-4 border-2 border-dashed border-gray-200 min-h-[100px] flex items-center justify-center text-gray-400">Container Full Width</div>`, script: null
+            },
+            {
+                id: 'feat-3-center', label: 'Feat 3-Col', category: '2. Features', 
+                content: `<section class="py-12 md:py-16 bg-white"><div class="max-w-7xl mx-auto px-6 text-center mb-10"><h2 class="text-2xl md:text-3xl font-black uppercase tracking-tighter">Kenapa Pilih Kami?</h2></div><div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 px-4 max-w-7xl mx-auto"><div class="p-8 border border-gray-100 rounded-3xl bg-gray-50 text-center group hover:border-indigo-500 transition-all"><div class="w-16 h-16 bg-white shadow-sm text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-indigo-600 group-hover:text-white transition-all"><iconify-icon data-gjs-type="iconify-icon" icon="ph:rocket-launch-duotone" width="32"></iconify-icon></div><h3 class="font-black text-gray-800 mb-2 uppercase tracking-tight text-sm md:text-base">Performa Cepat</h3><p class="text-gray-500 text-xs md:text-sm leading-relaxed mb-4">Website Anda akan dimuat secepat kilat.</p><a data-gjs-type="link" href="#" class="text-indigo-600 font-bold text-xs uppercase tracking-widest hover:underline">Detail &rarr;</a></div></div></section>`, script: null
+            },
+            {
+                id: 'feat-3-left', label: 'Features 3-Col (Left)', category: '2. Features', 
+                content: `<section class="py-16 bg-gray-50"><div class="max-w-7xl mx-auto px-6"><div class="mb-12"><h2 class="text-3xl font-black text-gray-900">Fitur Unggulan</h2><div class="w-20 h-1 bg-indigo-600 mt-4"></div></div><div class="grid grid-cols-1 md:grid-cols-3 gap-10"><div class="flex flex-col items-start text-left group"><div class="mb-5 p-3 bg-indigo-100 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition"><iconify-icon icon="ph:chart-bar-duotone" width="32"></iconify-icon></div><h3 class="text-xl font-bold text-gray-800 mb-3">Analitik Lengkap</h3><p class="text-gray-500 text-sm leading-relaxed">Dapatkan wawasan mendalam tentang pengunjung Anda dengan dashboard analitik yang mudah dipahami.</p><a href="#" class="mt-4 text-indigo-600 font-bold text-sm hover:underline">Pelajari &rarr;</a></div><div class="flex flex-col items-start text-left group"><div class="mb-5 p-3 bg-orange-100 text-orange-600 rounded-lg group-hover:bg-orange-600 group-hover:text-white transition"><iconify-icon icon="ph:users-three-duotone" width="32"></iconify-icon></div><h3 class="text-xl font-bold text-gray-800 mb-3">Manajemen User</h3><p class="text-gray-500 text-sm leading-relaxed">Kelola hak akses tim Anda dengan mudah dan aman tanpa batasan jumlah pengguna.</p><a href="#" class="mt-4 text-orange-600 font-bold text-sm hover:underline">Pelajari &rarr;</a></div><div class="flex flex-col items-start text-left group"><div class="mb-5 p-3 bg-teal-100 text-teal-600 rounded-lg group-hover:bg-teal-600 group-hover:text-white transition"><iconify-icon icon="ph:globe-duotone" width="32"></iconify-icon></div><h3 class="text-xl font-bold text-gray-800 mb-3">Global Access</h3><p class="text-gray-500 text-sm leading-relaxed">Akses platform dari mana saja di seluruh dunia dengan jaminan uptime 99.9%.</p><a href="#" class="mt-4 text-teal-600 font-bold text-sm hover:underline">Pelajari &rarr;</a></div></div></div></section>`, script: null
+            },
+            {
+                id: 'feat-3-right', label: 'Features 3-Col (Right)', category: '2. Features', 
+                content: `<section class="py-16 bg-white border-t border-b border-gray-100"><div class="max-w-7xl mx-auto px-6"><div class="grid grid-cols-1 md:grid-cols-3 gap-8"><div class="flex flex-col items-end text-right p-6 hover:bg-gray-50 rounded-xl transition duration-300"><div class="mb-4 text-red-500"><iconify-icon icon="ph:pencil-circle-duotone" width="48"></iconify-icon></div><h3 class="text-lg font-bold text-gray-900 mb-2">Desain Kustom</h3><p class="text-gray-500 text-sm">Sesuaikan tampilan halaman checkout Anda agar sesuai dengan identitas brand.</p></div><div class="flex flex-col items-end text-right p-6 hover:bg-gray-50 rounded-xl transition duration-300"><div class="mb-4 text-blue-500"><iconify-icon icon="ph:device-mobile-camera-duotone" width="48"></iconify-icon></div><h3 class="text-lg font-bold text-gray-900 mb-2">Mobile Friendly</h3><p class="text-gray-500 text-sm">Tampilan yang responsif dan sempurna di semua perangkat mobile pelanggan.</p></div><div class="flex flex-col items-end text-right p-6 hover:bg-gray-50 rounded-xl transition duration-300"><div class="mb-4 text-green-500"><iconify-icon icon="ph:money-duotone" width="48"></iconify-icon></div><h3 class="text-lg font-bold text-gray-900 mb-2">Biaya Rendah</h3><p class="text-gray-500 text-sm">Nikmati fitur premium dengan biaya yang sangat terjangkau untuk bisnis UMKM.</p></div></div></div></section>`, script: null
+            },
+            {
+                id: 'pricing-pro-6col', label: 'Pricing 6-Item', category: '4. Commerce',
+                content: `<section class="py-16 bg-white"><div class="max-w-7xl mx-auto px-4"><div class="text-center mb-12"><h2 class="text-3xl font-black text-gray-900">Pilihan Paket Lengkap</h2><p class="text-gray-500 mt-2">Pilih paket yang sesuai kebutuhan Anda</p></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"><div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 hover:shadow-lg transition bg-white flex flex-col"><div class="text-center mb-6 border-b pb-4 border-gray-100"><h3 class="font-bold text-gray-800 uppercase tracking-wider text-sm">PAKET 1</h3><div class="text-3xl font-black text-gray-900 mt-2">10k</div></div><ul class="space-y-3 mb-6 flex-1 text-sm text-gray-600"><li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500 text-lg"></iconify-icon><span>Akses Materi Dasar</span></li><li class="flex items-center gap-3"><iconify-icon icon="ph:x-bold" class="text-red-300 text-lg"></iconify-icon><span class="text-gray-400">Tanpa Mentor</span></li></ul><button class="btn btn-outline w-full rounded-lg font-bold border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-indigo-600">Pilih Paket</button></div><div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 hover:shadow-lg transition bg-white flex flex-col"><div class="text-center mb-6 border-b pb-4 border-gray-100"><h3 class="font-bold text-gray-800 uppercase tracking-wider text-sm">PAKET 2</h3><div class="text-3xl font-black text-gray-900 mt-2">25k</div></div><ul class="space-y-3 mb-6 flex-1 text-sm text-gray-600"><li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500 text-lg"></iconify-icon><span>Materi + Ebook</span></li><li class="flex items-center gap-3"><iconify-icon icon="ph:x-bold" class="text-red-300 text-lg"></iconify-icon><span class="text-gray-400">Tanpa Mentor</span></li></ul><button class="btn btn-outline w-full rounded-lg font-bold border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-indigo-600">Pilih Paket</button></div><div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 hover:shadow-lg transition bg-white flex flex-col"><div class="text-center mb-6 border-b pb-4 border-gray-100"><h3 class="font-bold text-gray-800 uppercase tracking-wider text-sm">PAKET 3</h3><div class="text-3xl font-black text-gray-900 mt-2">50k</div></div><ul class="space-y-3 mb-6 flex-1 text-sm text-gray-600"><li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500 text-lg"></iconify-icon><span>Full Akses Video</span></li><li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500 text-lg"></iconify-icon><span>Group Support</span></li></ul><button class="btn btn-outline w-full rounded-lg font-bold border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-indigo-600">Pilih Paket</button></div><div class="p-6 border-2 border-indigo-600 bg-indigo-50 rounded-xl relative overflow-hidden flex flex-col shadow-xl z-10"><div class="absolute top-0 right-0 bg-indigo-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider">Popular</div><div class="text-center mb-6 border-b border-indigo-200 pb-4"><h3 class="font-bold text-indigo-700 uppercase tracking-wider text-sm">PRO PACK</h3><div class="text-3xl font-black text-indigo-900 mt-2">99k</div></div><ul class="space-y-3 mb-6 flex-1 text-sm text-gray-700"><li class="flex items-center gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-indigo-600 text-lg"></iconify-icon><span class="font-bold">All Access VIP</span></li><li class="flex items-center gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-indigo-600 text-lg"></iconify-icon><span class="font-bold">Private Mentor</span></li></ul><button class="btn btn-primary w-full rounded-lg font-bold shadow-lg">Ambil Promo</button></div><div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 hover:shadow-lg transition bg-white flex flex-col"><div class="text-center mb-6 border-b pb-4 border-gray-100"><h3 class="font-bold text-gray-800 uppercase tracking-wider text-sm">PAKET 5</h3><div class="text-3xl font-black text-gray-900 mt-2">150k</div></div><ul class="space-y-3 mb-6 flex-1 text-sm text-gray-600"><li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500 text-lg"></iconify-icon><span>Bundle Course A+B</span></li><li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500 text-lg"></iconify-icon><span>Sertifikat Fisik</span></li></ul><button class="btn btn-outline w-full rounded-lg font-bold border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-indigo-600">Pilih Paket</button></div><div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 hover:shadow-lg transition bg-white flex flex-col"><div class="text-center mb-6 border-b pb-4 border-gray-100"><h3 class="font-bold text-gray-800 uppercase tracking-wider text-sm">PAKET 6</h3><div class="text-3xl font-black text-gray-900 mt-2">200k</div></div><ul class="space-y-3 mb-6 flex-1 text-sm text-gray-600"><li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500 text-lg"></iconify-icon><span>Lifetime Access</span></li><li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500 text-lg"></iconify-icon><span>Reseller License</span></li></ul><button class="btn btn-outline w-full rounded-lg font-bold border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-indigo-600">Pilih Paket</button></div></div></div></section>`, script: null
+            },
+            {
+                id: 'testimonial-grid', label: 'Testimonials', category: '3. Content',
+                content: `<section class="py-12 md:py-20 bg-white"><div class="max-w-7xl mx-auto px-6"><h2 class="text-2xl md:text-3xl font-black text-center mb-12">Apa Kata Mereka?</h2><div class="grid grid-cols-1 md:grid-cols-3 gap-8"><div class="p-8 rounded-3xl bg-gray-50 border border-gray-100"><div class="flex gap-1 text-yellow-400 mb-4"><iconify-icon icon="ph:star-fill"></iconify-icon><iconify-icon icon="ph:star-fill"></iconify-icon><iconify-icon icon="ph:star-fill"></iconify-icon><iconify-icon icon="ph:star-fill"></iconify-icon><iconify-icon icon="ph:star-fill"></iconify-icon></div><p class="text-gray-600 italic mb-6">"Layanan luar biasa! Website saya jadi jauh lebih cepat dan konversi naik drastis."</p><div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold">JD</div><div><h4 class="font-bold text-sm">John Doe</h4><p class="text-[10px] text-gray-400">CEO PasDigi</p></div></div></div></div></div></section>`, script: null
+            },
+            {
+                id: 'faq-section', label: 'FAQ Accordion', category: '3. Content',
+                content: `<section class="py-12 md:py-20 bg-gray-50"><div class="max-w-3xl mx-auto px-6"><h2 class="text-2xl md:text-3xl font-black text-center mb-10">Pertanyaan Umum</h2><div class="space-y-4"><details class="group bg-white border border-gray-200 rounded-xl p-4 cursor-pointer" open><summary class="list-none flex justify-between items-center font-bold text-gray-800">Apakah ini berlangganan?<iconify-icon icon="ph:caret-down-bold" class="group-open:rotate-180 transition"></iconify-icon></summary><p class="mt-4 text-sm text-gray-500 leading-relaxed">Ya, kami menyediakan paket bulanan dan tahunan sesuai kebutuhan bisnis Anda.</p></details></div></div></section>`, script: null
+            },
+            {
+                id: 'footer-pro', label: 'Footer Pro', category: '5. Footer',
+                content: `<footer class="py-12 bg-gray-900 text-white"><div class="max-w-7xl mx-auto px-6"><div class="grid grid-cols-1 md:grid-cols-4 gap-10 mb-10"><div class="md:col-span-2"><h3 class="text-2xl font-black tracking-tighter mb-4">BRAND.</h3><p class="text-gray-400 text-sm max-w-xs">Solusi terbaik untuk digitalisasi bisnis Anda dengan teknologi serverless tercepat.</p></div><div><h4 class="font-bold mb-4 uppercase text-xs tracking-widest text-indigo-400">Links</h4><ul class="space-y-2 text-sm text-gray-500"><li class="hover:text-white"><a data-gjs-type="link" href="#">Features</a></li><li class="hover:text-white"><a data-gjs-type="link" href="#">Pricing</a></li></ul></div><div><h4 class="font-bold mb-4 uppercase text-xs tracking-widest text-indigo-400">Sosial</h4><div class="flex gap-4"><a data-gjs-type="link" href="#" class="text-xl hover:text-indigo-400"><iconify-icon icon="ph:instagram-logo-fill"></iconify-icon></a><a data-gjs-type="link" href="#" class="text-xl hover:text-indigo-400"><iconify-icon icon="ph:facebook-logo-fill"></iconify-icon></a></div></div></div><div class="border-t border-gray-800 pt-8 text-center text-[10px] text-gray-600 uppercase tracking-widest">&copy; 2026 BlinkSite. All rights reserved.</div></div></footer>`, script: null
+            },
+            {
+                id: 'trusted-logos', label: 'Partner Logos', category: '3. Content',
+                content: `<div class="py-10 bg-white border-t border-b border-gray-50"><div class="max-w-7xl mx-auto px-6"><p class="text-center text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em] mb-8">Dipercaya Oleh Perusahaan Terkemuka</p><div class="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-40 grayscale"><iconify-icon icon="logos:google" width="100"></iconify-icon><iconify-icon icon="logos:meta" width="100"></iconify-icon><iconify-icon icon="logos:netflix" width="100"></iconify-icon><iconify-icon icon="logos:airbnb" width="100"></iconify-icon></div></div></div>`, script: null
+            }
+        ];
 
-            // --- GRAPESJS SETUP ---
-            initGrapes() {
-                const bridgeCSS = `
-                    body { min-height: 100vh; background: #fff; overflow-x: hidden; font-family: 'Inter', sans-serif; }
-                    [x-cloak] { display: none !important; }
-                    .countdown-item { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 60px; }
-                    .countdown-number { font-weight: 900; font-size: 2rem; line-height: 1; }
-                    .countdown-label { font-size: 0.65rem; text-transform: uppercase; font-weight: 700; margin-top: 4px; opacity: 0.8; }
-                    @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        function widgetApp() {
+            return {
+                sidebarOpen: window.innerWidth > 768,
+                darkMode: localStorage.getItem('theme') === 'dark',
+                loading: true,
+                isSaving: false,
+                search: '',
+                showModal: false,
+                isEdit: false,
+                codeTab: 'html', 
+                widgets: [],
+                form: { id: '', label: '', category: 'Custom', content: '', script: '', attributes: {} },
+
+                // --- BRIDGE CSS UNTUK PREVIEW ---
+                bridgeCSS: `
+                    body { font-family: 'Inter', sans-serif; padding: 20px; overflow-x: hidden; }
                     .animate-marquee { display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite; }
-                    .product-gallery { display: flex; flex-direction: column; gap: 12px; width: 100%; }
-                    .gallery-main img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 12px; }
-                    .gallery-thumbs { display: flex; gap: 10px; overflow-x: auto; padding: 5px 0; }
-                    .thumb-item { width: 60px; height: 60px; border-radius: 8px; cursor: pointer; opacity: 0.6; object-fit: cover; }
-                    .thumb-item.active { border: 2px solid #4f46e5; opacity: 1; }
-                    /* CAROUSEL FIXED & RESPONSIVE */
-                    .editable-carousel { position: relative; width: 100%; overflow: hidden; aspect-ratio: 16/9; min-height: 300px; }
-                    .editable-carousel .slides { display: flex; flex-direction: row; width: 100%; height: 100%; transition: transform 0.5s ease-in-out; }
-                    .editable-carousel .slide { min-width: 100%; flex: 0 0 100%; position: relative; height: 100%; overflow: hidden; }
-                    .editable-carousel .slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
-                    .editable-carousel .carousel-controls { position: absolute; inset: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 1rem; pointer-events: none; z-index: 10; }
-                    .editable-carousel .carousel-controls button { pointer-events: auto; background: rgba(0,0,0,0.3); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); transition: 0.2s; cursor: pointer; }
-                    .editable-carousel .carousel-controls button:hover { background: rgba(0,0,0,0.6); transform: scale(1.1); }
-                `;
+                    @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+                    .editable-carousel { position: relative; width: 100%; overflow: hidden; aspect-ratio: 21/9; min-height: 200px; background: #eee; }
+                    .editable-carousel .slides { display: flex; width: 100%; height: 100%; transition: transform 0.5s ease-in-out; }
+                    .editable-carousel .slide { min-width: 100%; flex: 0 0 100%; position: relative; height: 100%; }
+                    .editable-carousel .slide img { width: 100%; height: 100%; object-fit: cover; }
+                    .editable-carousel .carousel-controls { position: absolute; inset: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 1rem; pointer-events: none; }
+                    .editable-carousel .carousel-controls button { pointer-events: auto; background: rgba(0,0,0,0.5); color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border:none; }
+                    .countdown-number { font-weight: 900; }
+                `,
 
-                window.editor = grapesjs.init({
-                    container: '#gjs', height: '100%', storageManager: false, panels: { defaults: [] },
+                async init() {
+                    const token = localStorage.getItem('auth_token');
+                    if (this.darkMode) document.documentElement.classList.add('dark');
+                    await this.fetchWidgets();
                     
-                    // --- 1. KONFIGURASI API UPLOAD
-                    assetManager: {
-                        uploadText: 'Drop files here or click to upload',
-                        uploadFile: async (e) => {
-                            const files = e.dataTransfer ? e.dataTransfer.files : e.target.files;
-                            const file = files[0];
-                            if(!file) return;
-                    
-                            // 1. Convert ke Base64 (Wajib untuk API Anda)
-                            const toBase64 = f => new Promise((resolve, reject) => {
-                                const reader = new FileReader();
-                                reader.readAsDataURL(f);
-                                reader.onload = () => resolve(reader.result);
-                                reader.onerror = error => reject(error);
-                            });
-                    
-                            try {
-                                const base64Image = await toBase64(file);
-                                
-                                // 2. Kirim ke API Backend Anda
-                                const response = await fetch('/api/admin/upload-image', {
+                    this.$watch('showModal', (val) => {
+                        if (val) setTimeout(() => this.renderPreview(), 100); 
+                    });
+                },
+
+                get filteredWidgets() {
+                    if (!this.search) return this.widgets;
+                    const q = this.search.toLowerCase();
+                    return this.widgets.filter(w => w.label.toLowerCase().includes(q) || w.category.toLowerCase().includes(q) || w.id.toLowerCase().includes(q));
+                },
+
+                async fetchWidgets() {
+                    this.loading = true;
+                    try {
+                        const res = await fetch('/api/widgets');
+                        if (res.ok) this.widgets = await res.json();
+                    } catch (e) { console.error(e); }
+                    this.loading = false;
+                },
+
+                // --- FUNGSI INJECT DARI FRONTEND (Solusi Final) ---
+                async injectDefaults() {
+                    const r = await Swal.fire({
+                        title: 'Inject Default Widgets?',
+                        text: `Akan memasukkan ${MASTER_WIDGETS.length} widget ke database via API.`,
+                        icon: 'info',
+                        showCancelButton: true,
+                        confirmButtonText: 'Ya, Inject Sekarang!',
+                        confirmButtonColor: '#d97706'
+                    });
+
+                    if (r.isConfirmed) {
+                        Swal.fire({ title: 'Memproses...', didOpen: () => Swal.showLoading() });
+                        
+                        try {
+                            const token = localStorage.getItem('auth_token');
+                            let successCount = 0;
+
+                            // Loop kirim data satu per satu
+                            for (const w of MASTER_WIDGETS) {
+                                await fetch('/api/admin/widgets', {
                                     method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({
-                                        image: base64Image, 
-                                        filename: file.name
-                                    })
+                                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                                    body: JSON.stringify(w)
                                 });
-                    
-                                const result = await response.json();
-                    
-                                // 3. Masukkan URL hasil upload ke Galeri GrapesJS
-                                if (result.data) {
-                                    window.editor.AssetManager.add(result.data); 
-                                } else {
-                                    alert('Upload Gagal: ' + (result.message || 'Error API'));
-                                }
-                            } catch (err) {
-                                console.error('Upload Error:', err);
-                                alert('Gagal koneksi ke server.');
+                                successCount++;
                             }
+
+                            await this.fetchWidgets();
+                            Swal.fire('Selesai', `${successCount} Widget berhasil di-inject!`, 'success');
+                        } catch (e) {
+                            Swal.fire('Gagal', 'Terjadi kesalahan saat inject', 'error');
                         }
-                    },
-                    canvas: {
-                        scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
-                        styles: ['https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap', 'https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
-                        content: `<style>${bridgeCSS}</style>`
-                    },
-                    plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-tabs', 'grapesjs-custom-code', 'grapesjs-tooltip', 'grapesjs-blocks-flexbox', 'grapesjs-typed', 'grapesjs-style-bg'],
-                    deviceManager: { devices: [{ id: 'desktop', width: '' }, { id: 'tablet', width: '768px' }, { id: 'mobile', width: '375px' }] },
-                    blockManager: { appendTo: '#blocks-container' },
-                    layerManager: { appendTo: '#layers-container' },
-                    selectorManager: { appendTo: '#selectors-container' },
-                    traitManager: { appendTo: '#traits-container' },
-                    styleManager: { appendTo: '#styles-container', sectors: [{ name: 'Typography', open:true, buildProps:['font-family','font-size','font-weight','color','text-align'] }, { name: 'Decorations', buildProps:['background-color','border','border-radius','box-shadow'] }, { name: 'Dimensions', buildProps:['width','padding','margin'] }] }
-                });
-
-                const domc = window.editor.DomComponents;
-                const bm = window.editor.BlockManager;
-                const cmds = window.editor.Commands;
-                domc.addType('link', { model: { defaults: { traits: ['href', 'target', 'title'] } } });
-                // --- 2. COMMAND KHUSUS: BUKA ASSET MANAGER & AMBIL URL DARI API ---
-                cmds.add('set-img-src', {
-                    run(editor, sender) {
-                        const component = editor.getSelected();
-                        // Buka Modal Asset Manager
-                        editor.runCommand('open-assets', {
-                            target: component,
-                            onSelect() {
-                                // Ambil gambar yang dipilih user
-                                const asset = editor.AssetManager.getSelection();
-                                if(asset && asset.length) {
-                                    const imageUrl = asset[0].getSrc();
-                                    // Update atribut img-src di komponen
-                                    component.addAttributes({ 'img-src': imageUrl });
-                                    // Update visual gambar di canvas
-                                    const imgEl = component.view.el.querySelector('img');
-                                    if(imgEl) imgEl.src = imageUrl;
-                                }
-                                editor.Modal.close();
-                            }
-                        });
                     }
-                });
-                
-                // --- COMPONENT LOGIC ---
-                // 1. COUNTDOWN SMART (DENGAN CUSTOM PESAN EXPIRED)
+                },
 
-                domc.addType('countdown-smart', {
-                    model: {
-                        defaults: {
-                            traits: [
-                                { type: 'datetime-local', name: 'data-expire', label: 'Waktu Berakhir' },
-                                { type: 'text', name: 'data-msg', label: 'Pesan Expired', placeholder: 'PROMO BERAKHIR' }
-                            ],
-                            attributes: { 
-                                'data-expire': '2026-12-31T23:59',
-                                'data-msg': 'PROMO BERAKHIR'
-                            },
-                            script: function() {
-                                const el = this;
-                                const display = el.querySelector('.js-countdown-display');
-                                const expiredBox = el.querySelector('.js-expired-msg');
-                                const expiredText = el.querySelector('.js-expired-text');
-                                
-                                const expireStr = el.getAttribute('data-expire');
-                                const msgStr = el.getAttribute('data-msg') || 'PROMO BERAKHIR';
-                
-                                if(!expireStr) return;
-                
-                                const update = () => {
-                                    const now = new Date().getTime();
-                                    const distance = new Date(expireStr).getTime() - now;
-                
-                                    if (distance < 0) {
-                                        if(display) display.style.display = 'none';
-                                        if(expiredBox) {
-                                            expiredBox.style.display = 'block';
-                                            expiredBox.classList.remove('hidden');
-                                            if(expiredText) expiredText.innerText = msgStr;
-                                        }
-                                        return;
+                // --- RENDER PREVIEW (Isolated Iframe) ---
+                renderPreview() {
+                    const frame = document.getElementById('previewFrame');
+                    if (!frame) return;
+                    
+                    const doc = frame.contentWindow.document;
+                    const htmlCode = this.form.content || '<div class="flex items-center justify-center h-full text-gray-400">Mulai ketik HTML...</div>';
+                    
+                    // Script Execution Logic (Sandbox)
+                    let scriptInjection = '';
+                    if (this.form.script && this.form.script.trim() !== '') {
+                        scriptInjection = `
+                        <script>
+                            document.addEventListener("DOMContentLoaded", function() {
+                                try {
+                                    const el = document.body.firstElementChild;
+                                    if(el) {
+                                        (function() { ${this.form.script} }).call(el);
                                     }
-                
-                                    const d = Math.floor(distance / (1000 * 60 * 60 * 24));
-                                    const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                                    const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                                    const s = Math.floor((distance % (1000 * 60)) / 1000);
-                
-                                    const setTxt = (sel, val) => { 
-                                        const node = el.querySelector(sel); 
-                                        if(node) node.innerText = val < 10 ? '0'+val : val; 
-                                    };
-                
-                                    setTxt('.js-d', d);
-                                    setTxt('.js-h', h);
-                                    setTxt('.js-m', m);
-                                    setTxt('.js-s', s);
-                                    
-                                    requestAnimationFrame(update);
-                                };
-                                update();
-                            }
-                        }
+                                } catch(e) { console.error("Widget Script Error:", e); }
+                            });
+                        <\/script>`;
                     }
-                });
-                // 2. ICONIFY
-                domc.addType('iconify-icon', { model: { defaults: { tagName: 'iconify-icon', attributes: { icon: 'ph:star-fill', width: '24' }, traits: [{ type: 'button', text: 'Ganti Icon', command: (ed, t) => window.openIconifyPicker(t.target) }] } } });
 
-                // 3. CAROUSEL & GALLERY
-                // LOGIC CAROUSEL WRAPPER
-                domc.addType('editable-carousel', {
-                    model: {
-                        defaults: {
-                            droppable: '[data-gjs-type="carousel-slide"]', 
-                            script: function() {
-                                const el = this;
-                                const slidesContainer = el.querySelector('.slides');
-                                const items = el.querySelectorAll('.slide');
-                                if (!slidesContainer || items.length === 0) return;
-                                let idx = 0;
-                                const show = (n) => { idx = (n + items.length) % items.length; slidesContainer.style.transform = 'translateX(-' + (idx * 100) + '%)'; };
-                                const nextBtn = el.querySelector('.next'); if(nextBtn) nextBtn.onclick = (e) => { e.preventDefault(); show(idx + 1); };
-                                const prevBtn = el.querySelector('.prev'); if(prevBtn) prevBtn.onclick = (e) => { e.preventDefault(); show(idx - 1); };
-                                let interval = setInterval(() => show(idx + 1), 5000);
-                                el.onmouseenter = () => clearInterval(interval);
-                                el.onmouseleave = () => interval = setInterval(() => show(idx + 1), 5000);
-                            }
-                        }
+                    const fullHTML = `
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <meta charset="UTF-8">
+                            <script src="https://cdn.tailwindcss.com"><\/script>
+                            <script>tailwind.config = { theme: { extend: { colors: { theme: { 50:'#eef2ff', 600:'#4f46e5' } }, fontFamily: { sans: ['Inter', 'sans-serif'] } } } }<\/script>
+                            <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"><\/script>
+                            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+                            <style>${this.bridgeCSS}</style>
+                        </head>
+                        <body>
+                            ${htmlCode}
+                            ${scriptInjection}
+                        </body>
+                        </html>
+                    `;
+
+                    doc.open();
+                    doc.write(fullHTML);
+                    doc.close();
+                },
+
+                openModal(widget = null) {
+                    this.codeTab = 'html';
+                    if (widget) {
+                        this.isEdit = true;
+                        this.form = JSON.parse(JSON.stringify(widget));
+                    } else {
+                        this.isEdit = false;
+                        this.form = { id: 'widget-' + Date.now(), label: '', category: 'Custom', content: '<section class="p-10 text-center">\n  <h2 class="text-2xl font-bold">Judul Baru</h2>\n</section>', script: '', attributes: {} };
                     }
-                });
+                    this.showModal = true;
+                },
 
-                // LOGIC SLIDE (LINK KE ASSET MANAGER API)
-                domc.addType('carousel-slide', {
-                    model: {
-                        defaults: {
-                            tagName: 'div',
-                            classes: ['slide', 'min-w-full', 'relative', 'h-full'],
-                            traits: [
-                                { 
-                                    type: 'button', 
-                                    label: 'Gambar Background',
-                                    text: 'UPLOAD / GANTI GAMBAR', 
-                                    command: 'set-img-src' // Panggil command asset manager
-                                },
-                                { type: 'text', name: 'title-text', label: 'Judul Promo' }
-                            ],
-                            attributes: {
-                                'img-src': 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80',
-                                'title-text': 'JUDUL PROMO'
-                            }
-                        },
-                        init() {
-                            this.on('change:attributes:title-text', this.updateTitle);
-                        },
-                        updateTitle() {
-                            const txt = this.getAttributes()['title-text'];
-                            const overlay = this.components().models.find(c => c.get('classes').includes('absolute'));
-                            if(overlay) {
-                                const h2 = overlay.components().models.find(c => c.get('tagName') === 'h2');
-                                if(h2) h2.content = txt;
-                            }
-                        }
-                    }
-                });
-        
-        domc.addType('product-gallery', { model: { defaults: { script: function() { const m=this.querySelector('.main-img img'); const t=this.querySelectorAll('.thumb'); if(!m||!t.length)return; t.forEach(x=>{x.onclick=function(){m.src=this.src;t.forEach(k=>k.classList.remove('active'));this.classList.add('active')}}) } } } });
-
-                // --- WIDGETS ---
-                
-                // PRICING 3 COL (Eye Catching - Icon Kiri, Teks Kanan)
-                bm.add('pricing-pro-3col', { 
-                    label: 'Pricing 3-Col', category: '4. Commerce', 
-                    content: `
-                    <section class="py-16 bg-gray-50">
-                        <div class="max-w-7xl mx-auto px-4">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                                <div class="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm hover:shadow-xl transition flex flex-col">
-                                    <div class="mb-6"><h3 class="text-indigo-600 font-bold uppercase tracking-wider text-sm mb-2">Basic</h3><div class="flex items-baseline gap-1"><span class="text-4xl font-black text-gray-900">Rp 0</span><span class="text-gray-400">/bln</span></div></div>
-                                    <ul class="space-y-4 mb-8 flex-1">
-                                        <li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-green-500 text-xl"></iconify-icon><span class="text-gray-600 font-medium">Akses Dasar</span></li>
-                                        <li class="flex items-start gap-3 opacity-50"><iconify-icon icon="ph:x-circle-fill" class="text-gray-400 text-xl"></iconify-icon><span class="text-gray-400">Support VIP</span></li>
-                                    </ul>
-                                    <button class="w-full py-4 rounded-xl border-2 border-indigo-100 text-indigo-600 font-bold hover:bg-indigo-50">DAFTAR</button>
-                                </div>
-                                <div class="bg-indigo-600 rounded-2xl p-8 shadow-2xl scale-105 z-10 text-white flex flex-col relative overflow-hidden">
-                                    <div class="absolute top-0 right-0 bg-yellow-400 text-indigo-900 text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase">BEST VALUE</div>
-                                    <div class="mb-6"><h3 class="text-indigo-200 font-bold uppercase tracking-wider text-sm mb-2">PRO</h3><div class="flex items-baseline gap-1"><span class="text-5xl font-black">99k</span></div></div>
-                                    <ul class="space-y-4 mb-8 flex-1">
-                                        <li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-yellow-400 text-xl"></iconify-icon><span class="font-medium">All Features</span></li>
-                                        <li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-yellow-400 text-xl"></iconify-icon><span class="font-medium">Priority Support</span></li>
-                                    </ul>
-                                    <button class="w-full py-4 rounded-xl bg-white text-indigo-700 font-black hover:bg-gray-100 shadow-lg">BELI SEKARANG</button>
-                                </div>
-                                <div class="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm hover:shadow-xl transition flex flex-col">
-                                    <div class="mb-6"><h3 class="text-indigo-600 font-bold uppercase tracking-wider text-sm mb-2">Expert</h3><div class="flex items-baseline gap-1"><span class="text-4xl font-black text-gray-900">299k</span></div></div>
-                                    <ul class="space-y-4 mb-8 flex-1">
-                                        <li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-green-500 text-xl"></iconify-icon><span class="text-gray-600 font-medium">Unlimited</span></li>
-                                        <li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-green-500 text-xl"></iconify-icon><span class="text-gray-600 font-medium">Dedicated Team</span></li>
-                                    </ul>
-                                    <button class="w-full py-4 rounded-xl border-2 border-indigo-100 text-indigo-600 font-bold hover:bg-indigo-50">CONTACT</button>
-                                </div>
-                            </div>
-                        </div>
-                    </section>` 
-                });
-
-                // PRICING 6 ITEMS (Fixed: 2 Baris @ 3 Kolom, Font Besar, Editable)
-                bm.add('pricing-pro-6col', { 
-                    label: 'Pricing 6-Item', category: '4. Commerce', 
-                    content: `
-                    <section class="py-16 bg-white">
-                        <div class="max-w-7xl mx-auto px-4">
-                            <div class="text-center mb-12">
-                                <h2 class="text-3xl font-black text-gray-900">Pilihan Paket Lengkap</h2>
-                                <p class="text-gray-500 mt-2">Pilih paket yang sesuai kebutuhan Anda</p>
-                            </div>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                
-                                <div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 hover:shadow-lg transition bg-white flex flex-col">
-                                    <div class="text-center mb-6 border-b pb-4 border-gray-100">
-                                        <h3 class="font-bold text-gray-800 uppercase tracking-wider text-sm">PAKET 1</h3>
-                                        <div class="text-3xl font-black text-gray-900 mt-2">10k</div>
-                                    </div>
-                                    <ul class="space-y-3 mb-6 flex-1 text-sm text-gray-600">
-                                        <li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500 text-lg"></iconify-icon><span>Akses Materi Dasar</span></li>
-                                        <li class="flex items-center gap-3"><iconify-icon icon="ph:x-bold" class="text-red-300 text-lg"></iconify-icon><span class="text-gray-400">Tanpa Mentor</span></li>
-                                    </ul>
-                                    <button class="btn btn-outline w-full rounded-lg font-bold border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-indigo-600">Pilih Paket</button>
-                                </div>
-                
-                                <div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 hover:shadow-lg transition bg-white flex flex-col">
-                                    <div class="text-center mb-6 border-b pb-4 border-gray-100">
-                                        <h3 class="font-bold text-gray-800 uppercase tracking-wider text-sm">PAKET 2</h3>
-                                        <div class="text-3xl font-black text-gray-900 mt-2">25k</div>
-                                    </div>
-                                    <ul class="space-y-3 mb-6 flex-1 text-sm text-gray-600">
-                                        <li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500 text-lg"></iconify-icon><span>Materi + Ebook</span></li>
-                                        <li class="flex items-center gap-3"><iconify-icon icon="ph:x-bold" class="text-red-300 text-lg"></iconify-icon><span class="text-gray-400">Tanpa Mentor</span></li>
-                                    </ul>
-                                    <button class="btn btn-outline w-full rounded-lg font-bold border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-indigo-600">Pilih Paket</button>
-                                </div>
-                
-                                <div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 hover:shadow-lg transition bg-white flex flex-col">
-                                    <div class="text-center mb-6 border-b pb-4 border-gray-100">
-                                        <h3 class="font-bold text-gray-800 uppercase tracking-wider text-sm">PAKET 3</h3>
-                                        <div class="text-3xl font-black text-gray-900 mt-2">50k</div>
-                                    </div>
-                                    <ul class="space-y-3 mb-6 flex-1 text-sm text-gray-600">
-                                        <li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500 text-lg"></iconify-icon><span>Full Akses Video</span></li>
-                                        <li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500 text-lg"></iconify-icon><span>Group Support</span></li>
-                                    </ul>
-                                    <button class="btn btn-outline w-full rounded-lg font-bold border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-indigo-600">Pilih Paket</button>
-                                </div>
-                
-                                <div class="p-6 border-2 border-indigo-600 bg-indigo-50 rounded-xl relative overflow-hidden flex flex-col shadow-xl z-10">
-                                    <div class="absolute top-0 right-0 bg-indigo-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider">Popular</div>
-                                    <div class="text-center mb-6 border-b border-indigo-200 pb-4">
-                                        <h3 class="font-bold text-indigo-700 uppercase tracking-wider text-sm">PRO PACK</h3>
-                                        <div class="text-3xl font-black text-indigo-900 mt-2">99k</div>
-                                    </div>
-                                    <ul class="space-y-3 mb-6 flex-1 text-sm text-gray-700">
-                                        <li class="flex items-center gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-indigo-600 text-lg"></iconify-icon><span class="font-bold">All Access VIP</span></li>
-                                        <li class="flex items-center gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-indigo-600 text-lg"></iconify-icon><span class="font-bold">Private Mentor</span></li>
-                                    </ul>
-                                    <button class="btn btn-primary w-full rounded-lg font-bold shadow-lg">Ambil Promo</button>
-                                </div>
-                
-                                <div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 hover:shadow-lg transition bg-white flex flex-col">
-                                    <div class="text-center mb-6 border-b pb-4 border-gray-100">
-                                        <h3 class="font-bold text-gray-800 uppercase tracking-wider text-sm">PAKET 5</h3>
-                                        <div class="text-3xl font-black text-gray-900 mt-2">150k</div>
-                                    </div>
-                                    <ul class="space-y-3 mb-6 flex-1 text-sm text-gray-600">
-                                        <li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500 text-lg"></iconify-icon><span>Bundle Course A+B</span></li>
-                                        <li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500 text-lg"></iconify-icon><span>Sertifikat Fisik</span></li>
-                                    </ul>
-                                    <button class="btn btn-outline w-full rounded-lg font-bold border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-indigo-600">Pilih Paket</button>
-                                </div>
-                
-                                <div class="p-6 border border-gray-200 rounded-xl hover:border-indigo-500 hover:shadow-lg transition bg-white flex flex-col">
-                                    <div class="text-center mb-6 border-b pb-4 border-gray-100">
-                                        <h3 class="font-bold text-gray-800 uppercase tracking-wider text-sm">PAKET 6</h3>
-                                        <div class="text-3xl font-black text-gray-900 mt-2">200k</div>
-                                    </div>
-                                    <ul class="space-y-3 mb-6 flex-1 text-sm text-gray-600">
-                                        <li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500 text-lg"></iconify-icon><span>Lifetime Access</span></li>
-                                        <li class="flex items-center gap-3"><iconify-icon icon="ph:check-bold" class="text-green-500 text-lg"></iconify-icon><span>Reseller License</span></li>
-                                    </ul>
-                                    <button class="btn btn-outline w-full rounded-lg font-bold border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-indigo-600">Pilih Paket</button>
-                                </div>
-                
-                            </div>
-                        </div>
-                    </section>` 
-                });
-                // COUNTDOWN PRO (Fixed Logic)
-                // --- WIDGETS (BLOCK MANAGER) ---
-                
-                // COUNTDOWN PRO (Updated HTML structure for msg)
-                bm.add('countdown-smart', { 
-                    label: 'Countdown Pro', category: '3. Content', 
-                    content: `
-                    <div class="py-8 px-4 bg-gray-900 rounded-2xl text-center max-w-3xl mx-auto my-6" data-gjs-type="countdown-smart" data-expire="2026-12-31T23:59" data-msg="PROMO BERAKHIR">
-                        
-                        <div class="js-expired-msg hidden animate-fade-in">
-                            <h2 class="js-expired-text text-3xl md:text-4xl font-black text-red-500 tracking-widest uppercase animate-pulse">PROMO BERAKHIR</h2>
-                            <p class="text-gray-400 mt-2 text-sm">Penawaran ini telah ditutup.</p>
-                        </div>
-                        
-                        <div class="js-countdown-display">
-                            <h3 class="text-white text-xs md:text-sm font-bold uppercase tracking-[0.3em] mb-6 text-indigo-400">Penawaran Berakhir Dalam:</h3>
-                            <div class="flex flex-wrap justify-center gap-3 md:gap-6">
-                                <div class="bg-gray-800 border border-gray-700 rounded-xl p-3 w-20 md:w-28 shadow-2xl relative overflow-hidden group">
-                                    <div class="absolute top-0 left-0 w-full h-1 bg-indigo-500 shadow-[0_0_10px_#6366f1]"></div>
-                                    <div class="countdown-number text-white text-2xl md:text-4xl font-black js-d">00</div>
-                                    <div class="countdown-label text-[9px] md:text-[10px] text-gray-400 font-bold uppercase mt-1 tracking-wider">HARI</div>
-                                </div>
-                                <div class="bg-gray-800 border border-gray-700 rounded-xl p-3 w-20 md:w-28 shadow-2xl relative overflow-hidden">
-                                    <div class="absolute top-0 left-0 w-full h-1 bg-indigo-500 shadow-[0_0_10px_#6366f1]"></div>
-                                    <div class="countdown-number text-white text-2xl md:text-4xl font-black js-h">00</div>
-                                    <div class="countdown-label text-[9px] md:text-[10px] text-gray-400 font-bold uppercase mt-1 tracking-wider">JAM</div>
-                                </div>
-                                <div class="bg-gray-800 border border-gray-700 rounded-xl p-3 w-20 md:w-28 shadow-2xl relative overflow-hidden">
-                                    <div class="absolute top-0 left-0 w-full h-1 bg-indigo-500 shadow-[0_0_10px_#6366f1]"></div>
-                                    <div class="countdown-number text-white text-2xl md:text-4xl font-black js-m">00</div>
-                                    <div class="countdown-label text-[9px] md:text-[10px] text-gray-400 font-bold uppercase mt-1 tracking-wider">MENIT</div>
-                                </div>
-                                <div class="bg-gray-800 border border-gray-700 rounded-xl p-3 w-20 md:w-28 shadow-2xl relative overflow-hidden">
-                                    <div class="absolute top-0 left-0 w-full h-1 bg-red-500 shadow-[0_0_10px_#ef4444]"></div>
-                                    <div class="countdown-number text-red-500 text-2xl md:text-4xl font-black js-s">00</div>
-                                    <div class="countdown-label text-[9px] md:text-[10px] text-red-400 font-bold uppercase mt-1 tracking-wider">DETIK</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>` 
-                });
-
-                // STANDARD WIDGETS
-                // HERO SLIDER
-                bm.add('hero-slider', { 
-                    label: 'Hero Slider (10x)', category: '1. Header & Hero', 
-                    content: `
-                    <div class="editable-carousel group relative w-full overflow-hidden bg-gray-900" style="aspect-ratio: 21/9; min-height: 320px;" data-gjs-type="editable-carousel">
-                        <div class="slides flex w-full h-full transition-transform duration-500 ease-in-out">
-                            ${Array.from({length: 10}).map((_, i) => `
-                            <div class="slide min-w-full relative h-full" 
-                                 data-gjs-type="carousel-slide"
-                                 img-src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80&sig=${i}"
-                                 title-text="PROMO ${i+1}">
-                                <img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80&sig=${i}" 
-                                     class="w-full h-full object-cover block pointer-events-none" data-gjs-selectable="false">
-                                <div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white p-4 bg-black/30" data-gjs-selectable="false">
-                                    <h2 class="text-3xl md:text-5xl font-black mb-4 drop-shadow-md">PROMO ${i+1}</h2>
-                                    <button class="btn btn-primary rounded-full px-8 shadow-lg">Lihat Detail</button>
-                                </div>
-                            </div>
-                            `).join('')}
-                        </div>
-                        <div class="carousel-controls absolute inset-0 flex justify-between items-center px-4 pointer-events-none z-10" data-gjs-selectable="false">
-                            <button class="prev pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-10 h-10 rounded-full bg-black/30 text-white flex items-center justify-center hover:bg-black/60 cursor-pointer backdrop-blur-sm">❮</button>
-                            <button class="next pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-10 h-10 rounded-full bg-black/30 text-white flex items-center justify-center hover:bg-black/60 cursor-pointer backdrop-blur-sm">❯</button>
-                        </div>
-                    </div>` 
-                });
-        
-                bm.add('flash-news', { label: 'News Flash', category: '3. Content', content: `<div class="bg-gray-900 text-white py-2 overflow-hidden border-b border-gray-800"><div class="animate-marquee inline-block font-mono text-xs font-bold tracking-widest uppercase"><span class="mx-4">🔥 FLASH SALE: DISKON 50% HANYA HARI INI!</span> <span class="mx-4 text-yellow-400">GUNAKAN KODE: SERBU50</span> <span class="mx-4">🚀 GRATIS ONGKIR SELURUH INDONESIA</span></div></div>` });
-                bm.add('contact-form', { label: 'Contact Basic', category: '4. Commerce', content: `<div x-data="{ state: 'idle' }" class="max-w-md mx-auto p-8 bg-white rounded-2xl shadow-xl border border-gray-100" style="min-height:480px"><div x-show="state === 'idle'"><h3 class="text-2xl font-bold text-gray-800 mb-2">Hubungi Kami</h3><p class="text-gray-500 mb-6 text-sm">Isi form di bawah, kami akan membalas secepatnya.</p><form @submit.prevent="state = 'loading'; const fd = new FormData($event.target); setTimeout(() => { state = 'success' }, 1500);" class="space-y-4"><input type="hidden" name="page_id" value="0"><div><label class="font-bold text-xs uppercase text-gray-500">Nama Lengkap</label><input type="text" name="name" required class="w-full p-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="John Doe" /></div><div><label class="font-bold text-xs uppercase text-gray-500">Email</label><input type="email" name="email" required class="w-full p-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="email@anda.com" /></div><div><label class="font-bold text-xs uppercase text-gray-500">Pesan</label><textarea name="message" required class="w-full p-3 h-40 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none resize-none" placeholder="Tulis pesan Anda..."></textarea></div><button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-lg transition transform hover:-translate-y-1">Kirim Pesan <i class="ph ph-paper-plane-right-fill ml-2"></i></button></form></div><div x-show="state === 'loading'" style="display: none;" class="py-20 text-center"><i class="ph ph-spinner animate-spin text-4xl text-indigo-600 mb-4"></i><p class="text-gray-500 font-bold">Mengirim pesan...</p></div><div x-show="state === 'success'" style="display: none;" class="py-10 text-center animate-fade-in"><div class="w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4"><i class="ph ph-check text-3xl font-bold"></i></div><h3 class="text-xl font-black text-gray-800 mb-2">Pesan Terkirim!</h3><p class="text-gray-500 text-sm mb-6">Terima kasih telah menghubungi kami.<br>Tim kami akan segera merespon.</p><button @click="state = 'idle'" class="text-indigo-600 font-bold text-xs hover:underline">Kirim pesan lagi</button></div></div>` });
-                bm.add('container', { label: 'Container', category: 'Custom', content: `<div class="container mx-auto p-4 border-2 border-dashed border-gray-300 min-h-[100px] flex items-center justify-center text-gray-400">Drop Content Here</div>` });
-                bm.add('header-sticky', { label: 'Header Sticky', category: '1. Header', content: `<header style="position:sticky;top:0;z-index:999;background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);border-bottom:1px solid #f1f5f9;"><div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between"><div class="font-bold text-2xl text-indigo-600 tracking-tighter">BRAND.</div><nav class="hidden md:flex gap-8"><a href="#" class="text-sm font-medium hover:text-indigo-600 text-gray-600">Features</a><a href="#" class="text-sm font-medium hover:text-indigo-600 text-gray-600">Pricing</a><a href="#" class="text-sm font-medium hover:text-indigo-600 text-gray-600">Contact</a></nav><button class="btn btn-primary btn-sm rounded-full px-6">Get Started</button></div></header>` });
-                // --- 1. HERO SECTION VARIANTS ---
-                // --- 1. HERO SECTION (Link-able) ---
-                bm.add('hero-simple', { label: 'Hero Simple', category: '1. Header & Hero', content: `<section class="py-12 md:py-20 bg-white"><div class="max-w-5xl mx-auto px-6 text-center"><span class="inline-block py-1 px-3 rounded-full bg-indigo-50 text-indigo-600 text-[10px] md:text-xs font-bold tracking-widest mb-4 uppercase">NEW ARRIVAL</span><h1 class="text-3xl md:text-6xl font-black text-gray-900 leading-tight mb-6 px-2">Judul Hero <span class="text-indigo-600">Menarik</span> Disini.</h1><p class="text-base md:text-lg text-gray-500 mb-8 max-w-2xl mx-auto px-4">Deskripsi produk yang fleksibel.</p><div class="flex flex-col md:flex-row gap-4 justify-center px-6"><a data-gjs-type="link" href="#" class="inline-block w-full md:w-auto px-8 py-3 bg-indigo-600 text-white font-bold rounded-lg shadow-lg text-center">Mulai Sekarang</a><a data-gjs-type="link" href="#" class="inline-block w-full md:w-auto px-8 py-3 bg-white text-gray-700 font-bold border border-gray-200 rounded-lg text-center">Pelajari Lagi</a></div></div></section>` });
-                
-                bm.add('hero-beautiful', { label: 'Hero Beautiful', category: '1. Header & Hero', content: `<section class="relative py-20 md:py-32 flex items-center justify-center overflow-hidden"><div class="absolute inset-0 z-0"><img src="https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1600&q=80" class="w-full h-full object-cover" /><div class="absolute inset-0 bg-gradient-to-b from-gray-900/90 via-gray-900/70 to-gray-900/90"></div></div><div class="relative z-10 max-w-4xl mx-auto px-6 text-center"><h1 class="text-4xl md:text-7xl font-black text-white mb-6 leading-tight">Buat Website <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">Menakjubkan</span></h1><a data-gjs-type="link" href="#" class="inline-block w-full md:w-auto px-10 py-4 bg-white text-gray-900 font-black rounded-full shadow-2xl text-center">BERGABUNG SEKARANG</a></div></section>` });
-                
-                // --- 2. FEATURES (Link-able) ---
-                bm.add('feat-3-center', { label: 'Feat 3-Col', category: '2. Features', content: `<section class="py-12 md:py-16 bg-white"><div class="max-w-7xl mx-auto px-6 text-center mb-10"><h2 class="text-2xl md:text-3xl font-black uppercase tracking-tighter">Kenapa Pilih Kami?</h2></div><div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 px-4 max-w-7xl mx-auto"><div class="p-8 border border-gray-100 rounded-3xl bg-gray-50 text-center group hover:border-indigo-500 transition-all"><div class="w-16 h-16 bg-white shadow-sm text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-indigo-600 group-hover:text-white transition-all"><iconify-icon data-gjs-type="iconify-icon" icon="ph:rocket-launch-duotone" width="32"></iconify-icon></div><h3 class="font-black text-gray-800 mb-2 uppercase tracking-tight text-sm md:text-base">Performa Cepat</h3><p class="text-gray-500 text-xs md:text-sm leading-relaxed mb-4">Website Anda akan dimuat secepat kilat.</p><a data-gjs-type="link" href="#" class="text-indigo-600 font-bold text-xs uppercase tracking-widest hover:underline">Detail &rarr;</a></div></div></section>` });
-                
-                // --- 3. COMMERCE & PRICING (Link-able) ---
-                bm.add('pricing-pro-3col', { label: 'Pricing 3-Col', category: '4. Commerce', content: `<section class="py-12 bg-gray-50"><div class="max-w-7xl mx-auto px-6"><div class="grid grid-cols-1 md:grid-cols-3 gap-8"><div class="bg-white p-8 rounded-2xl border text-center"><h3 class="text-indigo-600 font-bold text-xs mb-2">BASIC</h3><span class="text-3xl font-black text-gray-900">Free</span><a data-gjs-type="link" href="#" class="inline-block w-full mt-6 py-3 border-2 border-indigo-100 text-indigo-600 font-bold rounded-xl text-sm text-center">DAFTAR</a></div><div class="bg-indigo-600 p-8 rounded-3xl shadow-xl text-white text-center md:scale-110 relative border-4 border-indigo-400"><h3 class="text-indigo-200 font-bold text-xs mb-2">PRO PLAN</h3><span class="text-5xl font-black">99k</span><a data-gjs-type="link" href="#" class="inline-block w-full mt-6 py-3 bg-white text-indigo-700 font-black rounded-xl text-sm shadow-lg text-center">BELI SEKARANG</a></div><div class="bg-white p-8 rounded-2xl border text-center"><h3 class="text-indigo-600 font-bold text-xs mb-2">EXPERT</h3><span class="text-3xl font-black text-gray-900">299k</span><a data-gjs-type="link" href="#" class="inline-block w-full mt-6 py-3 border-2 border-indigo-100 text-indigo-600 font-bold rounded-xl text-sm text-center">HUBUNGI KAMI</a></div></div></div></section>` });
-                // --- 2. FEATURED COLUMNS VARIANTS ---
-                bm.add('feat-3-center', { label: 'Features 3-Col (Center)', category: '2. Features', content: `<section class="py-16 bg-white"><div class="max-w-7xl mx-auto px-6"><div class="text-center mb-16 max-w-2xl mx-auto"><h2 class="text-3xl font-black text-gray-900 mb-4">Kenapa Memilih Kami?</h2><p class="text-gray-500">Kami memberikan layanan terbaik dengan standar kualitas tinggi untuk kepuasan pelanggan.</p></div><div class="grid grid-cols-1 md:grid-cols-3 gap-8"><div class="flex flex-col items-center text-center p-6 rounded-2xl bg-gray-50 border border-gray-100 hover:shadow-lg transition group"><div class="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center text-blue-600 mb-6 group-hover:bg-blue-600 group-hover:text-white transition"><iconify-icon icon="ph:rocket-launch-duotone" width="32"></iconify-icon></div><h3 class="text-xl font-bold text-gray-800 mb-3">Sangat Cepat</h3><p class="text-gray-500 leading-relaxed">Optimasi performa tingkat tinggi memastikan website Anda dimuat dalam hitungan detik.</p></div><div class="flex flex-col items-center text-center p-6 rounded-2xl bg-gray-50 border border-gray-100 hover:shadow-lg transition group"><div class="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center text-purple-600 mb-6 group-hover:bg-purple-600 group-hover:text-white transition"><iconify-icon icon="ph:shield-check-duotone" width="32"></iconify-icon></div><h3 class="text-xl font-bold text-gray-800 mb-3">Keamanan Terjamin</h3><p class="text-gray-500 leading-relaxed">Sistem keamanan berlapis melindungi data transaksi dan privasi pelanggan Anda.</p></div><div class="flex flex-col items-center text-center p-6 rounded-2xl bg-gray-50 border border-gray-100 hover:shadow-lg transition group"><div class="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center text-pink-600 mb-6 group-hover:bg-pink-600 group-hover:text-white transition"><iconify-icon icon="ph:headset-duotone" width="32"></iconify-icon></div><h3 class="text-xl font-bold text-gray-800 mb-3">Support Prioritas</h3><p class="text-gray-500 leading-relaxed">Tim support kami siap membantu kendala teknis Anda 24 jam sehari, 7 hari seminggu.</p></div></div></div></section>` });
-
-                bm.add('feat-3-left', { label: 'Features 3-Col (Left)', category: '2. Features', content: `<section class="py-16 bg-gray-50"><div class="max-w-7xl mx-auto px-6"><div class="mb-12"><h2 class="text-3xl font-black text-gray-900">Fitur Unggulan</h2><div class="w-20 h-1 bg-indigo-600 mt-4"></div></div><div class="grid grid-cols-1 md:grid-cols-3 gap-10"><div class="flex flex-col items-start text-left group"><div class="mb-5 p-3 bg-indigo-100 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition"><iconify-icon icon="ph:chart-bar-duotone" width="32"></iconify-icon></div><h3 class="text-xl font-bold text-gray-800 mb-3">Analitik Lengkap</h3><p class="text-gray-500 text-sm leading-relaxed">Dapatkan wawasan mendalam tentang pengunjung Anda dengan dashboard analitik yang mudah dipahami.</p><a href="#" class="mt-4 text-indigo-600 font-bold text-sm hover:underline">Pelajari &rarr;</a></div><div class="flex flex-col items-start text-left group"><div class="mb-5 p-3 bg-orange-100 text-orange-600 rounded-lg group-hover:bg-orange-600 group-hover:text-white transition"><iconify-icon icon="ph:users-three-duotone" width="32"></iconify-icon></div><h3 class="text-xl font-bold text-gray-800 mb-3">Manajemen User</h3><p class="text-gray-500 text-sm leading-relaxed">Kelola hak akses tim Anda dengan mudah dan aman tanpa batasan jumlah pengguna.</p><a href="#" class="mt-4 text-orange-600 font-bold text-sm hover:underline">Pelajari &rarr;</a></div><div class="flex flex-col items-start text-left group"><div class="mb-5 p-3 bg-teal-100 text-teal-600 rounded-lg group-hover:bg-teal-600 group-hover:text-white transition"><iconify-icon icon="ph:globe-duotone" width="32"></iconify-icon></div><h3 class="text-xl font-bold text-gray-800 mb-3">Global Access</h3><p class="text-gray-500 text-sm leading-relaxed">Akses platform dari mana saja di seluruh dunia dengan jaminan uptime 99.9%.</p><a href="#" class="mt-4 text-teal-600 font-bold text-sm hover:underline">Pelajari &rarr;</a></div></div></div></section>` });
-
-                bm.add('feat-3-right', { label: 'Features 3-Col (Right)', category: '2. Features', content: `<section class="py-16 bg-white border-t border-b border-gray-100"><div class="max-w-7xl mx-auto px-6"><div class="grid grid-cols-1 md:grid-cols-3 gap-8"><div class="flex flex-col items-end text-right p-6 hover:bg-gray-50 rounded-xl transition duration-300"><div class="mb-4 text-red-500"><iconify-icon icon="ph:pencil-circle-duotone" width="48"></iconify-icon></div><h3 class="text-lg font-bold text-gray-900 mb-2">Desain Kustom</h3><p class="text-gray-500 text-sm">Sesuaikan tampilan halaman checkout Anda agar sesuai dengan identitas brand.</p></div><div class="flex flex-col items-end text-right p-6 hover:bg-gray-50 rounded-xl transition duration-300"><div class="mb-4 text-blue-500"><iconify-icon icon="ph:device-mobile-camera-duotone" width="48"></iconify-icon></div><h3 class="text-lg font-bold text-gray-900 mb-2">Mobile Friendly</h3><p class="text-gray-500 text-sm">Tampilan yang responsif dan sempurna di semua perangkat mobile pelanggan.</p></div><div class="flex flex-col items-end text-right p-6 hover:bg-gray-50 rounded-xl transition duration-300"><div class="mb-4 text-green-500"><iconify-icon icon="ph:money-duotone" width="48"></iconify-icon></div><h3 class="text-lg font-bold text-gray-900 mb-2">Biaya Rendah</h3><p class="text-gray-500 text-sm">Nikmati fitur premium dengan biaya yang sangat terjangkau untuk bisnis UMKM.</p></div></div></div></section>` });
-
-                // --- CUSTOM CONTAINERS (800px - 1200px) ---
-                bm.add('container-800', { label: 'Container 800', category: 'Custom', content: `<div class="mx-auto p-4 border-2 border-dashed border-gray-200 min-h-[100px] flex items-center justify-center text-gray-400" style="max-width: 800px; width: 100%;">Container 800px</div>` });
-                bm.add('container-1000', { label: 'Container 1000', category: 'Custom', content: `<div class="mx-auto p-4 border-2 border-dashed border-gray-200 min-h-[100px] flex items-center justify-center text-gray-400" style="max-width: 1000px; width: 100%;">Container 1000px</div>` });
-                bm.add('container-1200', { label: 'Container 1200', category: 'Custom', content: `<div class="mx-auto p-4 border-2 border-dashed border-gray-200 min-h-[100px] flex items-center justify-center text-gray-400" style="max-width: 1200px; width: 100%;">Container 1200px</div>` });
-                bm.add('container-full', { label: 'Container Full', category: 'Custom', content: `<div class="w-full p-4 border-2 border-dashed border-gray-200 min-h-[100px] flex items-center justify-center text-gray-400">Container Full Width</div>` });
-                // --- 4. CONFIG TOOLBAR (VERTICAL COMPLETE) ---
-                editor.on('component:selected', (c) => {
-                    c.set('toolbar', [
-                        { attributes: { class: 'fa fa-arrows', title: 'Geser' }, command: 'tlb-move', label: '<iconify-icon icon="ph:arrows-out-cardinal-bold" style="font-size:20px;"></iconify-icon>' },
-                        { attributes: { class: 'fa fa-arrow-up', title: 'Parent' }, command: (e) => e.runCommand('core:component-exit'), label: '<iconify-icon icon="ph:arrow-fat-up-bold" style="font-size:20px;"></iconify-icon>' },
-                        { attributes: { class: 'fa fa-scissors', title: 'Cut' }, command: (e) => { e.runCommand('core:copy'); e.getSelected().remove(); }, label: '<iconify-icon icon="ph:scissors-bold" style="font-size:18px; color:#fbbf24;"></iconify-icon>' },
-                        { attributes: { class: 'fa fa-copy', title: 'Copy' }, command: (e) => e.runCommand('core:copy'), label: '<iconify-icon icon="ph:copy-bold" style="font-size:18px; color:#38bdf8;"></iconify-icon>' },
-                        { attributes: { class: 'fa fa-paste', title: 'Paste' }, command: (e) => e.runCommand('core:paste'), label: '<iconify-icon icon="ph:clipboard-text-bold" style="font-size:18px; color:#4ade80;"></iconify-icon>' },
-                        { attributes: { class: 'fa fa-paste-inside', title: 'Paste Inside' }, command: (e) => { const s = e.getSelected(); const cl = e.Models.Clipboard && e.Models.Clipboard.get ? e.Models.Clipboard.get() : null; if(cl) s.append(cl); }, label: '<iconify-icon icon="ph:arrow-elbow-down-right-bold" style="font-size:18px; color:#c084fc;"></iconify-icon>' },
-                        { attributes: { class: 'fa fa-trash', title: 'Delete' }, command: 'tlb-delete', label: '<iconify-icon icon="ph:trash-bold" style="font-size:18px; color:#ef4444;"></iconify-icon>' }
-                    ]);
-                });
-                
-                // --- ADD CLICK EVENT ---
-                setTimeout(() => {
-                    const container = document.getElementById('blocks-container');
-                    if (container) {
-                        container.addEventListener('click', (e) => {
-                            const blockEl = e.target.closest('.gjs-block');
-                            if (blockEl) {
-                                const id = blockEl.getAttribute('title') || blockEl.innerText.trim();
-                                const block = window.editor.BlockManager.get(id);
-                                if (block) {
-                                    window.editor.addComponents(block.get('content'));
-                                    if(window.innerWidth < 768) this.mobileMenuOpen = false;
-                                }
-                            }
+                async saveWidget() {
+                    if (!this.form.id || !this.form.content) return Swal.fire('Error', 'ID dan Content wajib diisi!', 'warning');
+                    this.isSaving = true;
+                    try {
+                        const token = localStorage.getItem('auth_token');
+                        const res = await fetch('/api/admin/widgets', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                            body: JSON.stringify(this.form)
                         });
+                        if (res.ok) {
+                            this.showModal = false;
+                            await this.fetchWidgets();
+                            const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+                            Toast.fire({ icon: 'success', title: 'Widget berhasil disimpan' });
+                        } else throw new Error('Gagal menyimpan');
+                    } catch (e) { Swal.fire('Error', e.message, 'error'); }
+                    this.isSaving = false;
+                },
+
+                async deleteWidget(id) {
+                    const result = await Swal.fire({ title: 'Hapus Widget?', text: "Data di D1 & Cache KV akan dihapus.", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Hapus!' });
+                    if (result.isConfirmed) {
+                        try {
+                            const token = localStorage.getItem('auth_token');
+                            await fetch(`/api/admin/widgets/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+                            await this.fetchWidgets();
+                        } catch (e) { Swal.fire('Error', 'Gagal menghapus', 'error'); }
                     }
-                }, 1500);
-            } // END INIT GRAPES
-        }; // END RETURN
-    } // END EDITOR APP
-</script>
+                },
+
+                toggleTheme() {
+                    this.darkMode = !this.darkMode;
+                    localStorage.setItem('theme', this.darkMode ? 'dark' : 'light');
+                    if (this.darkMode) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark');
+                },
+
+                logout() {
+                    if (confirm('Keluar?')) { localStorage.removeItem('auth_token'); window.location.href = '/login'; }
+                }
+            }
+        }
+    </script>
 </body>
 </html>
