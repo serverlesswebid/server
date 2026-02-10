@@ -27,13 +27,16 @@
                 <a href="/admin/widgets" class="flex items-center gap-3 px-3 py-3 rounded-lg bg-blue-600 text-white shadow-md"><i class="ph ph-puzzle-piece text-xl"></i>Widget Library</a>
                 <a href="/admin/settings" class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"><i class="ph ph-gear text-xl"></i>Settings</a>
             </nav>
+            <div class="p-4 border-t dark:border-gray-700 shrink-0">
+                <button @click="logout()" class="flex items-center gap-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 w-full p-2 rounded-lg transition-colors group"><i class="ph ph-sign-out text-xl"></i>Keluar</button>
+            </div>
         </aside>
 
         <div class="flex-1 flex flex-col min-w-0">
             <header class="h-16 bg-white dark:bg-gray-800 border-b dark:border-gray-700 flex justify-between items-center px-4 shadow-sm z-20">
                 <div class="flex items-center gap-4">
                     <button @click="sidebarOpen = !sidebarOpen" class="md:hidden p-2 rounded-lg hover:bg-gray-100"><i class="ph ph-list text-2xl dark:text-white"></i></button>
-                    <h1 class="font-bold text-lg truncate dark:text-white">Manajemen Widget (D1 + KV)</h1>
+                    <h1 class="font-bold text-lg truncate dark:text-white">Manajemen Widget (Database)</h1>
                 </div>
                 <button @click="toggleTheme()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 border dark:border-gray-600"><i class="ph" :class="darkMode ? 'ph-sun' : 'ph-moon'"></i></button>
             </header>
@@ -45,8 +48,8 @@
                         <input type="text" x-model="search" placeholder="Cari widget..." class="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm dark:text-white shadow-sm">
                     </div>
                     <div class="flex gap-2">
-                        <button @click="injectDefaults()" class="px-4 py-2 bg-amber-100 text-amber-700 border border-amber-200 font-bold rounded-lg text-sm hover:bg-amber-200 transition flex items-center gap-2">
-                            <i class="ph ph-lightning-fill"></i> Inject Default (Frontend)
+                        <button @click="injectFromCDN()" class="px-4 py-2 bg-amber-100 text-amber-700 border border-amber-200 font-bold rounded-lg text-sm hover:bg-amber-200 transition flex items-center gap-2">
+                            <i class="ph ph-cloud-arrow-down-fill"></i> Import dari JSON
                         </button>
                         <button @click="openModal()" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg text-sm shadow-lg hover:bg-blue-700 transition flex items-center gap-2">
                             <i class="ph ph-plus-bold"></i> Tambah Manual
@@ -131,51 +134,6 @@
     </div>
 
     <script>
-        // --- MASTER DATA WIDGET (FRONTEND SOURCE) ---
-        // Data ini akan dikirim ke API /api/admin/widgets satu per satu saat tombol "Inject" ditekan.
-        // Tidak ada hardcode di backend!
-        const MASTER_WIDGETS = [
-            {
-                id: 'hero-slider', label: 'Hero Slider (10x)', category: '1. Header & Hero',
-                content: `<div class="editable-carousel group relative w-full overflow-hidden bg-gray-900" style="aspect-ratio: 21/9; min-height: 320px;" data-gjs-type="editable-carousel"><div class="slides flex w-full h-full transition-transform duration-500 ease-in-out"><div class="slide min-w-full relative h-full" data-gjs-type="carousel-slide" img-src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80&sig=1" title-text="PROMO 1"><img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80&sig=1" class="w-full h-full object-cover block pointer-events-none" data-gjs-selectable="false"><div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white p-4 bg-black/30" data-gjs-selectable="false"><h2 class="text-3xl md:text-5xl font-black mb-4 drop-shadow-md">PROMO 1</h2><button class="btn btn-primary rounded-full px-8 shadow-lg">Lihat Detail</button></div></div><div class="slide min-w-full relative h-full" data-gjs-type="carousel-slide" img-src="https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1200&q=80&sig=2" title-text="PROMO 2"><img src="https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1200&q=80&sig=2" class="w-full h-full object-cover block pointer-events-none" data-gjs-selectable="false"><div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white p-4 bg-black/30" data-gjs-selectable="false"><h2 class="text-3xl md:text-5xl font-black mb-4 drop-shadow-md">PROMO 2</h2><button class="btn btn-primary rounded-full px-8 shadow-lg">Lihat Detail</button></div></div></div><div class="carousel-controls absolute inset-0 flex justify-between items-center px-4 pointer-events-none z-10" data-gjs-selectable="false"><button class="prev pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-10 h-10 rounded-full bg-black/30 text-white flex items-center justify-center hover:bg-black/60 cursor-pointer backdrop-blur-sm">❮</button><button class="next pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-10 h-10 rounded-full bg-black/30 text-white flex items-center justify-center hover:bg-black/60 cursor-pointer backdrop-blur-sm">❯</button></div></div>`,
-                script: `const el = this; const slidesContainer = el.querySelector(".slides"); const items = el.querySelectorAll(".slide"); if (!slidesContainer || items.length === 0) return; let idx = 0; const show = (n) => { idx = (n + items.length) % items.length; slidesContainer.style.transform = "translateX(-" + (idx * 100) + "%)"; }; const nextBtn = el.querySelector(".next"); if(nextBtn) nextBtn.onclick = (e) => { e.preventDefault(); show(idx + 1); }; const prevBtn = el.querySelector(".prev"); if(prevBtn) prevBtn.onclick = (e) => { e.preventDefault(); show(idx - 1); }; let interval = setInterval(() => show(idx + 1), 5000); el.onmouseenter = () => clearInterval(interval); el.onmouseleave = () => interval = setInterval(() => show(idx + 1), 5000);`
-            },
-            {
-                id: 'pricing-pro-3col', label: 'Pricing 3-Col', category: '4. Commerce',
-                content: `<section class="py-12 md:py-16 bg-gray-50"><div class="max-w-7xl mx-auto px-6"><div class="grid grid-cols-1 md:grid-cols-3 gap-8"><div class="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm hover:shadow-xl transition flex flex-col h-full"><div class="mb-6 text-center"><h3 class="text-indigo-600 font-bold text-xs mb-2 tracking-widest uppercase">BASIC</h3><span class="text-4xl font-black text-gray-900">Free</span></div><ul class="space-y-4 mb-8 flex-1 text-left text-sm"><li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-green-500 text-xl shrink-0"></iconify-icon><span class="text-gray-600 font-medium">Akses Dashboard Dasar</span></li><li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-green-500 text-xl shrink-0"></iconify-icon><span class="text-gray-600 font-medium">1 Project Aktif</span></li><li class="flex items-start gap-3 opacity-50"><iconify-icon icon="ph:x-circle-fill" class="text-gray-400 text-xl shrink-0"></iconify-icon><span class="text-gray-400 decoration-slate-400">Export Source Code</span></li></ul><a data-gjs-type="link" href="#" class="inline-block w-full py-3 border-2 border-indigo-100 text-indigo-600 font-bold rounded-xl text-sm text-center hover:bg-indigo-50 transition">DAFTAR GRATIS</a></div><div class="bg-indigo-600 p-8 rounded-3xl shadow-2xl text-white text-center md:scale-110 relative border-4 border-indigo-400 flex flex-col h-full z-10"><div class="absolute top-4 right-4 bg-yellow-400 text-indigo-900 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">POPULAR</div><div class="mb-6"><h3 class="text-indigo-200 font-bold text-xs mb-2 tracking-widest uppercase">PRO PLAN</h3><span class="text-5xl font-black">99k</span><span class="text-indigo-200 text-sm">/bln</span></div><ul class="space-y-4 mb-8 flex-1 text-left text-sm"><li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-yellow-400 text-xl shrink-0"></iconify-icon><span class="font-bold text-white">Semua Fitur Basic</span></li><li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-yellow-400 text-xl shrink-0"></iconify-icon><span class="font-bold text-white">Unlimited Projects</span></li><li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-yellow-400 text-xl shrink-0"></iconify-icon><span class="font-bold text-white">Export HTML/CSS</span></li></ul><a data-gjs-type="link" href="#" class="inline-block w-full py-4 bg-white text-indigo-700 font-black rounded-xl text-sm shadow-lg text-center hover:bg-gray-100 transition transform hover:-translate-y-1">AMBIL PROMO</a></div><div class="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm hover:shadow-xl transition flex flex-col h-full"><div class="mb-6 text-center"><h3 class="text-indigo-600 font-bold text-xs mb-2 tracking-widest uppercase">EXPERT</h3><span class="text-4xl font-black text-gray-900">299k</span><span class="text-gray-400 text-sm">/bln</span></div><ul class="space-y-4 mb-8 flex-1 text-left text-sm"><li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-green-500 text-xl shrink-0"></iconify-icon><span class="text-gray-600 font-medium">Semua Fitur Pro</span></li><li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-green-500 text-xl shrink-0"></iconify-icon><span class="text-gray-600 font-medium">Dedicated Server</span></li><li class="flex items-start gap-3"><iconify-icon icon="ph:check-circle-fill" class="text-green-500 text-xl shrink-0"></iconify-icon><span class="text-gray-600 font-medium">Prioritas Support 24/7</span></li></ul><a data-gjs-type="link" href="#" class="inline-block w-full py-3 border-2 border-indigo-100 text-indigo-600 font-bold rounded-xl text-sm text-center hover:bg-indigo-50 transition">HUBUNGI SALES</a></div></div></div></section>`,
-                script: null
-            },
-            {
-                id: 'hero-simple', label: 'Hero Simple', category: '1. Header & Hero',
-                content: `<section class="py-12 md:py-20 bg-white"><div class="max-w-5xl mx-auto px-6 text-center"><span class="inline-block py-1 px-3 rounded-full bg-indigo-50 text-indigo-600 text-[10px] md:text-xs font-bold tracking-widest mb-4 uppercase">NEW ARRIVAL</span><h1 class="text-3xl md:text-6xl font-black text-gray-900 leading-tight mb-6 px-2">Judul Hero <span class="text-indigo-600">Menarik</span> Disini.</h1><p class="text-base md:text-lg text-gray-500 mb-8 max-w-2xl mx-auto px-4">Deskripsi produk yang fleksibel di semua layar.</p><div class="flex flex-col md:flex-row gap-4 justify-center px-6"><a data-gjs-type="link" href="#" class="inline-block w-full md:w-auto px-8 py-3 bg-indigo-600 text-white font-bold rounded-lg shadow-lg text-center">Mulai Sekarang</a><a data-gjs-type="link" href="#" class="inline-block w-full md:w-auto px-8 py-3 bg-white text-gray-700 font-bold border border-gray-200 rounded-lg text-center">Pelajari Lagi</a></div></div></section>`, script: null
-            },
-            {
-                id: 'countdown-smart', label: 'Countdown Pro', category: '3. Content',
-                content: `<div class="py-8 px-4 bg-gray-900 rounded-2xl text-center max-w-3xl mx-auto my-6" data-gjs-type="countdown-smart" data-expire="2026-12-31T23:59" data-msg="PROMO BERAKHIR"><div class="js-expired-msg hidden animate-fade-in"><h2 class="js-expired-text text-3xl md:text-4xl font-black text-red-500 tracking-widest uppercase animate-pulse">PROMO BERAKHIR</h2><p class="text-gray-400 mt-2 text-sm">Penawaran ini telah ditutup.</p></div><div class="js-countdown-display"><h3 class="text-white text-xs md:text-sm font-bold uppercase tracking-[0.3em] mb-6 text-indigo-400">Penawaran Berakhir Dalam:</h3><div class="flex flex-wrap justify-center gap-3 md:gap-6"><div class="bg-gray-800 border border-gray-700 rounded-xl p-3 w-20 md:w-28 shadow-2xl relative overflow-hidden group"><div class="absolute top-0 left-0 w-full h-1 bg-indigo-500 shadow-[0_0_10px_#6366f1]"></div><div class="countdown-number text-white text-2xl md:text-4xl font-black js-d">00</div><div class="countdown-label text-[9px] md:text-[10px] text-gray-400 font-bold uppercase mt-1 tracking-wider">HARI</div></div><div class="bg-gray-800 border border-gray-700 rounded-xl p-3 w-20 md:w-28 shadow-2xl relative overflow-hidden"><div class="absolute top-0 left-0 w-full h-1 bg-indigo-500 shadow-[0_0_10px_#6366f1]"></div><div class="countdown-number text-white text-2xl md:text-4xl font-black js-h">00</div><div class="countdown-label text-[9px] md:text-[10px] text-gray-400 font-bold uppercase mt-1 tracking-wider">JAM</div></div><div class="bg-gray-800 border border-gray-700 rounded-xl p-3 w-20 md:w-28 shadow-2xl relative overflow-hidden"><div class="absolute top-0 left-0 w-full h-1 bg-indigo-500 shadow-[0_0_10px_#6366f1]"></div><div class="countdown-number text-white text-2xl md:text-4xl font-black js-m">00</div><div class="countdown-label text-[9px] md:text-[10px] text-gray-400 font-bold uppercase mt-1 tracking-wider">MENIT</div></div><div class="bg-gray-800 border border-gray-700 rounded-xl p-3 w-20 md:w-28 shadow-2xl relative overflow-hidden"><div class="absolute top-0 left-0 w-full h-1 bg-red-500 shadow-[0_0_10px_#ef4444]"></div><div class="countdown-number text-red-500 text-2xl md:text-4xl font-black js-s">00</div><div class="countdown-label text-[9px] md:text-[10px] text-red-400 font-bold uppercase mt-1 tracking-wider">DETIK</div></div></div></div></div>`,
-                script: `const el = this; const display = el.querySelector(".js-countdown-display"); const expiredBox = el.querySelector(".js-expired-msg"); const expiredText = el.querySelector(".js-expired-text"); const expireStr = el.getAttribute("data-expire"); const msgStr = el.getAttribute("data-msg") || "PROMO BERAKHIR"; if(!expireStr) return; const update = () => { const now = new Date().getTime(); const distance = new Date(expireStr).getTime() - now; if (distance < 0) { if(display) display.style.display = "none"; if(expiredBox) { expiredBox.style.display = "block"; expiredBox.classList.remove("hidden"); if(expiredText) expiredText.innerText = msgStr; } return; } const d = Math.floor(distance / (1000 * 60 * 60 * 24)); const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)); const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)); const s = Math.floor((distance % (1000 * 60)) / 1000); const setTxt = (sel, val) => { const node = el.querySelector(sel); if(node) node.innerText = val < 10 ? "0"+val : val; }; setTxt(".js-d", d); setTxt(".js-h", h); setTxt(".js-m", m); setTxt(".js-s", s); requestAnimationFrame(update); }; update();`
-            },
-            {
-                id: 'contact-form', label: 'Contact Basic', category: '4. Commerce',
-                content: `<div x-data="{ state: 'idle' }" class="max-w-md mx-auto p-8 bg-white rounded-2xl shadow-xl border border-gray-100" style="min-height:480px"><div x-show="state === 'idle'"><h3 class="text-2xl font-bold text-gray-800 mb-2">Hubungi Kami</h3><p class="text-gray-500 mb-6 text-sm">Isi form di bawah, kami akan membalas secepatnya.</p><form @submit.prevent="state = 'loading'; const fd = new FormData($event.target); setTimeout(() => { state = 'success' }, 1500);" class="space-y-4"><input type="hidden" name="page_id" value="0"><div><label class="font-bold text-xs uppercase text-gray-500">Nama Lengkap</label><input type="text" name="name" required class="w-full p-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="John Doe" /></div><div><label class="font-bold text-xs uppercase text-gray-500">Email</label><input type="email" name="email" required class="w-full p-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="email@anda.com" /></div><div><label class="font-bold text-xs uppercase text-gray-500">Pesan</label><textarea name="message" required class="w-full p-3 h-40 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none resize-none" placeholder="Tulis pesan Anda..."></textarea></div><button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-lg transition transform hover:-translate-y-1">Kirim Pesan <i class="ph ph-paper-plane-right-fill ml-2"></i></button></form></div><div x-show="state === 'loading'" style="display: none;" class="py-20 text-center"><i class="ph ph-spinner animate-spin text-4xl text-indigo-600 mb-4"></i><p class="text-gray-500 font-bold">Mengirim pesan...</p></div><div x-show="state === 'success'" style="display: none;" class="py-10 text-center animate-fade-in"><div class="w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4"><i class="ph ph-check text-3xl font-bold"></i></div><h3 class="text-xl font-black text-gray-800 mb-2">Pesan Terkirim!</h3><p class="text-gray-500 text-sm mb-6">Terima kasih telah menghubungi kami.<br>Tim kami akan segera merespon.</p><button @click="state = 'idle'" class="text-indigo-600 font-bold text-xs hover:underline">Kirim pesan lagi</button></div></div>`, script: null
-            },
-            {
-                id: 'flash-news', label: 'News Flash', category: '3. Content',
-                content: `<div class="bg-gray-900 text-white py-2 overflow-hidden border-b border-gray-800"><div class="animate-marquee inline-block font-mono text-xs font-bold tracking-widest uppercase"><span class="mx-4">🔥 FLASH SALE: DISKON 50% HANYA HARI INI!</span> <span class="mx-4 text-yellow-400">GUNAKAN KODE: SERBU50</span> <span class="mx-4">🚀 GRATIS ONGKIR SELURUH INDONESIA</span></div></div>`, script: null
-            },
-            {
-                id: 'container-800', label: 'Container 800', category: 'Custom',
-                content: `<div class="mx-auto p-4 border-2 border-dashed border-gray-200 min-h-[100px] flex items-center justify-center text-gray-400" style="max-width: 800px; width: 100%;">Container 800px</div>`, script: null
-            },
-            {
-                id: 'container-1000', label: 'Container 1000', category: 'Custom',
-                content: `<div class="mx-auto p-4 border-2 border-dashed border-gray-200 min-h-[100px] flex items-center justify-center text-gray-400" style="max-width: 1000px; width: 100%;">Container 1000px</div>`, script: null
-            },
-            {
-                id: 'container-full', label: 'Container Full', category: 'Custom',
-                content: `<div class="w-full p-4 border-2 border-dashed border-gray-200 min-h-[100px] flex items-center justify-center text-gray-400">Container Full Width</div>`, script: null
-            }
-        ];
-
         function widgetApp() {
             return {
                 sidebarOpen: window.innerWidth > 768,
@@ -228,26 +186,31 @@
                     this.loading = false;
                 },
 
-                // --- FUNGSI INJECT DARI FRONTEND (Tanpa Manual SQL) ---
-                async injectDefaults() {
+                // --- INJECT FROM CDN (EXTERNAL SOURCE) ---
+                async injectFromCDN() {
                     const r = await Swal.fire({
-                        title: 'Inject Default Widgets?',
-                        text: `Akan memasukkan ${MASTER_WIDGETS.length} widget ke database via API.`,
+                        title: 'Import dari JSON?',
+                        text: "Akan mengambil data dari 'https://cdn.pasdigi.com/json/blocks.json' dan menimpa database.",
                         icon: 'info',
                         showCancelButton: true,
-                        confirmButtonText: 'Ya, Inject Sekarang!',
+                        confirmButtonText: 'Ya, Import!',
                         confirmButtonColor: '#d97706'
                     });
 
                     if (r.isConfirmed) {
-                        Swal.fire({ title: 'Memproses...', didOpen: () => Swal.showLoading() });
+                        Swal.fire({ title: 'Mengunduh & Memproses...', didOpen: () => Swal.showLoading() });
                         
                         try {
                             const token = localStorage.getItem('auth_token');
-                            let successCount = 0;
+                            
+                            // 1. Fetch JSON dari CDN
+                            const cdnRes = await fetch('https://cdn.pasdigi.com/json/blocks.json');
+                            if(!cdnRes.ok) throw new Error('Gagal unduh JSON dari CDN');
+                            const externalWidgets = await cdnRes.json();
 
-                            // Loop kirim data satu per satu
-                            for (const w of MASTER_WIDGETS) {
+                            // 2. Loop & Kirim ke DB
+                            let successCount = 0;
+                            for (const w of externalWidgets) {
                                 await fetch('/api/admin/widgets', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -257,54 +220,26 @@
                             }
 
                             await this.fetchWidgets();
-                            Swal.fire('Selesai', `${successCount} Widget berhasil di-inject!`, 'success');
+                            Swal.fire('Selesai', `${successCount} Widget berhasil di-import dari CDN!`, 'success');
                         } catch (e) {
-                            Swal.fire('Gagal', 'Terjadi kesalahan saat inject', 'error');
+                            Swal.fire('Gagal', e.message, 'error');
                         }
                     }
                 },
 
-                // --- RENDER PREVIEW (Isolated Iframe) ---
+                // --- RENDER PREVIEW ---
                 renderPreview() {
                     const frame = document.getElementById('previewFrame');
                     if (!frame) return;
-                    
                     const doc = frame.contentWindow.document;
                     const htmlCode = this.form.content || '<div class="flex items-center justify-center h-full text-gray-400">Mulai ketik HTML...</div>';
                     
-                    // Script Execution Logic (Sandbox)
                     let scriptInjection = '';
                     if (this.form.script && this.form.script.trim() !== '') {
-                        scriptInjection = `
-                        <script>
-                            document.addEventListener("DOMContentLoaded", function() {
-                                try {
-                                    const el = document.body.firstElementChild;
-                                    if(el) {
-                                        (function() { ${this.form.script} }).call(el);
-                                    }
-                                } catch(e) { console.error("Widget Script Error:", e); }
-                            });
-                        <\/script>`;
+                        scriptInjection = `<script>document.addEventListener("DOMContentLoaded", function() { try { const el = document.body.firstElementChild; if(el) { (function() { ${this.form.script} }).call(el); } } catch(e) { console.error("Widget Script Error:", e); } });<\/script>`;
                     }
 
-                    const fullHTML = `
-                        <!DOCTYPE html>
-                        <html>
-                        <head>
-                            <meta charset="UTF-8">
-                            <script src="https://cdn.tailwindcss.com"><\/script>
-                            <script>tailwind.config = { theme: { extend: { colors: { theme: { 50:'#eef2ff', 600:'#4f46e5' } }, fontFamily: { sans: ['Inter', 'sans-serif'] } } } }<\/script>
-                            <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"><\/script>
-                            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-                            <style>${this.bridgeCSS}</style>
-                        </head>
-                        <body>
-                            ${htmlCode}
-                            ${scriptInjection}
-                        </body>
-                        </html>
-                    `;
+                    const fullHTML = `<!DOCTYPE html><html><head><meta charset="UTF-8"><script src="https://cdn.tailwindcss.com"><\/script><script>tailwind.config = { theme: { extend: { colors: { theme: { 50:'#eef2ff', 600:'#4f46e5' } }, fontFamily: { sans: ['Inter', 'sans-serif'] } } } }<\/script><script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"><\/script><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"><style>${this.bridgeCSS}</style></head><body>${htmlCode}${scriptInjection}</body></html>`;
 
                     doc.open();
                     doc.write(fullHTML);
@@ -344,7 +279,7 @@
                 },
 
                 async deleteWidget(id) {
-                    const result = await Swal.fire({ title: 'Hapus Widget?', text: "Data di D1 & Cache KV akan dihapus.", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Hapus!' });
+                    const result = await Swal.fire({ title: 'Hapus Widget?', text: "Data akan dihapus permanen.", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Hapus!' });
                     if (result.isConfirmed) {
                         try {
                             const token = localStorage.getItem('auth_token');
