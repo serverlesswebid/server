@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - DB Driven</title>
+    <title>LandingBuilder Pro - Final Fixed</title>
     
     <script>
         (function() {
@@ -57,9 +57,29 @@
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
         .gjs-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px; }
 
-        /* Toolbar Besar & Horizontal */
-        .gjs-toolbar { background-color: #1f2937 !important; border-radius: 8px !important; border: 1px solid #ffffff33 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; display: flex !important; flex-direction: row !important; gap: 8px !important; padding: 6px 12px !important; position: absolute !important; top: -45px !important; left: 0 !important; right: auto !important; width: max-content !important; height: auto !important; z-index: 99999 !important; transform: none !important; }
-        .gjs-toolbar-item { color: white !important; width: 35px !important; height: 35px !important; display: flex !important; align-items: center; justify-content: center !important; cursor: pointer !important; transition: 0.2s !important; border-radius: 6px !important; }
+        /* --- TOOLBAR YANG DIPERBAIKI (TIDAK MENUTUPI OBJEK) --- */
+        /* Kita hapus positioning absolute yang memaksa. Biarkan GrapesJS menghitung posisinya */
+        .gjs-toolbar { 
+            background-color: #1f2937 !important; 
+            border-radius: 8px !important; 
+            border: 1px solid #ffffff33 !important; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; 
+            display: flex !important;
+            gap: 5px !important;
+            padding: 5px 8px !important;
+            z-index: 99999 !important;
+        }
+        
+        .gjs-toolbar-item { 
+            color: white !important; 
+            width: 30px !important; 
+            height: 30px !important; 
+            display: flex !important; 
+            align-items: center; 
+            justify-content: center !important; 
+            cursor: pointer !important; 
+            border-radius: 4px !important;
+        }
         .gjs-toolbar-item:hover { background-color: #4f46e5 !important; transform: scale(1.1); }
 
         /* Accordion Style */
@@ -296,10 +316,13 @@
                 domc.addType('link', { model: { defaults: { traits: ['href', 'target'] } } });
                 
                 // Iconify System (Framework Core - Hardcode)
+                // UPDATE: Stylable & Resizable diaktifkan agar bisa diubah ukuran/posisi
                 domc.addType('iconify-icon', { 
                     model: { 
                         defaults: { 
-                            tagName: 'iconify-icon', 
+                            tagName: 'iconify-icon',
+                            resizable: true, // Biar bisa ditarik
+                            stylable: true, // Biar bisa di-style di panel kanan
                             attributes: { icon: 'ph:star-fill', width: '24' }, 
                             traits: [{ type: 'button', text: 'Ganti Icon', command: (ed, t) => window.openIconifyPicker(t.target) }] 
                         } 
@@ -311,7 +334,6 @@
                 cmds.add('open-icon-picker', { run(ed) { window.openIconifyPicker(ed.getSelected()); } });
 
                 // --- 2. DYNAMIC DB COMPONENT LOADER ---
-                // Mengambil komponen Logic (Countdown, dll) & Content dari Database
                 fetch('/api/widgets')
                     .then(res => res.json())
                     .then(widgets => {
@@ -321,14 +343,11 @@
 
                         widgets.forEach(w => {
                             // A. REGISTER COMPONENT TYPE (LOGIC)
-                            // Jika ada 'attributes' atau 'script', daftarkan sebagai Type baru
-                            // Pengecualian: iconify-icon (sudah dihardcode)
                             if (w.attributes && w.attributes !== 'null' && w.id !== 'iconify-icon') {
                                 try {
                                     const defaults = typeof w.attributes === 'string' ? JSON.parse(w.attributes) : w.attributes;
                                     if(w.script) defaults.script = new Function(w.script);
                                     
-                                    // Ambil tipe dari data-gjs-type di content HTML, atau gunakan ID
                                     const typeMatch = w.content.match(/data-gjs-type=["']([^"']+)["']/);
                                     const typeName = (typeMatch && typeMatch[1]) ? typeMatch[1] : w.id;
                                     
@@ -336,7 +355,7 @@
                                 } catch(e) { console.error('Error register logic', w.id); }
                             }
 
-                            // B. BUILD SIDEBAR MENU (CONTENT WIDGETS ONLY)
+                            // B. BUILD SIDEBAR MENU
                             if (w.category !== 'System') {
                                 widgetCache[w.id] = w;
                                 if (!groups[w.category]) groups[w.category] = [];
@@ -367,11 +386,11 @@
                             details.appendChild(contentDiv);
                             renderer.appendChild(details);
                         });
-                        console.log('✅ All Widgets (Including Logic) Loaded from DB');
+                        console.log('✅ All Widgets Loaded');
                     })
                     .catch(e => console.error('Load Error', e));
 
-                // TOOLBAR
+                // TOOLBAR - DIKEMBALIKAN TOMBOL "PASTE INSIDE" DAN "INSERT INSIDE"
                 editor.on('component:selected', (c) => {
                     c.set('toolbar', [
                         { attributes: { class: 'fa' }, command: 'tlb-move', label: '<i class="ph ph-arrows-out-cardinal text-lg"></i>' },
@@ -379,6 +398,12 @@
                         { attributes: { class: 'fa' }, command: e => { e.runCommand('core:copy'); e.getSelected().remove(); }, label: '<i class="ph ph-scissors text-lg text-yellow-300"></i>' },
                         { attributes: { class: 'fa' }, command: e => e.runCommand('core:copy'), label: '<i class="ph ph-copy text-lg text-blue-300"></i>' },
                         { attributes: { class: 'fa' }, command: e => e.runCommand('core:paste'), label: '<i class="ph ph-clipboard-text text-lg text-green-300"></i>' },
+                        // FITUR PASTE INSIDE (Untuk Paste di dalam container/box)
+                        { attributes: { class: 'fa' }, command: e => { 
+                            const selected = e.getSelected();
+                            const clipboard = e.Models.Clipboard && e.Models.Clipboard.get ? e.Models.Clipboard.get() : null;
+                            if(selected && clipboard) selected.append(clipboard);
+                        }, label: '<i class="ph ph-arrow-elbow-down-right text-lg text-purple-400"></i>' },
                         { attributes: { class: 'fa' }, command: 'tlb-delete', label: '<i class="ph ph-trash text-lg text-red-400"></i>' }
                     ]);
                 });
