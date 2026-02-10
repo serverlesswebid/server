@@ -181,7 +181,8 @@
     function editorApp() {
         return {
             device: 'desktop', tab: 'blocks', mobileMenuOpen: false, showSettings: false, loading: false,
-            page: { id: 0, slug: '', title: '', config: { price: 0, active_payments: [] }, meta: {}, analytics: {}, scripts: {} },
+            // META DIHAPUS DARI STATE AGAR TIDAK BIKIN BINGUNG, KARENA DB TIDAK PUNYA KOLOM META
+            page: { id: 0, slug: '', title: '', config: { price: 0, active_payments: [] }, product_type: 'physical', analytics: {}, scripts: {} },
 
             async init() {
                 this.initGrapes();
@@ -189,12 +190,27 @@
                 if (slug) await this.loadPageData(slug);
             },
 
+            // --- LOAD DATA (FIXED: NO META) ---
             async loadPageData(slug) {
                 try {
                     const res = await fetch(`/api/admin/pages/${slug}`);
                     if(res.ok) {
                         const data = await res.json();
-                        this.page = { ...this.page, ...data, config: JSON.parse(data.product_config_json || '{}'), meta: JSON.parse(data.meta || '{}') };
+                        // MAPPING MANUAL AGAR AMAN
+                        this.page.id = data.id;
+                        this.page.slug = data.slug;
+                        this.page.title = data.title || '';
+                        this.page.product_type = data.product_type || 'physical';
+                        
+                        // Parse Config
+                        if (data.product_config_json) {
+                            try {
+                                const conf = typeof data.product_config_json === 'string' ? JSON.parse(data.product_config_json) : data.product_config_json;
+                                this.page.config = { ...this.page.config, ...conf };
+                            } catch(e) {}
+                        }
+
+                        // Load to Canvas
                         if (window.editor) {
                             if (data.html_content) window.editor.setComponents(data.html_content);
                             if (data.css_content) window.editor.setStyle(data.css_content);
@@ -203,13 +219,19 @@
                 } catch (e) { alert('Gagal memuat data'); }
             },
 
+            // --- SAVE DATA (FIXED: NO META) ---
             async savePage() {
                 this.loading = true;
                 try {
                     const payload = {
-                        id: this.page.id, slug: this.page.slug, title: this.page.title,
+                        id: this.page.id, 
+                        slug: this.page.slug, 
+                        title: this.page.title,
+                        product_type: this.page.product_type,
                         html: `${window.editor.getHtml()}<script>${window.editor.getJs()}<\/script>`,
-                        css: window.editor.getCss(), meta: this.page.meta, product_config: this.page.config
+                        css: window.editor.getCss(), 
+                        product_config: this.page.config
+                        // JANGAN KIRIM META, KARENA DB TIDAK PUNYA KOLOM META
                     };
                     await fetch('/api/admin/pages', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
                     alert('Berhasil disimpan!');
@@ -273,7 +295,7 @@
                 // Link Basic
                 domc.addType('link', { model: { defaults: { traits: ['href', 'target'] } } });
                 
-                // Iconify System (Framework Core)
+                // Iconify System (Framework Core - Hardcode)
                 domc.addType('iconify-icon', { 
                     model: { 
                         defaults: { 
@@ -289,7 +311,7 @@
                 cmds.add('open-icon-picker', { run(ed) { window.openIconifyPicker(ed.getSelected()); } });
 
                 // --- 2. DYNAMIC DB COMPONENT LOADER ---
-                // Mengambil komponen Logic & Content dari Database
+                // Mengambil komponen Logic (Countdown, dll) & Content dari Database
                 fetch('/api/widgets')
                     .then(res => res.json())
                     .then(widgets => {
@@ -314,7 +336,7 @@
                                 } catch(e) { console.error('Error register logic', w.id); }
                             }
 
-                            // B. BUILD SIDEBAR MENU
+                            // B. BUILD SIDEBAR MENU (CONTENT WIDGETS ONLY)
                             if (w.category !== 'System') {
                                 widgetCache[w.id] = w;
                                 if (!groups[w.category]) groups[w.category] = [];
