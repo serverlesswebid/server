@@ -543,7 +543,7 @@
                 });
                 
                 // --- TOOLBAR CONFIG (PASTE INSIDE IS BACK) ---
-                window.editor.on('component:selected', (c) => { // GUNAKAN window.editor AGAR AMAN
+                window.editor.on('component:selected', (c) => { 
                     c.set('toolbar', [
                         { attributes: { class: 'fa' }, command: 'tlb-move', label: '<i class="ph ph-arrows-out-cardinal text-lg"></i>' },
                         { attributes: { class: 'fa' }, command: e => e.runCommand('core:component-exit'), label: '<i class="ph ph-arrow-fat-up text-lg"></i>' },
@@ -558,7 +558,9 @@
                         { attributes: { class: 'fa' }, command: 'tlb-delete', label: '<i class="ph ph-trash text-lg text-red-400"></i>' }
                     ]);
                 });
-            }
+            } // <--- Tutup initGrapes
+        }; // <--- Tutup object return (INI YANG HILANG SEBELUMNYA)
+    } // <--- Tutup function editorApp (INI JUGA HILANG)
     </script>
     </body>
 </html>
