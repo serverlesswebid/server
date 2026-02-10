@@ -3,74 +3,79 @@ export class ModuleManager {
    * @param {import('hono').Context} c
    */
   constructor(c) {
-    // Pastikan binding di wrangler.toml sudah sesuai
-    // contoh: kv_namespaces = [{ binding = "MY_KV", id = "..." }]
-    this.kv = c.env.MY_KV; 
+    // BINDING KV HARUS SESUAI DENGAN WRANGLER.TOML
+    this.kv = c.env.MODULES_KV; 
     this.db = c.env.DB;
+
+    if (!this.kv) {
+      throw new Error("Binding 'MODULES_KV' tidak ditemukan. Cek wrangler.toml!");
+    }
   }
 
   /**
    * Eksekusi Module dengan Cache Strategy
+   * Flow: Cek KV -> Jika Kosong Ambil DB -> Simpan ke KV -> Eksekusi
    */
   async execute(moduleId, inputData, configValues) {
-    // 1. Cek KV (Cache Layer - Cepat)
+    // 1. Cek Cache KV (Fast Path)
     let moduleCode = await this.kv.get(`module:${moduleId}`, 'text');
 
-    // 2. Jika KV kosong, ambil dari DB (Source of Truth)
+    // 2. Jika Cache Miss (Data tidak ada di KV), ambil dari DB
     if (!moduleCode) {
-      console.log(`Cache miss: ${moduleId}. Fetching from DB...`);
+      console.log(`[Cache Miss] Fetching module '${moduleId}' from DB...`);
       
       const record = await this.db.prepare(
         "SELECT code FROM server_modules WHERE id = ? AND is_active = 1"
       ).bind(moduleId).first();
       
       if (!record) {
-        throw new Error(`Module ${moduleId} tidak ditemukan atau tidak aktif.`);
+        throw new Error(`Module '${moduleId}' tidak ditemukan atau status inactive.`);
       }
       
       moduleCode = record.code;
       
-      // 3. Simpan ke KV (Cache Warming)
-      // Simpan permanen sampai ada update manual
+      // 3. Simpan ke KV secara PERMANEN (Self-Healing Cache)
+      // Tidak ada expiration, data hanya hilang jika di-delete/update manual
       await this.kv.put(`module:${moduleId}`, moduleCode);
     }
 
-    // 4. Eksekusi Code dalam Sandbox
+    // 4. Eksekusi Code dalam Sandbox Environment
     try {
-      // Helper functions yang boleh dipakai di dalam dynamic script
+      // Library helper yang aman untuk digunakan dalam modul dinamis
       const sandboxHelpers = {
-        fetch: fetch,                 // Boleh fetch API luar
-        uuid: crypto.randomUUID.bind(crypto), // Generate UUID
+        fetch: fetch,                        // Untuk HTTP Request ke pihak ketiga
+        uuid: crypto.randomUUID.bind(crypto),// Generate ID Transaksi
         json: JSON.stringify,
         parse: JSON.parse,
         log: console.log,
-        date: () => new Date().toISOString()
+        timestamp: () => new Date().toISOString()
       };
 
-      // Bungkus kode string jadi Async Function
-      // Parameter: 'input' (data transaksi), 'config' (settingan user), 'lib' (helpers)
+      // Konstruksi Async Function dari String Database
+      // Parameters: 'input' (data dari checkout), 'config' (setting user), 'lib' (helpers)
       const dynamicFunction = new Function('input', 'config', 'lib', `
         return (async () => { 
           ${moduleCode} 
         })();
       `);
 
-      // Jalankan fungsi
+      // Jalankan Fungsi
       return await dynamicFunction(inputData, configValues, sandboxHelpers);
 
     } catch (err) {
-      console.error(`Error executing module ${moduleId}:`, err);
-      throw new Error(`Module Runtime Error: ${err.message}`);
+      console.error(`[Module Execution Error] ID: ${moduleId}`, err);
+      throw new Error(`Gagal memproses modul: ${err.message}`);
     }
   }
 
   /**
-   * Simpan/Update Module (Admin)
+   * Simpan Module Baru / Update Module (Admin)
+   * Efek: Menulis ke DB dan langsung memperbarui Cache KV
    */
   async saveModule(id, data) {
     const timestamp = Math.floor(Date.now() / 1000);
     
-    // 1. Simpan ke DB (Upsert)
+    // 1. Upsert ke Database D1
     await this.db.prepare(`
       INSERT INTO server_modules (id, name, type, config_schema, code, updated_at)
       VALUES (?, ?, ?, ?, ?, ?)
@@ -89,7 +94,8 @@ export class ModuleManager {
       timestamp
     ).run();
 
-    // 2. Langsung Update KV agar perubahan instan (Cache Invalidation)
+    // 2. Force Update Cache KV (Cache Warming)
+    // Agar user langsung mendapatkan logic terbaru tanpa delay
     await this.kv.put(`module:${id}`, data.code);
     
     return { success: true, id };
@@ -97,12 +103,15 @@ export class ModuleManager {
 
   /**
    * Hapus Module
+   * Efek: Menghapus dari DB dan KV
    */
   async deleteModule(id) {
     // Hapus dari DB
     await this.db.prepare("DELETE FROM server_modules WHERE id = ?").bind(id).run();
+    
     // Hapus dari KV
     await this.kv.delete(`module:${id}`);
+    
     return { success: true };
   }
 }
