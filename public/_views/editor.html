@@ -416,7 +416,7 @@
                             } catch(err) { alert('Upload gagal'); }
                         }
                     },
-                    // 2. CONFIG CANVAS YANG DIPERBAIKI
+                    // 2. CONFIG CANVAS YANG DIPERBAIKI (ESCAPE SCRIPT TAG)
                     canvas: {
                         scripts: [
                             'https://cdn.tailwindcss.com', 
@@ -426,6 +426,7 @@
                             'https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'
                         ],
                         // INJECT FONT & TAILWIND CONFIG KE DALAM IFRAME EDITOR
+                        // PERHATIKAN: <\/script> di bawah ini SANGAT PENTING agar tidak memutus script utama
                         content: `
                             <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
                             <script>
@@ -438,7 +439,7 @@
                                         }
                                     }
                                 }
-                            </script>
+                            <\/script>
                             <style>${bridgeCSS}</style>
                         `
                     },
@@ -525,39 +526,24 @@
                     .catch(e => console.error('Load Error', e));
 
                 // --- 0. LOGIC EDIT DI PANEL (SETTINGS TAB) ---
-                // Saat komponen dipilih, cek apakah itu teks. Jika ya, tambahkan input di panel.
                 window.editor.on('component:selected', (model) => {
                     const el = model.getEl();
-                    
-                    // Cek apakah elemen punya teks (tapi bukan wrapper kosong)
                     if (el && el.innerText && el.childElementCount === 0) {
                         const currentTraits = model.get('traits').filter(t => t.name !== 'content_text');
-                        
-                        // Tambahkan Trait 'Isi Teks' ke Panel Kanan
                         model.set('traits', [
-                            { 
-                                type: 'textarea', // Kotak isian panjang
-                                name: 'content_text', 
-                                label: 'Edit Teks Disini',
-                                changeProp: 1 // PENTING: Update properti, bukan atribut
-                            },
+                            { type: 'textarea', name: 'content_text', label: 'Edit Teks Disini', changeProp: 1 },
                             ...currentTraits
                         ]);
-
-                        // Sinkronisasi isi saat ini ke panel
-                        // Kita pakai properti custom 'content_text' agar tidak bentrok
                         model.set('content_text', model.get('content')); 
-                        
-                        // Listener: Saat panel diketik -> update canvas
                         model.on('change:content_text', () => {
                             const newVal = model.get('content_text');
-                            model.components(newVal); // Update tampilan visual
+                            model.components(newVal); 
                         });
                     }
                 });
                 
                 // --- TOOLBAR CONFIG (PASTE INSIDE IS BACK) ---
-                editor.on('component:selected', (c) => {
+                window.editor.on('component:selected', (c) => { // GUNAKAN window.editor AGAR AMAN
                     c.set('toolbar', [
                         { attributes: { class: 'fa' }, command: 'tlb-move', label: '<i class="ph ph-arrows-out-cardinal text-lg"></i>' },
                         { attributes: { class: 'fa' }, command: e => e.runCommand('core:component-exit'), label: '<i class="ph ph-arrow-fat-up text-lg"></i>' },
@@ -573,8 +559,6 @@
                     ]);
                 });
             }
-        };
-    }
     </script>
     </body>
 </html>
