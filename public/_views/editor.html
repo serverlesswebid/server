@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - Embedded Core</title>
+    <title>LandingBuilder Pro - UI Fixed</title>
     
     <script>
         (function() {
@@ -40,7 +40,27 @@
         header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
         .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; }
         #gjs { flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; position: relative; }
+        
+        /* SIDEBAR DESKTOP DEFAULT */
         .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; }
+
+        /* SIDEBAR MOBILE FIX (HIDDEN BY DEFAULT) */
+        @media (max-width: 768px) {
+            .sidebar-panel {
+                position: fixed;
+                right: 0;
+                top: 60px;
+                bottom: 0;
+                width: 85%; /* Tidak full screen agar user bisa klik luar */
+                max-width: 320px;
+                transform: translateX(100%); /* Sembunyi ke kanan */
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: -4px 0 15px rgba(0,0,0,0.1);
+            }
+            .sidebar-panel.mobile-open {
+                transform: translateX(0); /* Muncul */
+            }
+        }
         
         .gjs-toolbar { 
             position: fixed !important; top: 60px !important; left: 0 !important; right: auto !important; transform: none !important;
@@ -82,14 +102,19 @@
             <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile text-lg"></i></button>
         </div>
         <div class="flex items-center gap-2">
+            <button @click="sidebarOpen = !sidebarOpen" class="md:hidden bg-gray-100 p-2 rounded text-gray-600 hover:bg-gray-200">
+                <i class="ph ph-list text-xl" x-show="!sidebarOpen"></i>
+                <i class="ph ph-x text-xl" x-show="sidebarOpen"></i>
+            </button>
+
             <button @click="showSettings=true" class="bg-white text-gray-600 px-3 py-2 rounded-lg text-xs font-bold border border-gray-200 hover:bg-gray-50 transition">Config</button>
             <button @click="savePage" :disabled="loading" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-lg"><span x-text="loading ? 'SAVING...' : 'PUBLISH'"></span></button>
         </div>
     </header>
 
     <div class="workspace">
-        <div id="gjs"></div>
-        <div class="sidebar-panel">
+        <div id="gjs" @click="sidebarOpen = false"></div>
+        <div class="sidebar-panel" :class="sidebarOpen ? 'mobile-open' : ''">
             <div class="flex border-b border-gray-200 bg-white shrink-0">
                 <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-squares-four text-xl"></i></button>
                 <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-paint-brush text-xl"></i></button>
@@ -163,12 +188,13 @@
         </div>
     </div>
 
-    <div id="iconify-picker-modal" class="fixed inset-0 hidden z-[99999] bg-black/40 flex items-start justify-center p-6 backdrop-blur-sm">
+    <div id="iconify-picker-modal" class="fixed inset-0 hidden z-[2000000] bg-black/40 flex items-start justify-center p-6 backdrop-blur-sm">
         <div class="bg-white rounded-xl w-full max-w-xl shadow-2xl mt-10 overflow-hidden">
             <div class="flex items-center justify-between p-4 border-b bg-gray-50"><input id="iconify-picker-search" placeholder="Cari icon..." class="w-full bg-transparent outline-none text-sm" /><button id="iconify-picker-close"><i class="ph ph-x text-lg"></i></button></div>
             <div id="iconify-picker-results" class="p-4 grid grid-cols-6 gap-3 max-h-[300px] overflow-y-auto"></div>
         </div>
     </div>
+    
     <div class="fixed bottom-5 left-5 z-[100000] flex flex-col gap-2 pointer-events-none">
         <template x-for="n in notifications" :key="n.id">
             <div x-show="n.show" x-transition class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-l-4 bg-white min-w-[280px]" :class="n.type==='success'?'border-green-500':'border-red-500'">
@@ -182,21 +208,55 @@
     let appBuilderCache = {};
 
     (function(){
-        let activeModel = null; const modal = document.getElementById('iconify-picker-modal'); const input = document.getElementById('iconify-picker-search'); const results = document.getElementById('iconify-picker-results');
-        window.openIconifyPicker = function(model) { activeModel = model; modal.classList.remove('hidden'); input.value = ''; input.focus(); searchIcons('star'); };
+        // ICON PICKER LOGIC (Global Scope agar bisa dipanggil GrapesJS)
+        let activeModel = null; 
+        const modal = document.getElementById('iconify-picker-modal'); 
+        const input = document.getElementById('iconify-picker-search'); 
+        const results = document.getElementById('iconify-picker-results');
+        
+        window.openIconifyPicker = function(model) { 
+            activeModel = model; 
+            modal.classList.remove('hidden'); // Buka Modal
+            input.value = ''; 
+            input.focus(); 
+            searchIcons('star'); 
+        };
+        
         document.getElementById('iconify-picker-close').onclick = () => modal.classList.add('hidden'); 
         input.oninput = (e) => searchIcons(e.target.value);
+        
         async function searchIcons(q) { 
             if(!q) return; 
             try { 
-                const res = await fetch(`https://api.iconify.design/search?query=${q}&limit=30`); const data = await res.json(); results.innerHTML = ''; 
-                if(data.icons) data.icons.forEach(icon => { const btn = document.createElement('button'); btn.className = 'p-2 hover:bg-indigo-50 rounded flex flex-col items-center gap-1 transition'; btn.innerHTML = `<iconify-icon icon="${icon}" width="24"></iconify-icon><span class="text-[9px] text-gray-400 truncate w-full text-center">${icon.split(':')[1]}</span>`; btn.onclick = () => { if(activeModel) activeModel.setAttributes({ icon: icon }); modal.classList.add('hidden'); }; results.appendChild(btn); }); 
+                const res = await fetch(`https://api.iconify.design/search?query=${q}&limit=30`); 
+                const data = await res.json(); 
+                results.innerHTML = ''; 
+                if(data.icons) data.icons.forEach(icon => { 
+                    const btn = document.createElement('button'); 
+                    btn.className = 'p-2 hover:bg-indigo-50 rounded flex flex-col items-center gap-1 transition'; 
+                    btn.innerHTML = `<iconify-icon icon="${icon}" width="24"></iconify-icon><span class="text-[9px] text-gray-400 truncate w-full text-center">${icon.split(':')[1]}</span>`; 
+                    btn.onclick = () => { 
+                        if(activeModel) {
+                            // Update Attribute Icon pada Model GrapesJS
+                            activeModel.setAttributes({ icon: icon }); 
+                            // Paksa render ulang jika perlu (opsional)
+                            const el = activeModel.getEl();
+                            if(el) {
+                                const iconEl = el.querySelector('iconify-icon');
+                                if(iconEl) iconEl.setAttribute('icon', icon);
+                            }
+                        }
+                        modal.classList.add('hidden'); 
+                    }; 
+                    results.appendChild(btn); 
+                }); 
             } catch(e) {} 
         }
     })();
 
     function editorApp() {
         return {
+            sidebarOpen: false, // State Sidebar Mobile
             device: 'desktop', tab: 'blocks', settingsTab: 'commerce', showSettings: false, loading: false, notifications: [],
             paymentProviders: [{ slug: 'paspay', name: 'Paspay QRIS' }, { slug: 'paspay-va', name: 'Paspay VA' }, { slug: 'midtrans', name: 'Midtrans' }],
             page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, active_payments: [], settings: { seo_title:'', seo_description:'', favicon:'', og_image:'', fb_pixel:'', tiktok_pixel:'', ga_id:'', scripts_header:'', scripts_footer:'' } } },
@@ -216,27 +276,23 @@
                 const w = appBuilderCache[id];
                 if (w) {
                     let html = w.content;
-                    // DISPATCHER MODE: Insert ID unik, lalu jalankan script manual
                     const div = document.createElement('div'); div.innerHTML = html;
                     const root = div.firstElementChild;
                     if(root) { 
-                        // Kunci untuk Live Hydration: CLASS dan ATRIBUT DATA
-                        // Kita tidak lagi pakai ID untuk script, tapi class marker
                         root.classList.add('js-widget-root');
                         root.setAttribute('data-widget-type', w.id);
                         html = div.innerHTML; 
                     }
                     try { 
                         const added = window.editor.addComponents(html);
-                        // EDITOR MANUAL DISPATCHER
+                        // Close sidebar on mobile after clicking widget
+                        if(window.innerWidth < 768) this.sidebarOpen = false; 
+
                         if(w.script && w.script.trim()) {
                             setTimeout(() => {
-                                // Cari elemen yang baru ditambahkan (paling akhir)
                                 const allWidgets = window.editor.getWrapper().find(`[data-widget-type="${w.id}"]`);
                                 const el = allWidgets[allWidgets.length - 1];
-                                if(el) {
-                                    try { (new Function(w.script)).call(el.getEl()); } catch(e) { console.warn('Editor Exec Error', e); }
-                                }
+                                if(el) { try { (new Function(w.script)).call(el.getEl()); } catch(e) { console.warn('Editor Exec Error', e); } }
                             }, 150);
                         }
                     } catch(e) { console.error('Add Error', e); }
@@ -255,26 +311,17 @@
                     }
                     if (window.editor) {
                         let safeHtml = data.html_content || '';
-                        // CLEANUP: Hapus script lama
                         safeHtml = safeHtml.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gm, ""); 
-                        
                         window.editor.setComponents(safeHtml);
                         window.editor.setStyle(data.css_content || '');
                         
-                        // EDITOR HYDRATION (Jalankan ulang semua script widget di editor)
                         setTimeout(() => {
                             const wrapper = window.editor.getWrapper();
-                            
-                            // 1. Hydrate Widgets (Counter, dll)
                             wrapper.find('[data-widget-type]').forEach(comp => {
                                 const wid = comp.getAttributes()['data-widget-type'];
                                 const wData = appBuilderCache[wid];
-                                if(wData && wData.script) {
-                                    try { (new Function(wData.script)).call(comp.getEl()); } catch(e) {}
-                                }
+                                if(wData && wData.script) { try { (new Function(wData.script)).call(comp.getEl()); } catch(e) {} }
                             });
-
-                            // 2. Auto Open Accordion
                             wrapper.find('details').forEach(d => d.addAttributes({ open: 'true' }));
                         }, 800);
                     }
@@ -285,20 +332,13 @@
             async savePage() {
                 this.loading = true;
                 try {
-                    // Tutup Accordion
                     window.editor.getWrapper().find('details').forEach(d => d.addAttributes({ open: null }));
-                    
                     const html = window.editor.getHtml();
                     const css = window.editor.getCss();
                     
-                    // --- LIVE SCRIPT INJECTION (EMBEDDED LOGIC) ---
-                    // Ini adalah "Script Anti-Bego" yang menjamin countdown jalan di Live
-                    // Script ini akan disuntikkan langsung ke dalam HTML halaman.
-                    // Tidak butuh file eksternal, tidak butuh database script yang rumit.
                     const safeJs = `
                     <script>
                     document.addEventListener("DOMContentLoaded", function() {
-                        // 1. INITIALIZE COUNTDOWN (Global Logic)
                         document.querySelectorAll('.js-countdown').forEach(function(el) {
                             if(el.dataset.init === "true") return;
                             el.dataset.init = "true";
@@ -329,15 +369,23 @@
                             var interval = setInterval(update, 1000);
                             update();
                         });
-
-                        // 2. INITIALIZE CAROUSEL / SLIDER (Jika ada)
-                        // Tambahkan logika global lain di sini...
+                        
+                        // Accordion Logic Live
+                        document.querySelectorAll("details").forEach(function(target) {
+                            target.addEventListener("click", function() {
+                                if (!target.hasAttribute("open")) {
+                                    document.querySelectorAll("details").forEach(function(other) {
+                                        if (other !== target) other.removeAttribute("open");
+                                    });
+                                }
+                            });
+                        });
                     });
                     <\/script>`;
 
                     const payload = {
                         id: this.page.id, slug: this.page.slug, title: this.page.title,
-                        html: html + safeJs, // Inject Script Langsung ke HTML
+                        html: html + safeJs,
                         css: css, product_config: this.page.config
                     };
                     const res = await fetch('/api/admin/pages', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
@@ -391,20 +439,13 @@
 
                 const domc = window.editor.DomComponents;
 
-                // --- FETCH WIDGETS ---
                 fetch('/api/widgets').then(res => res.json()).then(widgets => {
                     const renderer = document.getElementById('blocks-custom-renderer');
                     renderer.innerHTML = ''; const groups = {};
                     
                     widgets.forEach(w => {
                         appBuilderCache[w.id] = w;
-                        
-                        // Register sebagai struktur murni (tanpa script internal GrapesJS)
-                        // Agar tidak bentrok dengan script manual kita
-                        domc.addType(w.id, {
-                            model: { defaults: { attributes: { 'data-widget-type': w.id } } }
-                        });
-
+                        domc.addType(w.id, { model: { defaults: { attributes: { 'data-widget-type': w.id } } } });
                         if (w.category !== 'System') {
                             if (!groups[w.category]) groups[w.category] = [];
                             groups[w.category].push(w);
