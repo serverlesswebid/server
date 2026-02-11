@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - Smart Accordion Core</title>
+    <title>LandingBuilder Pro - Stable Core</title>
     
     <script>
-        // Meredam warning library eksternal agar konsol bersih
         (function() {
             const originalWarn = console.warn;
             console.warn = function(...args) {
@@ -39,11 +38,14 @@
         [x-cloak] { display: none !important; }
 
         header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+        
         .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; }
+        
         #gjs { flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; position: relative; }
+        
         .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; }
         
-        /* STICKY TOOLBAR (FIXED POSITION) */
+        /* STICKY TOOLBAR */
         .gjs-toolbar { 
             position: fixed !important; top: 60px !important; left: 0 !important; right: auto !important; transform: none !important;
             background-color: #1f2937 !important; border-radius: 0 0 8px 0 !important; box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
@@ -58,14 +60,12 @@
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
         .gjs-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px; }
         
-        /* Sidebar Elements */
         details.group > summary { list-style: none; }
         details.group > summary::-webkit-details-marker { display: none; }
         .block-card { cursor: pointer; background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: all 0.2s; user-select: none; }
         .block-card:hover { border-color: #6366f1; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15); transform: translateY(-2px); }
         .block-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #4b5563; text-align: center; }
         
-        /* Z-INDEX FIX UNTUK COLOR PICKER */
         .sp-container { z-index: 1000000 !important; position: fixed !important; }
         .gjs-field-color-picker { width: 100%; height: 24px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
     </style>
@@ -221,8 +221,8 @@
                 const w = appBuilderCache[id];
                 if (w) {
                     let html = w.content;
-                    // FORCE GJS-TYPE AGAR SCRIPT BINDING JALAN (Jika Script Valid)
-                    if(w.script && w.validScript) { 
+                    // FORCE GJS-TYPE JIKA SCRIPT VALID
+                    if(w.script && w.valid) { 
                         const div = document.createElement('div'); div.innerHTML = html;
                         const root = div.firstElementChild;
                         if(root) { root.setAttribute('data-gjs-type', w.id); html = div.innerHTML; }
@@ -242,7 +242,7 @@
                         this.page.config = { ...this.page.config, ...conf }; 
                     }
                     if (window.editor) {
-                        // SANITASI HALAMAN: HAPUS SEMUA TAG <SCRIPT> YANG MUNGKIN KOTOR DARI DATABASE
+                        // SANITASI EXTREME: Buang semua <script> bawaan HTML yang mungkin korup
                         let safeHtml = data.html_content || '';
                         safeHtml = safeHtml.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gm, ""); 
                         
@@ -262,10 +262,9 @@
             async savePage() {
                 this.loading = true;
                 try {
-                    // AUTO CLOSE ACCORDION BEFORE SAVE (Logika Khusus)
-                    // Cari semua tag 'details' (bukan cuma widget accordion tertentu)
+                    // AUTO CLOSE ACCORDION BEFORE SAVE
                     const details = window.editor.getWrapper().find('details');
-                    details.forEach(d => d.addAttributes({ open: null })); // Hapus atribut open
+                    details.forEach(d => d.addAttributes({ open: null })); // Close accordion
                     
                     const html = window.editor.getHtml();
                     const css = window.editor.getCss();
@@ -331,36 +330,37 @@
 
                 const domc = window.editor.DomComponents;
 
-                // --- ROBUST REGISTER: FILTER SCRIPT RUSAK (SOLUSI ANTI-CRASH) ---
+                // --- ROBUST REGISTER: FILTER SCRIPT RUSAK ---
                 fetch('/api/widgets').then(res => res.json()).then(widgets => {
                     const renderer = document.getElementById('blocks-custom-renderer');
                     renderer.innerHTML = ''; const groups = {};
                     
                     widgets.forEach(w => {
                         appBuilderCache[w.id] = w;
-                        w.validScript = false; // Flag status script
+                        w.valid = false; // Default flag
 
                         if (w.script && w.script.trim() !== "") {
-                            // TEST COMPILE SCRIPT DULU
-                            try {
-                                const fn = new Function(w.script); 
-                                // Jika sukses (tidak throw error), berarti ini Accordion/Countdown yang VALID.
+                            // 1. BLOKIR SCRIPT YANG DIAWALI KATA-KATA SQL / ERROR
+                            if(w.script.trim().startsWith("replace") || w.script.includes("char(10)")) {
+                                console.warn("Script Sampah (SQL Injection) diblokir:", w.id);
+                                // Register widget TANPA SCRIPT agar tidak crash
+                                domc.addType(w.id, { model: { defaults: { attributes: { 'data-gjs-type': w.id } } } });
+                            } else {
+                                // 2. SCRIPT VALID -> REGISTER SEBAGAI STRING (String is safe!)
                                 domc.addType(w.id, {
                                     model: {
                                         defaults: {
-                                            script: fn, 
+                                            script: w.script.trim(), // Biarkan GrapesJS handle wrapping
                                             attributes: { 'data-gjs-type': w.id }
                                         }
                                     }
                                 });
-                                w.validScript = true;
-                            } catch(e) {
-                                // JIKA ERROR (Seperti 'Unexpected token .'), SKIP SCRIPTNYA.
-                                // Tapi tetap daftarkan WIDGETNYA agar bisa didrag.
-                                console.warn(`Script Widget '${w.id}' CORRUPT (SQL Injection?). Script diabaikan.`);
-                                domc.addType(w.id, {
-                                    model: { defaults: { attributes: { 'data-gjs-type': w.id } } }
-                                });
+                                w.valid = true;
+                            }
+                        } else {
+                            // Widget tanpa script
+                            if(w.id !== 'iconify-icon') { // Icon punya logika sendiri di atas
+                                domc.addType(w.id, { model: { defaults: { attributes: { 'data-gjs-type': w.id } } } });
                             }
                         }
 
@@ -370,7 +370,6 @@
                         }
                     });
 
-                    // Render Sidebar
                     Object.keys(groups).sort().forEach(catName => {
                         const details = document.createElement('details'); details.className = 'group border border-gray-200 rounded-lg bg-white mb-2'; details.open = true;
                         const summary = document.createElement('summary'); summary.className = 'p-3 bg-gray-50 text-xs font-bold cursor-pointer flex justify-between items-center hover:bg-gray-100';
