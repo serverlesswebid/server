@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - Live Hydration Core</title>
+    <title>LandingBuilder Pro - External Script Edition</title>
     
     <script>
         (function() {
@@ -216,28 +216,14 @@
                 const w = appBuilderCache[id];
                 if (w) {
                     let html = w.content;
-                    // DISPATCHER MODE: Insert ID unik, lalu jalankan script manual
-                    const div = document.createElement('div'); div.innerHTML = html;
-                    const root = div.firstElementChild;
-                    if(root) { 
-                        // ID Induk untuk Live Loader
-                        root.setAttribute('data-widget-id', w.id); 
-                        // ID Unik Instance untuk Editor Dispatcher
-                        const instId = 'w-' + Date.now() + Math.floor(Math.random()*1000);
-                        root.setAttribute('id', instId);
-                        html = div.innerHTML; 
-                    }
+                    // --- DISPATCHER: Inject manual script handling ---
                     try { 
-                        const added = window.editor.addComponents(html);
-                        // EDITOR MANUAL DISPATCHER (Agar Counter Jalan di Editor)
-                        if(w.script && w.script.trim()) {
-                            setTimeout(() => {
-                                const wrapper = window.editor.getWrapper();
-                                const el = wrapper.find(`#${root.getAttribute('id')}`)[0];
-                                if(el) {
-                                    try { (new Function(w.script)).call(el.getEl()); } catch(e) { console.warn('Editor Exec Error', e); }
-                                }
-                            }, 150);
+                        window.editor.addComponents(html);
+                        // TRIGGER SCRIPT DI EDITOR SECARA AMAN
+                        // Pastikan ada file /js/countdown.js yang menghandle ini, 
+                        // TAPI untuk kenyamanan di Editor, kita panggil ulang init global jika ada
+                        if (window.editor.getWrapper().getEl().contentWindow.initCountdowns) {
+                            window.editor.getWrapper().getEl().contentWindow.initCountdowns();
                         }
                     } catch(e) { console.error('Add Error', e); }
                 }
@@ -255,28 +241,22 @@
                     }
                     if (window.editor) {
                         let safeHtml = data.html_content || '';
-                        // Sanitasi script lama yang mungkin rusak
+                        // CLEANUP: Hapus script usang dari database
                         safeHtml = safeHtml.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gm, ""); 
                         
                         window.editor.setComponents(safeHtml);
                         window.editor.setStyle(data.css_content || '');
                         
-                        // EDITOR HYDRATION (Jalankan ulang semua script widget di editor)
+                        // AUTO OPEN ACCORDION (Logika Khusus Editor)
                         setTimeout(() => {
-                            const wrapper = window.editor.getWrapper();
+                            const details = window.editor.getWrapper().find('details');
+                            details.forEach(d => d.addAttributes({ open: 'true' }));
                             
-                            // 1. Hydrate Widgets (Counter, dll)
-                            wrapper.find('[data-widget-id]').forEach(comp => {
-                                const wid = comp.getAttributes()['data-widget-id'];
-                                const wData = appBuilderCache[wid];
-                                if(wData && wData.script) {
-                                    try { (new Function(wData.script)).call(comp.getEl()); } catch(e) {}
-                                }
-                            });
-
-                            // 2. Auto Open Accordion
-                            wrapper.find('details').forEach(d => d.addAttributes({ open: 'true' }));
-                        }, 800);
+                            // JALANKAN SCRIPT EKSTERNAL DI IFRAME EDITOR
+                            if (window.editor.getWrapper().getEl().contentWindow.initCountdowns) {
+                                window.editor.getWrapper().getEl().contentWindow.initCountdowns();
+                            }
+                        }, 600);
                     }
                 } catch (e) { this.notify('Error', e.message, 'error'); }
                 this.loading = false;
@@ -285,44 +265,20 @@
             async savePage() {
                 this.loading = true;
                 try {
-                    // Close Accordion
+                    // TUTUP ACCORDION SEBELUM SAVE
                     window.editor.getWrapper().find('details').forEach(d => d.addAttributes({ open: null }));
                     
                     const html = window.editor.getHtml();
                     const css = window.editor.getCss();
                     
-                    // --- LIVE SMART LOADER (THE FIX) ---
-                    // Kita kumpulkan script yang dipakai, lalu kita bungkus dalam JSON.
-                    // Ini menghindari Syntax Error akibat kutip/newline yang salah.
-                    const usedScripts = {};
-                    window.editor.getWrapper().find('[data-widget-id]').forEach(comp => {
-                        const wid = comp.getAttributes()['data-widget-id'];
-                        if(appBuilderCache[wid] && appBuilderCache[wid].script) {
-                            usedScripts[wid] = appBuilderCache[wid].script;
-                        }
-                    });
-
-                    // Loader Script: Aman, Rapi, Terenkapsulasi
-                    const loaderScript = `
-                    <script>
-                    (function() {
-                        var widgetScripts = ${JSON.stringify(usedScripts)}; // MAGIC LINE: Mengubah script jadi data JSON
-                        document.addEventListener("DOMContentLoaded", function() {
-                            document.querySelectorAll('[data-widget-id]').forEach(function(el) {
-                                var id = el.getAttribute('data-widget-id');
-                                if(widgetScripts[id]) {
-                                    try {
-                                        (new Function(widgetScripts[id])).call(el); // Hidupkan widget
-                                    } catch(e) { console.error("Widget Error " + id, e); }
-                                }
-                            });
-                        });
-                    })();
-                    <\/script>`;
+                    // --- LIVE SCRIPT INJECTION ---
+                    // Kita menyuntikkan script eksternal countdown.js agar berjalan di Live
+                    // Script ini akan otomatis mencari .js-countdown dan menjalankannya
+                    const finalHtml = `${html}<script src="/js/countdown.js"><\/script>`;
 
                     const payload = {
                         id: this.page.id, slug: this.page.slug, title: this.page.title,
-                        html: html + loaderScript, // Inject Loader di akhir body
+                        html: finalHtml, 
                         css: css, product_config: this.page.config
                     };
                     const res = await fetch('/api/admin/pages', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
@@ -342,7 +298,6 @@
 
                 window.editor = grapesjs.init({
                     container: '#gjs', height: '100%', width: 'auto', storageManager: false, panels: { defaults: [] }, allowScripts: 1, 
-                    // NOTICE: Kita TIDAK memakai script native GrapesJS untuk menghindari crash
                     assetManager: {
                         uploadText: 'Upload Gambar',
                         uploadFile: async (e) => {
@@ -357,8 +312,13 @@
                             } catch(err) { this.notify('Gagal', 'Upload gagal', 'error'); }
                         }
                     },
+                    // --- LOAD SCRIPT EKSTERNAL DI EDITOR CANVAS ---
                     canvas: {
-                        scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
+                        scripts: [
+                            'https://cdn.tailwindcss.com', 
+                            'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js',
+                            '/js/countdown.js' // LOAD SCRIPT KITA DI SINI!
+                        ],
                         styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
                         content: `<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"><script>console.warn=function(){};<\/script><style>${bridgeCSS}</style>`
                     },
@@ -377,18 +337,18 @@
 
                 const domc = window.editor.DomComponents;
 
-                // --- FETCH WIDGETS (NO SCRIPT REGISTRATION) ---
+                // --- FETCH WIDGETS (NO SCRIPT INJECTION) ---
+                // Kita tidak lagi menyuntikkan script GrapesJS. Kita mengandalkan /js/countdown.js
                 fetch('/api/widgets').then(res => res.json()).then(widgets => {
                     const renderer = document.getElementById('blocks-custom-renderer');
                     renderer.innerHTML = ''; const groups = {};
                     
                     widgets.forEach(w => {
-                        appBuilderCache[w.id] = w; 
-
-                        // Kita HANYA mendaftarkan atribut, TIDAK script-nya.
-                        // Script akan dieksekusi oleh Dispatcher Manual kita.
+                        appBuilderCache[w.id] = w;
+                        
+                        // Register Component Attributes Only
                         domc.addType(w.id, {
-                            model: { defaults: { attributes: { 'data-widget-id': w.id } } }
+                            model: { defaults: { attributes: { 'data-widget-type': w.id } } }
                         });
 
                         if (w.category !== 'System') {
