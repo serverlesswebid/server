@@ -3,21 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - UI Fixed</title>
+    <title>LandingBuilder Pro - Fixed UI</title>
     
-    <script>
-        (function() {
-            const originalWarn = console.warn;
-            console.warn = function(...args) {
-                if (args[0] && typeof args[0] === 'string' && (args[0].includes('cdn.tailwindcss.com') || args[0].includes('production'))) return;
-                originalWarn.apply(console, args);
-            };
-        })();
-    </script>
-
+    <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
     <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.2/dist/css/grapes.min.css">
@@ -41,27 +32,18 @@
         .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; }
         #gjs { flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; position: relative; }
         
-        /* SIDEBAR DESKTOP DEFAULT */
-        .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; }
-
-        /* SIDEBAR MOBILE FIX (HIDDEN BY DEFAULT) */
+        /* SIDEBAR PANEL & MOBILE FIX */
+        .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; transition: transform 0.3s ease; }
+        
         @media (max-width: 768px) {
             .sidebar-panel {
-                position: fixed;
-                right: 0;
-                top: 60px;
-                bottom: 0;
-                width: 85%; /* Tidak full screen agar user bisa klik luar */
-                max-width: 320px;
-                transform: translateX(100%); /* Sembunyi ke kanan */
-                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                box-shadow: -4px 0 15px rgba(0,0,0,0.1);
+                position: fixed; right: 0; top: 60px; bottom: 0;
+                transform: translateX(100%); /* Default Hidden di Mobile */
+                box-shadow: -5px 0 15px rgba(0,0,0,0.1);
             }
-            .sidebar-panel.mobile-open {
-                transform: translateX(0); /* Muncul */
-            }
+            .sidebar-panel.open { transform: translateX(0); }
         }
-        
+
         .gjs-toolbar { 
             position: fixed !important; top: 60px !important; left: 0 !important; right: auto !important; transform: none !important;
             background-color: #1f2937 !important; border-radius: 0 0 8px 0 !important; box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
@@ -82,6 +64,7 @@
         .block-card:hover { border-color: #6366f1; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15); transform: translateY(-2px); }
         .block-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #4b5563; text-align: center; }
         
+        /* ICON PICKER Z-INDEX HARUS TINGGI */
         .sp-container { z-index: 1000000 !important; position: fixed !important; }
         .gjs-field-color-picker { width: 100%; height: 24px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
     </style>
@@ -102,19 +85,18 @@
             <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile text-lg"></i></button>
         </div>
         <div class="flex items-center gap-2">
-            <button @click="sidebarOpen = !sidebarOpen" class="md:hidden bg-gray-100 p-2 rounded text-gray-600 hover:bg-gray-200">
-                <i class="ph ph-list text-xl" x-show="!sidebarOpen"></i>
-                <i class="ph ph-x text-xl" x-show="sidebarOpen"></i>
+            <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden p-2 rounded bg-gray-100 text-gray-600">
+                <i class="ph" :class="mobileMenuOpen ? 'ph-x' : 'ph-list'"></i>
             </button>
-
             <button @click="showSettings=true" class="bg-white text-gray-600 px-3 py-2 rounded-lg text-xs font-bold border border-gray-200 hover:bg-gray-50 transition">Config</button>
             <button @click="savePage" :disabled="loading" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-lg"><span x-text="loading ? 'SAVING...' : 'PUBLISH'"></span></button>
         </div>
     </header>
 
     <div class="workspace">
-        <div id="gjs" @click="sidebarOpen = false"></div>
-        <div class="sidebar-panel" :class="sidebarOpen ? 'mobile-open' : ''">
+        <div id="gjs" @click="mobileMenuOpen = false"></div>
+        
+        <div class="sidebar-panel" :class="mobileMenuOpen ? 'open' : ''">
             <div class="flex border-b border-gray-200 bg-white shrink-0">
                 <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-squares-four text-xl"></i></button>
                 <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-paint-brush text-xl"></i></button>
@@ -126,7 +108,6 @@
                     <div id="blocks-custom-renderer" class="space-y-2">
                         <div class="text-center py-10 text-gray-400 text-xs animate-pulse">Memuat Widget...</div>
                     </div>
-                    <div id="blocks-container" class="hidden"></div> 
                 </div>
                 <div x-show="tab=='styles'" class="h-full pb-20"><div id="selectors-container" class="p-3 bg-gray-50 border-b"></div><div id="styles-container" class="p-1"></div></div>
                 <div x-show="tab=='traits'" class="h-full pb-20"><div id="traits-container" class="p-4"></div></div>
@@ -148,7 +129,7 @@
             </div>
             <div class="flex-1 overflow-y-auto p-6 space-y-6">
                 <div x-show="settingsTab === 'commerce'" class="space-y-4">
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Judul Halaman</label><input x-model="page.title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500 transition"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Judul Halaman</label><input x-model="page.title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">URL Slug</label><input x-model="page.slug" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tipe Produk</label><select x-model="page.product_type" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm"><option value="physical">Physical Product</option><option value="digital">Digital Product</option></select></div>
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Harga Dasar (Rp)</label><input type="number" x-model="page.config.price" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
@@ -156,28 +137,26 @@
                         <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Metode Pembayaran</label>
                         <div class="grid grid-cols-2 gap-2 mt-3">
                             <label class="flex items-center gap-2 p-2 bg-white border rounded-lg cursor-pointer"><input type="checkbox" value="whatsapp" x-model="page.config.active_payments" class="w-4 h-4 rounded text-indigo-600"><span class="text-[11px] font-medium text-gray-700">WhatsApp</span></label>
-                            <template x-for="p in paymentProviders" :key="p.slug">
-                                <label class="flex items-center gap-2 p-2 bg-white border rounded-lg cursor-pointer"><input type="checkbox" :value="p.slug" x-model="page.config.active_payments" class="w-4 h-4 rounded text-indigo-600"><span class="text-[11px] font-medium text-gray-700" x-text="p.name"></span></label>
-                            </template>
+                            <template x-for="p in paymentProviders" :key="p.slug"><label class="flex items-center gap-2 p-2 bg-white border rounded-lg cursor-pointer"><input type="checkbox" :value="p.slug" x-model="page.config.active_payments" class="w-4 h-4 rounded text-indigo-600"><span class="text-[11px] font-medium text-gray-700" x-text="p.name"></span></label></template>
                         </div>
                     </div>
                 </div>
                 <div x-show="settingsTab === 'seo'" class="space-y-4">
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">SEO Title</label><input x-model="page.config.settings.seo_title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Meta Description</label><textarea x-model="page.config.settings.seo_description" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm h-24 outline-none resize-none"></textarea></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Favicon URL</label><input x-model="page.config.settings.favicon" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Social Image</label><input x-model="page.config.settings.og_image" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">SEO Title</label><input x-model="page.config.settings.seo_title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Meta Description</label><textarea x-model="page.config.settings.seo_description" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm h-24"></textarea></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Favicon URL</label><input x-model="page.config.settings.favicon" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Social Image</label><input x-model="page.config.settings.og_image" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm"></div>
                 </div>
                 <div x-show="settingsTab === 'advanced'" class="space-y-6">
                     <div class="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 space-y-4">
-                        <h4 class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Pixels & Analytics</h4>
-                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">FB Pixel ID</label><input x-model="page.config.settings.fb_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none"></div>
-                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">TikTok Pixel ID</label><input x-model="page.config.settings.tiktok_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none"></div>
-                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">GA4 ID</label><input x-model="page.config.settings.ga_id" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none"></div>
+                        <h4 class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Pixels</h4>
+                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">FB Pixel</label><input x-model="page.config.settings.fb_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm"></div>
+                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">TikTok Pixel</label><input x-model="page.config.settings.tiktok_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm"></div>
+                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">GA4 ID</label><input x-model="page.config.settings.ga_id" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm"></div>
                     </div>
                     <div class="space-y-4">
-                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Header Script</label><textarea x-model="page.config.settings.scripts_header" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none" placeholder="<script>...</script>"></textarea></div>
-                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Footer Script</label><textarea x-model="page.config.settings.scripts_footer" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none" placeholder="Sebelum </body>"></textarea></div>
+                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Header Script</label><textarea x-model="page.config.settings.scripts_header" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl"></textarea></div>
+                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Footer Script</label><textarea x-model="page.config.settings.scripts_footer" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl"></textarea></div>
                     </div>
                 </div>
             </div>
@@ -208,7 +187,8 @@
     let appBuilderCache = {};
 
     (function(){
-        // ICON PICKER LOGIC (Global Scope agar bisa dipanggil GrapesJS)
+        // GLOBAL ICONIFY PICKER LOGIC
+        // Harus ada di global window agar bisa dipanggil oleh GrapesJS Trait atau Tombol
         let activeModel = null; 
         const modal = document.getElementById('iconify-picker-modal'); 
         const input = document.getElementById('iconify-picker-search'); 
@@ -216,7 +196,7 @@
         
         window.openIconifyPicker = function(model) { 
             activeModel = model; 
-            modal.classList.remove('hidden'); // Buka Modal
+            modal.classList.remove('hidden'); 
             input.value = ''; 
             input.focus(); 
             searchIcons('star'); 
@@ -237,13 +217,12 @@
                     btn.innerHTML = `<iconify-icon icon="${icon}" width="24"></iconify-icon><span class="text-[9px] text-gray-400 truncate w-full text-center">${icon.split(':')[1]}</span>`; 
                     btn.onclick = () => { 
                         if(activeModel) {
-                            // Update Attribute Icon pada Model GrapesJS
                             activeModel.setAttributes({ icon: icon }); 
-                            // Paksa render ulang jika perlu (opsional)
                             const el = activeModel.getEl();
                             if(el) {
-                                const iconEl = el.querySelector('iconify-icon');
-                                if(iconEl) iconEl.setAttribute('icon', icon);
+                                // Paksa update attribute DOM
+                                const iconEl = el.querySelector('iconify-icon') || el;
+                                if(iconEl.tagName === 'ICONIFY-ICON') iconEl.setAttribute('icon', icon);
                             }
                         }
                         modal.classList.add('hidden'); 
@@ -256,13 +235,17 @@
 
     function editorApp() {
         return {
-            sidebarOpen: false, // State Sidebar Mobile
+            mobileMenuOpen: false, // Control untuk Sidebar Mobile
             device: 'desktop', tab: 'blocks', settingsTab: 'commerce', showSettings: false, loading: false, notifications: [],
-            paymentProviders: [{ slug: 'paspay', name: 'Paspay QRIS' }, { slug: 'paspay-va', name: 'Paspay VA' }, { slug: 'midtrans', name: 'Midtrans' }],
+            paymentProviders: [{ slug: 'paspay', name: 'Paspay QRIS' }, { slug: 'midtrans', name: 'Midtrans' }],
             page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, active_payments: [], settings: { seo_title:'', seo_description:'', favicon:'', og_image:'', fb_pixel:'', tiktok_pixel:'', ga_id:'', scripts_header:'', scripts_footer:'' } } },
 
             async init() {
                 this.initGrapes();
+                
+                // LOAD WIDGETS TERPISAH (Agar Sidebar Block PASTI Muncul)
+                await this.loadWidgetsIntoSidebar();
+
                 const slug = new URLSearchParams(window.location.search).get('slug');
                 if (slug) await this.loadPageData(slug);
             },
@@ -270,6 +253,49 @@
             notify(title, msg, type = 'success') { 
                 const id = Date.now(); this.notifications.push({ id, title, msg, type, show: true }); 
                 setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); 
+            },
+
+            // LOGIKA RENDER SIDEBAR YANG LEBIH KUAT
+            async loadWidgetsIntoSidebar() {
+                try {
+                    const res = await fetch('/api/widgets');
+                    if(!res.ok) throw new Error('Gagal load widgets');
+                    const widgets = await res.json();
+                    
+                    const renderer = document.getElementById('blocks-custom-renderer');
+                    const domc = window.editor.DomComponents;
+                    
+                    renderer.innerHTML = ''; 
+                    const groups = {};
+                    
+                    widgets.forEach(w => {
+                        appBuilderCache[w.id] = w;
+                        // Register Structure Only (No Script Injection to prevent crash)
+                        domc.addType(w.id, { model: { defaults: { attributes: { 'data-widget-type': w.id } } } });
+
+                        if (w.category !== 'System') {
+                            if (!groups[w.category]) groups[w.category] = [];
+                            groups[w.category].push(w);
+                        }
+                    });
+
+                    Object.keys(groups).sort().forEach(catName => {
+                        const details = document.createElement('details'); details.className = 'group border border-gray-200 rounded-lg bg-white mb-2'; details.open = true;
+                        const summary = document.createElement('summary'); summary.className = 'p-3 bg-gray-50 text-xs font-bold cursor-pointer flex justify-between items-center hover:bg-gray-100';
+                        summary.innerHTML = `<span>${catName}</span> <i class="ph ph-caret-down group-open:rotate-180 transition"></i>`;
+                        const contentDiv = document.createElement('div'); contentDiv.className = 'grid grid-cols-3 gap-2 p-2';
+                        groups[catName].forEach(w => {
+                            const btn = document.createElement('div'); btn.className = 'block-card'; 
+                            btn.onclick = () => this.addWidgetToCanvas(w.id);
+                            btn.innerHTML = `<div class="text-indigo-600 mb-1"><i class="ph ph-cube text-xl"></i></div><div class="block-label">${w.label}</div>`; 
+                            contentDiv.appendChild(btn);
+                        });
+                        details.appendChild(summary); details.appendChild(contentDiv); renderer.appendChild(details);
+                    });
+                } catch(e) {
+                    console.error(e);
+                    document.getElementById('blocks-custom-renderer').innerHTML = '<div class="text-red-500 text-center p-4">Gagal memuat widget.</div>';
+                }
             },
 
             addWidgetToCanvas(id) {
@@ -284,15 +310,16 @@
                         html = div.innerHTML; 
                     }
                     try { 
-                        const added = window.editor.addComponents(html);
-                        // Close sidebar on mobile after clicking widget
-                        if(window.innerWidth < 768) this.sidebarOpen = false; 
+                        window.editor.addComponents(html);
+                        // Close sidebar on mobile after click
+                        if(window.innerWidth < 768) this.mobileMenuOpen = false;
 
+                        // Manual Dispatcher for Editor Preview
                         if(w.script && w.script.trim()) {
                             setTimeout(() => {
                                 const allWidgets = window.editor.getWrapper().find(`[data-widget-type="${w.id}"]`);
                                 const el = allWidgets[allWidgets.length - 1];
-                                if(el) { try { (new Function(w.script)).call(el.getEl()); } catch(e) { console.warn('Editor Exec Error', e); } }
+                                if(el) { try { (new Function(w.script)).call(el.getEl()); } catch(e) {} }
                             }, 150);
                         }
                     } catch(e) { console.error('Add Error', e); }
@@ -336,51 +363,53 @@
                     const html = window.editor.getHtml();
                     const css = window.editor.getCss();
                     
+                    // SMART LOADER (Live Script)
+                    const usedScripts = {};
+                    window.editor.getWrapper().find('[data-widget-type]').forEach(comp => {
+                        const wid = comp.getAttributes()['data-widget-type'];
+                        if(appBuilderCache[wid] && appBuilderCache[wid].script) {
+                            usedScripts[wid] = appBuilderCache[wid].script;
+                        }
+                    });
+
                     const safeJs = `
                     <script>
-                    document.addEventListener("DOMContentLoaded", function() {
-                        document.querySelectorAll('.js-countdown').forEach(function(el) {
-                            if(el.dataset.init === "true") return;
-                            el.dataset.init = "true";
-                            var display = el.querySelector(".js-display");
-                            var expiredBox = el.querySelector(".js-expired-msg");
-                            var expireStr = el.getAttribute("data-expire");
-                            var msgStr = el.getAttribute("data-msg") || "WAKTU HABIS";
-                            if (!expireStr) return;
-                            var update = function() {
-                                var now = new Date().getTime();
-                                var distance = new Date(expireStr).getTime() - now;
-                                if (distance < 0) {
-                                    if(display) display.style.display = "none";
-                                    if(expiredBox) { expiredBox.style.display = "block"; expiredBox.classList.remove("hidden"); expiredBox.innerHTML = msgStr; }
-                                    clearInterval(interval);
-                                    return;
-                                }
-                                var d = Math.floor(distance / (1000 * 60 * 60 * 24));
-                                var h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                                var m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                                var s = Math.floor((distance % (1000 * 60)) / 1000);
-                                var setTxt = function(sel, val) {
-                                    var node = el.querySelector(sel);
-                                    if (node) node.innerText = val < 10 ? "0" + val : val;
-                                };
-                                setTxt(".days", d); setTxt(".hours", h); setTxt(".minutes", m); setTxt(".seconds", s);
-                            };
-                            var interval = setInterval(update, 1000);
-                            update();
-                        });
-                        
-                        // Accordion Logic Live
-                        document.querySelectorAll("details").forEach(function(target) {
-                            target.addEventListener("click", function() {
-                                if (!target.hasAttribute("open")) {
-                                    document.querySelectorAll("details").forEach(function(other) {
-                                        if (other !== target) other.removeAttribute("open");
-                                    });
+                    (function() {
+                        var widgetScripts = ${JSON.stringify(usedScripts)};
+                        document.addEventListener("DOMContentLoaded", function() {
+                            // 1. Widget Logic
+                            document.querySelectorAll('[data-widget-type]').forEach(function(el) {
+                                var id = el.getAttribute('data-widget-type');
+                                if(widgetScripts[id]) {
+                                    try { (new Function(widgetScripts[id])).call(el); } catch(e) { console.error("Widget Error " + id, e); }
                                 }
                             });
+                            
+                            // 2. Global Countdown Logic (Backup jika script widget kosong)
+                            document.querySelectorAll('.js-countdown').forEach(function(el) {
+                                if(el.dataset.init) return; el.dataset.init = "true";
+                                var d=el.querySelector(".days"),h=el.querySelector(".hours"),m=el.querySelector(".minutes"),s=el.querySelector(".seconds");
+                                var exp=el.getAttribute("data-expire"); if(!exp) return;
+                                setInterval(function(){
+                                    var dist = new Date(exp).getTime() - new Date().getTime();
+                                    if(dist<0) return;
+                                    if(d) d.innerText = Math.floor(dist / 86400000);
+                                    if(h) h.innerText = Math.floor((dist % 86400000) / 3600000);
+                                    if(m) m.innerText = Math.floor((dist % 3600000) / 60000);
+                                    if(s) s.innerText = Math.floor((dist % 60000) / 1000);
+                                },1000);
+                            });
+
+                            // 3. Accordion Logic
+                            document.querySelectorAll("details").forEach(function(t) {
+                                t.addEventListener("click", function() {
+                                    if (!t.hasAttribute("open")) {
+                                        document.querySelectorAll("details").forEach(function(o) { if (o !== t) o.removeAttribute("open"); });
+                                    }
+                                });
+                            });
                         });
-                    });
+                    })();
                     <\/script>`;
 
                     const payload = {
@@ -397,12 +426,7 @@
             setDevice(d) { this.device = d; if (window.editor) window.editor.setDevice(d); },
 
             initGrapes() {
-                const bridgeCSS = `
-                    body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; padding-top: 65px !important; } 
-                    img { max-width: 100% !important; height: auto !important; display: block; }
-                    details > :not(summary) { display: block !important; opacity: 1 !important; height: auto !important; padding-top: 10px; border-top: 1px dashed #e5e7eb; }
-                `; 
-
+                const bridgeCSS = `body { font-family: 'Inter', sans-serif; margin: 0; padding-top: 60px; } img { max-width: 100%; display: block; }`; 
                 window.editor = grapesjs.init({
                     container: '#gjs', height: '100%', width: 'auto', storageManager: false, panels: { defaults: [] }, allowScripts: 1, 
                     assetManager: {
@@ -419,6 +443,7 @@
                             } catch(err) { this.notify('Gagal', 'Upload gagal', 'error'); }
                         }
                     },
+                    // SCRIPT ICONIFY DIMUAT DI CANVAS JUGA
                     canvas: {
                         scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
                         styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
@@ -432,39 +457,9 @@
                             { name: 'Typography', open: 1, buildProps: ['font-family', 'font-size', 'font-weight', 'letter-spacing', 'line-height', 'color', 'text-align', 'text-decoration', 'font-style', 'text-transform', 'text-shadow'] }, 
                             { name: 'Layout', open: 0, buildProps: ['width', 'height', 'padding', 'margin', 'display', 'flex-direction', 'justify-content', 'align-items', 'position', 'top', 'bottom', 'left', 'right', 'z-index'] },
                             { name: 'Background', open: 0, buildProps: ['background-color', 'background-image', 'background-repeat', 'background-size', 'background-position'] },
-                            { name: 'Border & Effects', open: 0, buildProps: ['border', 'border-radius', 'box-shadow', 'opacity', 'cursor', 'overflow'] }
+                            { name: 'Border', open: 0, buildProps: ['border', 'border-radius', 'box-shadow', 'opacity', 'cursor', 'overflow'] }
                         ] 
                     }
-                });
-
-                const domc = window.editor.DomComponents;
-
-                fetch('/api/widgets').then(res => res.json()).then(widgets => {
-                    const renderer = document.getElementById('blocks-custom-renderer');
-                    renderer.innerHTML = ''; const groups = {};
-                    
-                    widgets.forEach(w => {
-                        appBuilderCache[w.id] = w;
-                        domc.addType(w.id, { model: { defaults: { attributes: { 'data-widget-type': w.id } } } });
-                        if (w.category !== 'System') {
-                            if (!groups[w.category]) groups[w.category] = [];
-                            groups[w.category].push(w);
-                        }
-                    });
-
-                    Object.keys(groups).sort().forEach(catName => {
-                        const details = document.createElement('details'); details.className = 'group border border-gray-200 rounded-lg bg-white mb-2'; details.open = true;
-                        const summary = document.createElement('summary'); summary.className = 'p-3 bg-gray-50 text-xs font-bold cursor-pointer flex justify-between items-center hover:bg-gray-100';
-                        summary.innerHTML = `<span>${catName}</span> <i class="ph ph-caret-down group-open:rotate-180 transition"></i>`;
-                        const contentDiv = document.createElement('div'); contentDiv.className = 'grid grid-cols-3 gap-2 p-2';
-                        groups[catName].forEach(w => {
-                            const btn = document.createElement('div'); btn.className = 'block-card'; 
-                            btn.onclick = () => this.addWidgetToCanvas(w.id);
-                            btn.innerHTML = `<div class="text-indigo-600 mb-1"><i class="ph ph-cube text-xl"></i></div><div class="block-label">${w.label}</div>`; 
-                            contentDiv.appendChild(btn);
-                        });
-                        details.appendChild(summary); details.appendChild(contentDiv); renderer.appendChild(details);
-                    });
                 });
 
                 window.editor.on('rte:enable', () => document.querySelectorAll('.gjs-toolbar').forEach(t => t.classList.add('ghost-mode')));
@@ -473,24 +468,14 @@
                 window.editor.Traits.addType('textarea', {
                     createInput({ trait }) {
                         const el = document.createElement('textarea');
-                        el.className = 'w-full p-2 text-xs border border-gray-300 rounded bg-gray-50 text-gray-800 focus:outline-none focus:border-indigo-500 transition';
-                        el.style.minHeight = '80px';
+                        el.className = 'w-full p-2 text-xs border border-gray-300 rounded bg-gray-50 outline-none';
                         el.addEventListener('input', (e) => this.onChange(e));
                         return el;
                     },
                     onUpdate({ elInput, component }) { elInput.value = component.get(this.model.get('name')) || component.get('content') || ''; },
                 });
 
-                window.editor.on('component:selected', (model) => {
-                    const el = model.getEl();
-                    if (el && el.innerText && el.childElementCount === 0) {
-                        const currentTraits = model.get('traits').filter(t => t.name !== 'content_text');
-                        model.set('traits', [{ type: 'textarea', name: 'content_text', label: 'Edit Teks', changeProp: 1 }, ...currentTraits]);
-                        model.set('content_text', model.get('content')); 
-                        model.on('change:content_text', () => { model.components(model.get('content_text')); });
-                    }
-                });
-
+                // CUSTOM TOOLBAR
                 window.editor.on('component:selected', (c) => { 
                     c.set('toolbar', [
                         { attributes: { class: 'fa' }, command: 'tlb-move', label: '<i class="ph ph-arrows-out-cardinal text-lg"></i>' },
