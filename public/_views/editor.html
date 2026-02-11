@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - External Script Edition</title>
+    <title>LandingBuilder Pro - Embedded Core</title>
     
     <script>
         (function() {
@@ -216,14 +216,28 @@
                 const w = appBuilderCache[id];
                 if (w) {
                     let html = w.content;
-                    // --- DISPATCHER: Inject manual script handling ---
+                    // DISPATCHER MODE: Insert ID unik, lalu jalankan script manual
+                    const div = document.createElement('div'); div.innerHTML = html;
+                    const root = div.firstElementChild;
+                    if(root) { 
+                        // Kunci untuk Live Hydration: CLASS dan ATRIBUT DATA
+                        // Kita tidak lagi pakai ID untuk script, tapi class marker
+                        root.classList.add('js-widget-root');
+                        root.setAttribute('data-widget-type', w.id);
+                        html = div.innerHTML; 
+                    }
                     try { 
-                        window.editor.addComponents(html);
-                        // TRIGGER SCRIPT DI EDITOR SECARA AMAN
-                        // Pastikan ada file /js/countdown.js yang menghandle ini, 
-                        // TAPI untuk kenyamanan di Editor, kita panggil ulang init global jika ada
-                        if (window.editor.getWrapper().getEl().contentWindow.initCountdowns) {
-                            window.editor.getWrapper().getEl().contentWindow.initCountdowns();
+                        const added = window.editor.addComponents(html);
+                        // EDITOR MANUAL DISPATCHER
+                        if(w.script && w.script.trim()) {
+                            setTimeout(() => {
+                                // Cari elemen yang baru ditambahkan (paling akhir)
+                                const allWidgets = window.editor.getWrapper().find(`[data-widget-type="${w.id}"]`);
+                                const el = allWidgets[allWidgets.length - 1];
+                                if(el) {
+                                    try { (new Function(w.script)).call(el.getEl()); } catch(e) { console.warn('Editor Exec Error', e); }
+                                }
+                            }, 150);
                         }
                     } catch(e) { console.error('Add Error', e); }
                 }
@@ -241,22 +255,28 @@
                     }
                     if (window.editor) {
                         let safeHtml = data.html_content || '';
-                        // CLEANUP: Hapus script usang dari database
+                        // CLEANUP: Hapus script lama
                         safeHtml = safeHtml.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gm, ""); 
                         
                         window.editor.setComponents(safeHtml);
                         window.editor.setStyle(data.css_content || '');
                         
-                        // AUTO OPEN ACCORDION (Logika Khusus Editor)
+                        // EDITOR HYDRATION (Jalankan ulang semua script widget di editor)
                         setTimeout(() => {
-                            const details = window.editor.getWrapper().find('details');
-                            details.forEach(d => d.addAttributes({ open: 'true' }));
+                            const wrapper = window.editor.getWrapper();
                             
-                            // JALANKAN SCRIPT EKSTERNAL DI IFRAME EDITOR
-                            if (window.editor.getWrapper().getEl().contentWindow.initCountdowns) {
-                                window.editor.getWrapper().getEl().contentWindow.initCountdowns();
-                            }
-                        }, 600);
+                            // 1. Hydrate Widgets (Counter, dll)
+                            wrapper.find('[data-widget-type]').forEach(comp => {
+                                const wid = comp.getAttributes()['data-widget-type'];
+                                const wData = appBuilderCache[wid];
+                                if(wData && wData.script) {
+                                    try { (new Function(wData.script)).call(comp.getEl()); } catch(e) {}
+                                }
+                            });
+
+                            // 2. Auto Open Accordion
+                            wrapper.find('details').forEach(d => d.addAttributes({ open: 'true' }));
+                        }, 800);
                     }
                 } catch (e) { this.notify('Error', e.message, 'error'); }
                 this.loading = false;
@@ -265,20 +285,59 @@
             async savePage() {
                 this.loading = true;
                 try {
-                    // TUTUP ACCORDION SEBELUM SAVE
+                    // Tutup Accordion
                     window.editor.getWrapper().find('details').forEach(d => d.addAttributes({ open: null }));
                     
                     const html = window.editor.getHtml();
                     const css = window.editor.getCss();
                     
-                    // --- LIVE SCRIPT INJECTION ---
-                    // Kita menyuntikkan script eksternal countdown.js agar berjalan di Live
-                    // Script ini akan otomatis mencari .js-countdown dan menjalankannya
-                    const finalHtml = `${html}<script src="/js/countdown.js"><\/script>`;
+                    // --- LIVE SCRIPT INJECTION (EMBEDDED LOGIC) ---
+                    // Ini adalah "Script Anti-Bego" yang menjamin countdown jalan di Live
+                    // Script ini akan disuntikkan langsung ke dalam HTML halaman.
+                    // Tidak butuh file eksternal, tidak butuh database script yang rumit.
+                    const safeJs = `
+                    <script>
+                    document.addEventListener("DOMContentLoaded", function() {
+                        // 1. INITIALIZE COUNTDOWN (Global Logic)
+                        document.querySelectorAll('.js-countdown').forEach(function(el) {
+                            if(el.dataset.init === "true") return;
+                            el.dataset.init = "true";
+                            var display = el.querySelector(".js-display");
+                            var expiredBox = el.querySelector(".js-expired-msg");
+                            var expireStr = el.getAttribute("data-expire");
+                            var msgStr = el.getAttribute("data-msg") || "WAKTU HABIS";
+                            if (!expireStr) return;
+                            var update = function() {
+                                var now = new Date().getTime();
+                                var distance = new Date(expireStr).getTime() - now;
+                                if (distance < 0) {
+                                    if(display) display.style.display = "none";
+                                    if(expiredBox) { expiredBox.style.display = "block"; expiredBox.classList.remove("hidden"); expiredBox.innerHTML = msgStr; }
+                                    clearInterval(interval);
+                                    return;
+                                }
+                                var d = Math.floor(distance / (1000 * 60 * 60 * 24));
+                                var h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                                var m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                                var s = Math.floor((distance % (1000 * 60)) / 1000);
+                                var setTxt = function(sel, val) {
+                                    var node = el.querySelector(sel);
+                                    if (node) node.innerText = val < 10 ? "0" + val : val;
+                                };
+                                setTxt(".days", d); setTxt(".hours", h); setTxt(".minutes", m); setTxt(".seconds", s);
+                            };
+                            var interval = setInterval(update, 1000);
+                            update();
+                        });
+
+                        // 2. INITIALIZE CAROUSEL / SLIDER (Jika ada)
+                        // Tambahkan logika global lain di sini...
+                    });
+                    <\/script>`;
 
                     const payload = {
                         id: this.page.id, slug: this.page.slug, title: this.page.title,
-                        html: finalHtml, 
+                        html: html + safeJs, // Inject Script Langsung ke HTML
                         css: css, product_config: this.page.config
                     };
                     const res = await fetch('/api/admin/pages', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
@@ -312,13 +371,8 @@
                             } catch(err) { this.notify('Gagal', 'Upload gagal', 'error'); }
                         }
                     },
-                    // --- LOAD SCRIPT EKSTERNAL DI EDITOR CANVAS ---
                     canvas: {
-                        scripts: [
-                            'https://cdn.tailwindcss.com', 
-                            'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js',
-                            '/js/countdown.js' // LOAD SCRIPT KITA DI SINI!
-                        ],
+                        scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
                         styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
                         content: `<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"><script>console.warn=function(){};<\/script><style>${bridgeCSS}</style>`
                     },
@@ -337,8 +391,7 @@
 
                 const domc = window.editor.DomComponents;
 
-                // --- FETCH WIDGETS (NO SCRIPT INJECTION) ---
-                // Kita tidak lagi menyuntikkan script GrapesJS. Kita mengandalkan /js/countdown.js
+                // --- FETCH WIDGETS ---
                 fetch('/api/widgets').then(res => res.json()).then(widgets => {
                     const renderer = document.getElementById('blocks-custom-renderer');
                     renderer.innerHTML = ''; const groups = {};
@@ -346,7 +399,8 @@
                     widgets.forEach(w => {
                         appBuilderCache[w.id] = w;
                         
-                        // Register Component Attributes Only
+                        // Register sebagai struktur murni (tanpa script internal GrapesJS)
+                        // Agar tidak bentrok dengan script manual kita
                         domc.addType(w.id, {
                             model: { defaults: { attributes: { 'data-widget-type': w.id } } }
                         });
