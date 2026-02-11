@@ -100,7 +100,6 @@
                     <div id="blocks-custom-renderer" class="space-y-2">
                         <div class="text-center py-10 text-gray-400 text-xs animate-pulse">Memuat Widget...</div>
                     </div>
-                    <div id="blocks-container" class="hidden"></div> 
                 </div>
                 <div x-show="tab=='styles'" class="h-full pb-20"><div id="selectors-container" class="p-3 bg-gray-50 border-b"></div><div id="styles-container" class="p-1"></div></div>
                 <div x-show="tab=='traits'" class="h-full pb-20"><div id="traits-container" class="p-4"></div></div>
@@ -122,36 +121,11 @@
             </div>
             <div class="flex-1 overflow-y-auto p-6 space-y-6">
                 <div x-show="settingsTab === 'commerce'" class="space-y-4">
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Judul Halaman</label><input x-model="page.title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">URL Slug</label><input x-model="page.slug" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Harga (Rp)</label><input type="number" x-model="page.config.price" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
-                    <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Metode Pembayaran</label>
-                        <div class="grid grid-cols-2 gap-2 mt-3">
-                            <label class="flex items-center gap-2 p-2 bg-white border rounded-lg cursor-pointer"><input type="checkbox" value="whatsapp" x-model="page.config.active_payments" class="w-4 h-4 rounded text-indigo-600"><span class="text-[11px] font-medium text-gray-700">WhatsApp</span></label>
-                            <template x-for="p in paymentProviders" :key="p.slug">
-                                <label class="flex items-center gap-2 p-2 bg-white border rounded-lg cursor-pointer"><input type="checkbox" :value="p.slug" x-model="page.config.active_payments" class="w-4 h-4 rounded text-indigo-600"><span class="text-[11px] font-medium text-gray-700" x-text="p.name"></span></label>
-                            </template>
-                        </div>
-                    </div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Judul</label><input x-model="page.title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Slug</label><input x-model="page.slug" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
                 </div>
                 <div x-show="settingsTab === 'seo'" class="space-y-4">
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">SEO Title</label><input x-model="page.config.settings.seo_title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Meta Description</label><textarea x-model="page.config.settings.seo_description" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm h-24"></textarea></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Favicon URL</label><input x-model="page.config.settings.favicon" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Social Image</label><input x-model="page.config.settings.og_image" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm"></div>
-                </div>
-                <div x-show="settingsTab === 'advanced'" class="space-y-6">
-                    <div class="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 space-y-4">
-                        <h4 class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Pixels</h4>
-                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">FB Pixel</label><input x-model="page.config.settings.fb_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm"></div>
-                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">TikTok Pixel</label><input x-model="page.config.settings.tiktok_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm"></div>
-                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">GA4 ID</label><input x-model="page.config.settings.ga_id" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm"></div>
-                    </div>
-                    <div class="space-y-4">
-                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Header Script</label><textarea x-model="page.config.settings.scripts_header" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl"></textarea></div>
-                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Footer Script</label><textarea x-model="page.config.settings.scripts_footer" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl"></textarea></div>
-                    </div>
                 </div>
             </div>
             <div class="p-4 border-t bg-gray-50 flex justify-end gap-3">
@@ -163,42 +137,61 @@
 
     <div id="iconify-picker-modal" class="fixed inset-0 hidden z-[999999] bg-black/40 flex items-start justify-center p-6 backdrop-blur-sm">
         <div class="bg-white rounded-xl w-full max-w-xl shadow-2xl mt-10 overflow-hidden">
-            <div class="flex items-center justify-between p-4 border-b bg-gray-50"><input id="iconify-picker-search" placeholder="Cari icon..." class="w-full bg-transparent outline-none text-sm" /><button id="iconify-picker-close"><i class="ph ph-x text-lg"></i></button></div>
+            <div class="flex items-center justify-between p-4 border-b bg-gray-50">
+                <input id="iconify-picker-search" placeholder="Cari icon..." class="w-full bg-transparent outline-none text-sm" />
+                <button id="iconify-picker-close"><i class="ph ph-x text-lg"></i></button>
+            </div>
             <div id="iconify-picker-results" class="p-4 grid grid-cols-6 gap-3 max-h-[300px] overflow-y-auto"></div>
         </div>
-    </div>
-    <div class="fixed bottom-5 left-5 z-[100000] flex flex-col gap-2 pointer-events-none">
-        <template x-for="n in notifications" :key="n.id">
-            <div x-show="n.show" class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-l-4 bg-white min-w-[280px]" :class="n.type==='success'?'border-green-500':'border-red-500'">
-                <i class="ph text-2xl" :class="n.type==='success'?'ph-check-circle text-green-500':'ph-warning-circle text-red-500'"></i>
-                <div><h4 class="text-xs font-bold text-gray-800 uppercase" x-text="n.title"></h4><p class="text-[10px] text-gray-500 font-medium" x-text="n.msg"></p></div>
-            </div>
-        </template>
     </div>
 
     <script>
     let appBuilderCache = {};
+    let activeModel = null;
+    const modal = document.getElementById('iconify-picker-modal');
+    const input = document.getElementById('iconify-picker-search');
+    const results = document.getElementById('iconify-picker-results');
 
-    (function(){
-        let activeModel = null; const modal = document.getElementById('iconify-picker-modal'); const input = document.getElementById('iconify-picker-search'); const results = document.getElementById('iconify-picker-results');
-        window.openIconifyPicker = function(model) { activeModel = model; modal.classList.remove('hidden'); input.value = ''; input.focus(); searchIcons('star'); };
-        document.getElementById('iconify-picker-close').onclick = () => modal.classList.add('hidden'); 
-        input.oninput = (e) => searchIcons(e.target.value);
-        async function searchIcons(q) { 
-            if(!q) return; 
-            try { 
-                const res = await fetch(`https://api.iconify.design/search?query=${q}&limit=30`); const data = await res.json(); results.innerHTML = ''; 
-                if(data.icons) data.icons.forEach(icon => { const btn = document.createElement('button'); btn.className = 'p-2 hover:bg-indigo-50 rounded flex flex-col items-center gap-1 transition'; btn.innerHTML = `<iconify-icon icon="${icon}" width="24"></iconify-icon><span class="text-[9px] text-gray-400 truncate w-full text-center">${icon.split(':')[1]}</span>`; btn.onclick = () => { if(activeModel) activeModel.setAttributes({ icon: icon }); modal.classList.add('hidden'); }; results.appendChild(btn); }); 
-            } catch(e) {} 
-        }
-    })();
+    // 2. ICON PICKER GLOBAL FUNCTION
+    window.openIconifyPicker = function(model) { 
+        activeModel = model; 
+        modal.classList.remove('hidden'); 
+        input.value = ''; 
+        input.focus(); 
+        searchIcons('star'); 
+    };
+
+    document.getElementById('iconify-picker-close').onclick = () => modal.classList.add('hidden'); 
+    input.oninput = (e) => searchIcons(e.target.value);
+
+    async function searchIcons(q) { 
+        if(!q) return; 
+        try { 
+            const res = await fetch(`https://api.iconify.design/search?query=${q}&limit=30`); 
+            const data = await res.json(); 
+            results.innerHTML = ''; 
+            if(data.icons) data.icons.forEach(icon => { 
+                const btn = document.createElement('button'); btn.className = 'p-2 hover:bg-indigo-50 rounded flex flex-col items-center gap-1 transition'; 
+                btn.innerHTML = `<iconify-icon icon="${icon}" width="24"></iconify-icon>`; 
+                btn.onclick = () => { 
+                    if(activeModel) {
+                        activeModel.setAttributes({ icon: icon });
+                        const el = activeModel.getEl();
+                        if(el) { const iconEl = el.querySelector('iconify-icon') || el; if(iconEl.tagName === 'ICONIFY-ICON') iconEl.setAttribute('icon', icon); }
+                    }
+                    modal.classList.add('hidden'); 
+                }; 
+                results.appendChild(btn); 
+            }); 
+        } catch(e) {} 
+    }
 
     function editorApp() {
         return {
             mobileMenu: false,
             device: 'desktop', tab: 'blocks', settingsTab: 'commerce', showSettings: false, loading: false, notifications: [],
             paymentProviders: [{ slug: 'paspay', name: 'Paspay QRIS' }, { slug: 'midtrans', name: 'Midtrans' }],
-            page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, active_payments: [], settings: { seo_title:'', seo_description:'', favicon:'', og_image:'', fb_pixel:'', tiktok_pixel:'', ga_id:'', scripts_header:'', scripts_footer:'' } } },
+            page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, active_payments: [], settings: { seo_title:'', seo_description:'' } } },
 
             async init() {
                 this.initGrapes();
@@ -212,6 +205,7 @@
                 setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); 
             },
 
+            // --- LOAD WIDGET (PEMBERSIH CRASH) ---
             async loadWidgets() {
                 try {
                     const res = await fetch('/api/widgets');
@@ -224,30 +218,18 @@
                     
                     widgets.forEach(w => {
                         appBuilderCache[w.id] = w;
-                        let safeScript = null;
+                        
+                        // ANTI-CRASH: Cek jika script berisi data SQL kotor (replace/char)
+                        let scriptFn = null;
                         if (w.script && w.script.trim() !== "") {
                             if (!w.script.includes('replace(')) {
-                                try {
-                                    safeScript = new Function(w.script);
-                                    domc.addType(w.id, {
-                                        model: {
-                                            defaults: {
-                                                script: safeScript,
-                                                attributes: { 'data-gjs-type': w.id }
-                                            }
-                                        }
-                                    });
-                                } catch(e) {
-                                    domc.addType(w.id, { model: { defaults: { attributes: { 'data-gjs-type': w.id } } } });
-                                }
-                            } else {
-                                domc.addType(w.id, { model: { defaults: { attributes: { 'data-gjs-type': w.id } } } });
-                            }
-                        } else {
-                            if(w.id !== 'iconify-icon') {
-                                domc.addType(w.id, { model: { defaults: { attributes: { 'data-gjs-type': w.id } } } });
+                                try { scriptFn = new Function(w.script); } catch(e) {}
                             }
                         }
+
+                        domc.addType(w.id, {
+                            model: { defaults: { script: scriptFn, attributes: { 'data-gjs-type': w.id } } }
+                        });
 
                         if (w.category !== 'System') {
                             if (!groups[w.category]) groups[w.category] = [];
@@ -275,6 +257,7 @@
                 const w = appBuilderCache[id];
                 if (w) {
                     try {
+                        // KEMBALIKAN FUNGSI ASLI YANG JALAN
                         const comp = window.editor.addComponents(w.content)[0];
                         if(comp) comp.addAttributes({ 'data-gjs-type': w.id });
                         if(window.innerWidth < 768) this.mobileMenu = false;
@@ -286,21 +269,16 @@
                 this.loading = true;
                 try {
                     const res = await fetch(`/api/admin/pages/${slug}`);
-                    if(!res.ok) throw new Error('Halaman tidak ditemukan');
                     const data = await res.json();
                     this.page.id = data.id; this.page.slug = data.slug; this.page.title = data.title || '';
-                    if (data.product_config_json) { 
-                        const conf = typeof data.product_config_json === 'string' ? JSON.parse(data.product_config_json) : data.product_config_json;
-                        this.page.config = { ...this.page.config, ...conf }; 
-                    }
+                    if (data.product_config_json) this.page.config = { ...this.page.config, ...JSON.parse(data.product_config_json) };
+                    
                     if (window.editor) {
                         let safeHtml = data.html_content || '';
                         safeHtml = safeHtml.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gm, ""); 
                         window.editor.setComponents(safeHtml);
                         window.editor.setStyle(data.css_content || '');
-                        setTimeout(() => {
-                            window.editor.getWrapper().find('details').forEach(d => d.addAttributes({ open: 'true' }));
-                        }, 600);
+                        setTimeout(() => window.editor.getWrapper().find('details').forEach(d => d.addAttributes({ open: 'true' })), 600);
                     }
                 } catch (e) { this.notify('Error', e.message, 'error'); }
                 this.loading = false;
@@ -325,35 +303,16 @@
                 this.loading = false;
             },
 
-            setDevice(d) { this.device = d; if (window.editor) window.editor.setDevice(d); },
+            setDevice(d) { this.device = d; window.editor.setDevice(d); },
 
             initGrapes() {
-                const bridgeCSS = `
-                    body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; padding-top: 65px !important; } 
-                    img { max-width: 100% !important; height: auto !important; display: block; }
-                    details > :not(summary) { display: block !important; opacity: 1 !important; height: auto !important; padding-top: 10px; border-top: 1px dashed #e5e7eb; }
-                `; 
-
+                const bridgeCSS = `body { font-family: 'Inter', sans-serif; margin: 0; padding-top: 65px; } details > :not(summary) { display: block !important; opacity: 1 !important; height: auto !important; padding-top: 10px; border-top: 1px dashed #e5e7eb; }`; 
                 window.editor = grapesjs.init({
                     container: '#gjs', height: '100%', width: 'auto', storageManager: false, panels: { defaults: [] }, allowScripts: 1, 
-                    assetManager: {
-                        uploadText: 'Upload Gambar',
-                        uploadFile: async (e) => {
-                            const file = e.dataTransfer ? e.dataTransfer.files[0] : e.target.files[0];
-                            if(!file) return;
-                            const toBase64 = f => new Promise((r,j)=>{const x=new FileReader();x.onload=()=>r(x.result);x.readAsDataURL(f)});
-                            try {
-                                const b64 = await toBase64(file);
-                                const res = await fetch('/api/admin/upload-image', { method: 'POST', body: JSON.stringify({ image: b64, filename: file.name }) });
-                                const d = await res.json();
-                                if(d.data) { window.editor.AssetManager.add(d.data); this.notify('Sukses', 'Gambar diupload!'); }
-                            } catch(err) { this.notify('Gagal', 'Upload gagal', 'error'); }
-                        }
-                    },
                     canvas: {
                         scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
                         styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
-                        content: `<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"><script>console.warn=function(){};<\/script><style>${bridgeCSS}</style>`
+                        content: `<style>${bridgeCSS}</style>`
                     },
                     plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg'],
                     deviceManager: { devices: [{ id: 'desktop', width: '' }, { id: 'tablet', width: '768px' }, { id: 'mobile', width: '375px' }] },
@@ -362,18 +321,16 @@
                         sectors: [
                             { name: 'Typography', open: 1, buildProps: ['font-family', 'font-size', 'font-weight', 'color', 'text-align'] }, 
                             { name: 'Layout', open: 0, buildProps: ['width', 'height', 'padding', 'margin', 'display'] },
-                            { name: 'Decoration', open: 0, buildProps: ['background-color', 'border', 'border-radius', 'box-shadow'] }
+                            { name: 'Decoration', open: 0, buildProps: ['background-color', 'border', 'border-radius'] }
                         ] 
                     }
                 });
 
-                const domc = window.editor.DomComponents;
-                const tm = window.editor.Traits;
-
-                tm.addType('textarea', {
+                // --- TEXT EDITOR & ICONIFY TRAITS ---
+                window.editor.Traits.addType('textarea', {
                     createInput({ trait }) {
                         const el = document.createElement('textarea');
-                        el.className = 'w-full p-2 text-xs border border-gray-300 rounded bg-gray-50 text-gray-800 outline-none focus:border-indigo-500 transition';
+                        el.className = 'w-full p-2 text-xs border rounded bg-gray-50 text-gray-800 outline-none transition';
                         el.style.minHeight = '100px';
                         el.addEventListener('input', (e) => this.onChange(e));
                         return el;
@@ -381,7 +338,7 @@
                     onUpdate({ elInput, component }) { elInput.value = component.get(this.model.get('name')) || component.get('content') || ''; },
                 });
 
-                domc.addType('iconify-icon', {
+                window.editor.DomComponents.addType('iconify-icon', {
                     model: {
                         defaults: { tagName: 'iconify-icon', traits: [{ type: 'button', text: 'GANTI ICON', command: (ed, t) => window.openIconifyPicker(t.target) }] }
                     }
