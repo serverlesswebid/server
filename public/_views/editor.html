@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - Stable Core</title>
+    <title>LandingBuilder Pro - Smart Hydration</title>
     
     <script>
         (function() {
@@ -38,14 +38,10 @@
         [x-cloak] { display: none !important; }
 
         header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
-        
         .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; }
-        
         #gjs { flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; position: relative; }
-        
         .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; }
         
-        /* STICKY TOOLBAR */
         .gjs-toolbar { 
             position: fixed !important; top: 60px !important; left: 0 !important; right: auto !important; transform: none !important;
             background-color: #1f2937 !important; border-radius: 0 0 8px 0 !important; box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
@@ -173,7 +169,6 @@
             <div id="iconify-picker-results" class="p-4 grid grid-cols-6 gap-3 max-h-[300px] overflow-y-auto"></div>
         </div>
     </div>
-
     <div class="fixed bottom-5 left-5 z-[100000] flex flex-col gap-2 pointer-events-none">
         <template x-for="n in notifications" :key="n.id">
             <div x-show="n.show" x-transition class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-l-4 bg-white min-w-[280px]" :class="n.type==='success'?'border-green-500':'border-red-500'">
@@ -221,11 +216,14 @@
                 const w = appBuilderCache[id];
                 if (w) {
                     let html = w.content;
-                    // FORCE GJS-TYPE JIKA SCRIPT VALID
-                    if(w.script && w.valid) { 
+                    if(w.script) {
                         const div = document.createElement('div'); div.innerHTML = html;
                         const root = div.firstElementChild;
-                        if(root) { root.setAttribute('data-gjs-type', w.id); html = div.innerHTML; }
+                        if(root) { 
+                            // PENTING: Gunakan Custom ID agar script Live bisa menemukannya
+                            root.setAttribute('data-widget-id', w.id); 
+                            html = div.innerHTML; 
+                        }
                     }
                     try { window.editor.addComponents(html); } catch(e) { console.error('Add Error', e); }
                 }
@@ -242,7 +240,7 @@
                         this.page.config = { ...this.page.config, ...conf }; 
                     }
                     if (window.editor) {
-                        // SANITASI EXTREME: Buang semua <script> bawaan HTML yang mungkin korup
+                        // SANITASI EXTREME: Buang semua <script> dari masa lalu
                         let safeHtml = data.html_content || '';
                         safeHtml = safeHtml.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gm, ""); 
                         
@@ -262,20 +260,34 @@
             async savePage() {
                 this.loading = true;
                 try {
-                    // AUTO CLOSE ACCORDION BEFORE SAVE
-                    const details = window.editor.getWrapper().find('details');
-                    details.forEach(d => d.addAttributes({ open: null })); // Close accordion
+                    // 1. TUTUP ACCORDION UNTUK LIVE
+                    window.editor.getWrapper().find('details').forEach(d => d.addAttributes({ open: null }));
                     
                     const html = window.editor.getHtml();
                     const css = window.editor.getCss();
-                    const rawJs = window.editor.getJs();
                     
-                    // LIVE SCRIPT WRAPPER: Supaya halaman live aman dari script error
-                    const safeJs = `document.addEventListener("DOMContentLoaded", function() { try { ${rawJs} } catch(e) { console.warn("Widget JS Error ignored:", e); } });`;
+                    // 2. BUILD CUSTOM HYDRATION SCRIPT (SOLUSI LIVE STATIC)
+                    // Kita tidak pakai editor.getJs(), tapi kita buat loader sendiri.
+                    let customLiveJs = "";
+                    Object.values(appBuilderCache).forEach(w => {
+                        if (w.script && w.script.trim()) {
+                            // Bungkus script dalam IIFE per widget agar variabel aman
+                            customLiveJs += `
+                            document.querySelectorAll('[data-widget-id="${w.id}"]').forEach(function(el) {
+                                try {
+                                    (function() { ${w.script} }).call(el);
+                                } catch(e) { console.warn("Widget Runtime Error ${w.id}:", e); }
+                            });
+                            `;
+                        }
+                    });
+
+                    // Bungkus dalam DOMContentLoaded agar dieksekusi setelah halaman siap
+                    const finalScript = `<script>document.addEventListener("DOMContentLoaded", function() { ${customLiveJs} });<\/script>`;
 
                     const payload = {
                         id: this.page.id, slug: this.page.slug, title: this.page.title,
-                        html: `${html}<script>${safeJs}<\/script>`,
+                        html: `${html}${finalScript}`, // Inject manual script
                         css: css, product_config: this.page.config
                     };
                     const res = await fetch('/api/admin/pages', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
@@ -290,7 +302,6 @@
                 const bridgeCSS = `
                     body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; padding-top: 65px !important; } 
                     img { max-width: 100% !important; height: auto !important; display: block; }
-                    /* Style untuk Accordion di Editor */
                     details > :not(summary) { display: block !important; opacity: 1 !important; height: auto !important; padding-top: 10px; border-top: 1px dashed #e5e7eb; }
                 `; 
 
@@ -337,30 +348,25 @@
                     
                     widgets.forEach(w => {
                         appBuilderCache[w.id] = w;
-                        w.valid = false; // Default flag
 
                         if (w.script && w.script.trim() !== "") {
-                            // 1. BLOKIR SCRIPT YANG DIAWALI KATA-KATA SQL / ERROR
-                            if(w.script.trim().startsWith("replace") || w.script.includes("char(10)")) {
-                                console.warn("Script Sampah (SQL Injection) diblokir:", w.id);
-                                // Register widget TANPA SCRIPT agar tidak crash
-                                domc.addType(w.id, { model: { defaults: { attributes: { 'data-gjs-type': w.id } } } });
-                            } else {
-                                // 2. SCRIPT VALID -> REGISTER SEBAGAI STRING (String is safe!)
+                            try {
+                                const testFn = new Function(w.script); 
                                 domc.addType(w.id, {
                                     model: {
                                         defaults: {
-                                            script: w.script.trim(), // Biarkan GrapesJS handle wrapping
-                                            attributes: { 'data-gjs-type': w.id }
+                                            script: testFn, // Editor pakai Function agar reaktif
+                                            attributes: { 'data-widget-id': w.id } // Custom ID untuk Live Hydration
                                         }
                                     }
                                 });
-                                w.valid = true;
+                            } catch(e) {
+                                console.warn(`Script Widget '${w.id}' RUSAK dan diabaikan.`);
+                                domc.addType(w.id, { model: { defaults: { attributes: { 'data-widget-id': w.id } } } });
                             }
                         } else {
-                            // Widget tanpa script
-                            if(w.id !== 'iconify-icon') { // Icon punya logika sendiri di atas
-                                domc.addType(w.id, { model: { defaults: { attributes: { 'data-gjs-type': w.id } } } });
+                            if(w.id !== 'iconify-icon') {
+                                domc.addType(w.id, { model: { defaults: { attributes: { 'data-widget-id': w.id } } } });
                             }
                         }
 
