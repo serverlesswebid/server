@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IronBuilder - Robust Core</title>
+    <title>IronBuilder - Pro & Stable</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
@@ -15,14 +15,14 @@
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; overflow: hidden; height: 100vh; }
         [x-cloak] { display: none !important; }
         
-        /* HEADER */
-        header { height: 60px; background: white; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 50; position: fixed; top:0; left:0; right:0; }
+        /* HEADER ASLI (RESTORED) */
+        header { height: 60px; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 50; position: fixed; top:0; left:0; right:0; }
         
-        /* LAYOUT */
+        /* MAIN LAYOUT */
         .main-layout { display: flex; height: calc(100vh - 60px); margin-top: 60px; }
         
-        /* CANVAS WRAPPER */
-        .canvas-area { flex: 1; overflow-y: auto; padding: 40px; background-color: #e5e7eb; background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 20px 20px; display: flex; justify-content: center; }
+        /* CANVAS AREA */
+        .canvas-area { flex: 1; overflow-y: auto; padding: 40px; background-color: #e5e7eb; background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 20px 20px; display: flex; justify-content: center; position: relative; }
         
         /* THE CANVAS */
         #editor-canvas { 
@@ -33,72 +33,60 @@
         #editor-canvas.mobile { max-width: 375px; border: 8px solid #333; border-radius: 20px; }
         #editor-canvas.tablet { max-width: 768px; }
 
-        /* SIDEBAR */
-        .sidebar { width: 320px; background: white; border-left: 1px solid #e5e7eb; display: flex; flex-direction: column; z-index: 40; }
-        .widget-list { overflow-y: auto; padding: 15px; flex: 1; display: flex; flex-direction: column; gap: 10px; }
-
-        /* WIDGET ITEM (Vanilla JS Rendered) */
-        .widget-item { 
-            padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: white; 
-            display: flex; align-items: center; gap: 10px; cursor: grab; user-select: none;
-            transition: all 0.2s;
-        }
-        .widget-item:hover { border-color: #6366f1; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .widget-item:active { cursor: grabbing; }
-        .widget-icon { width: 32px; height: 32px; background: #eef2ff; color: #4f46e5; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
-
-        /* SORTABLE GHOSTS */
-        .sortable-ghost { opacity: 0.4; background: #e0e7ff; border: 2px dashed #6366f1; height: 60px; overflow: hidden; }
-        .sortable-drag { opacity: 1; background: white; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2); transform: scale(1.02); }
-
-        /* CANVAS EDITING EXPERIENCE */
-        /* Sorot elemen saat hover */
-        #editor-canvas *:hover { outline: 1px dashed #6366f1; cursor: text; }
-        /* Tampilan saat teks diedit */
-        [contenteditable="true"]:focus { outline: 2px solid #6366f1; background: rgba(255,255,255,0.8); }
+        /* SIDEBAR KANAN (PROPERTY & BLOCKS) */
+        .sidebar { width: 320px; background: white; border-left: 1px solid #e2e8f0; display: flex; flex-direction: column; z-index: 40; }
         
-        /* HOVER TOOLS (Hapus/Move) */
-        .comp-wrapper { position: relative; }
-        .comp-wrapper:hover::before {
-            content: ""; position: absolute; inset: 0; border: 2px solid #6366f1; pointer-events: none; z-index: 10;
+        /* TABS */
+        .tab-btn { flex: 1; padding: 12px; text-align: center; border-bottom: 2px solid transparent; font-size: 12px; font-weight: bold; color: #6b7280; transition: all 0.2s; }
+        .tab-btn.active { color: #4f46e5; border-bottom-color: #4f46e5; background: #eef2ff; }
+
+        /* WIDGET ITEM */
+        .widget-item { 
+            padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; 
+            display: flex; align-items: center; gap: 8px; cursor: grab; user-select: none; margin-bottom: 8px;
         }
-        .comp-tools {
-            position: absolute; top: -30px; right: 0; background: #6366f1; display: none; 
-            border-radius: 4px; padding: 2px; z-index: 20; gap: 2px;
-        }
-        .comp-wrapper:hover .comp-tools { display: flex; }
-        .tool-btn { color: white; padding: 4px 8px; cursor: pointer; font-size: 12px; display: flex; align-items: center; }
-        .tool-btn:hover { background: rgba(0,0,0,0.2); }
+        .widget-item:hover { border-color: #6366f1; transform: translateY(-2px); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        
+        /* HIGHLIGHT SELECTION */
+        .selected-element { outline: 2px solid #4f46e5 !important; outline-offset: -2px; position: relative; z-index: 10; }
+        .hover-element { outline: 1px dashed #6366f1; cursor: pointer; }
+
+        /* FORM INPUTS */
+        .prop-group { margin-bottom: 12px; }
+        .prop-label { font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; margin-bottom: 4px; display: block; }
+        .prop-input { width: 100%; border: 1px solid #e5e7eb; border-radius: 4px; padding: 6px; font-size: 12px; outline: none; transition: border 0.2s; }
+        .prop-input:focus { border-color: #4f46e5; }
+        .prop-row { display: flex; gap: 8px; }
     </style>
 </head>
 <body x-data="ironApp()">
 
     <header>
-        <div class="flex items-center gap-4 w-1/3">
-            <a href="/admin/pages" class="text-gray-400 hover:text-indigo-600"><i class="ph ph-arrow-left text-2xl"></i></a>
-            <div>
-                <input x-model="page.title" class="font-bold text-gray-800 outline-none w-full" placeholder="Judul Halaman">
-                <div class="flex text-xs text-gray-400 font-mono">/<input x-model="page.slug" class="bg-transparent outline-none" placeholder="slug"></div>
+        <div class="flex items-center gap-3 overflow-hidden w-full max-w-[250px]">
+            <a href="/admin/pages" class="text-gray-400 hover:text-indigo-600 transition p-1.5 rounded shrink-0"><i class="ph ph-arrow-left text-xl"></i></a>
+            <div class="flex-1 min-w-0">
+                <input x-model="page.title" class="bg-transparent font-bold text-xs text-gray-800 outline-none w-full truncate" placeholder="Nama Halaman">
+                <div class="flex items-center gap-1"><span class="text-[8px] font-black text-gray-300 uppercase shrink-0">Slug:</span><input x-model="page.slug" class="bg-transparent font-mono text-[9px] text-gray-400 outline-none w-full truncate"></div>
             </div>
         </div>
-
-        <div class="flex bg-gray-100 p-1 rounded-lg">
-            <button @click="device='desktop'" :class="device=='desktop'?'bg-white shadow text-indigo-600':''" class="p-2 rounded transition"><i class="ph ph-desktop"></i></button>
-            <button @click="device='mobile'" :class="device=='mobile'?'bg-white shadow text-indigo-600':''" class="p-2 rounded transition"><i class="ph ph-device-mobile"></i></button>
+        
+        <div class="hidden md:flex absolute left-1/2 transform -translate-x-1/2 items-center bg-gray-100 rounded-lg p-1 border shadow-sm">
+            <button @click="device='desktop'" :class="device=='desktop'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-desktop text-lg"></i></button>
+            <button @click="device='tablet'" :class="device=='tablet'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-tablet text-lg"></i></button>
+            <button @click="device='mobile'" :class="device=='mobile'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile text-lg"></i></button>
         </div>
 
-        <div class="flex justify-end gap-2 w-1/3">
-            <button @click="showConfig=true" class="px-4 py-2 border rounded text-xs font-bold hover:bg-gray-50">CONFIG</button>
-            <button @click="savePage" :disabled="saving" class="px-6 py-2 bg-indigo-600 text-white rounded text-xs font-bold hover:bg-indigo-700 shadow-lg flex items-center gap-2">
+        <div class="flex items-center gap-2">
+            <button @click="showSettings=true" class="bg-white text-gray-600 px-3 py-2 rounded-lg text-xs font-bold border border-gray-200 hover:bg-gray-50 transition">Config</button>
+            <button @click="savePage" :disabled="saving" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-lg flex items-center gap-2">
                 <span x-text="saving ? 'SAVING...' : 'PUBLISH'"></span>
-                <i x-show="saving" class="ph ph-spinner animate-spin"></i>
             </button>
         </div>
     </header>
 
     <div class="main-layout">
-        <div class="canvas-area">
-            <div id="editor-canvas" :class="device">
+        <div class="canvas-area" @click.self="deselect()">
+            <div id="editor-canvas" :class="device" @click="handleCanvasClick($event)">
                 <div id="empty-msg" class="h-full flex flex-col items-center justify-center text-gray-400 pointer-events-none p-20 border-2 border-dashed border-gray-300 rounded-xl m-10">
                     <i class="ph ph-plus-circle text-4xl mb-2"></i>
                     <span>Drop Widget Disini</span>
@@ -107,61 +95,153 @@
         </div>
 
         <div class="sidebar">
-            <div class="p-4 border-b font-bold text-xs text-gray-500 uppercase">Widget Library</div>
-            <div id="widget-container" class="widget-list">
-                <div class="text-center py-10 text-gray-400 text-xs animate-pulse">Memuat...</div>
+            <div class="flex border-b border-gray-200 bg-white">
+                <button @click="activeTab='widgets'" :class="activeTab=='widgets'?'active':''" class="tab-btn"><i class="ph ph-squares-four text-lg"></i> BLOCKS</button>
+                <button @click="activeTab='style'" :class="activeTab=='style'?'active':''" class="tab-btn"><i class="ph ph-sliders text-lg"></i> EDIT</button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-4 custom-scroll">
+                
+                <div x-show="activeTab === 'widgets'">
+                    <div id="widget-container">
+                        <div class="text-center py-10 text-gray-400 text-xs animate-pulse">Memuat Widget...</div>
+                    </div>
+                </div>
+
+                <div x-show="activeTab === 'style'">
+                    <div x-show="!selectedEl" class="text-center text-gray-400 text-xs py-10">
+                        Klik elemen di canvas untuk mengedit.
+                    </div>
+
+                    <div x-show="selectedEl">
+                        <div class="bg-indigo-50 p-2 rounded mb-4 text-xs font-bold text-indigo-700 flex justify-between items-center">
+                            <span>SELECTED: <span x-text="tagName"></span></span>
+                            <button @click="deleteElement" class="text-red-500 hover:bg-red-100 p-1 rounded"><i class="ph ph-trash"></i></button>
+                        </div>
+
+                        <div class="prop-group">
+                            <label class="prop-label">Isi Teks</label>
+                            <textarea x-model="styles.text" @input="applyText" class="prop-input h-20 resize-none"></textarea>
+                        </div>
+
+                        <div class="prop-group">
+                            <label class="prop-label">Warna Teks</label>
+                            <div class="flex gap-2">
+                                <input type="color" x-model="styles.color" @input="applyStyle('color', styles.color)" class="h-8 w-10 p-0 border-0">
+                                <input type="text" x-model="styles.color" @change="applyStyle('color', styles.color)" class="prop-input uppercase">
+                            </div>
+                        </div>
+                        
+                        <div class="prop-row prop-group">
+                            <div class="flex-1">
+                                <label class="prop-label">Size (px)</label>
+                                <input type="text" x-model="styles.fontSize" @change="applyStyle('fontSize', styles.fontSize)" class="prop-input">
+                            </div>
+                            <div class="flex-1">
+                                <label class="prop-label">Weight</label>
+                                <select x-model="styles.fontWeight" @change="applyStyle('fontWeight', styles.fontWeight)" class="prop-input">
+                                    <option value="normal">Normal</option>
+                                    <option value="bold">Bold</option>
+                                    <option value="100">Thin</option>
+                                    <option value="900">Black</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="prop-group">
+                            <label class="prop-label">Alignment</label>
+                            <div class="flex border rounded overflow-hidden">
+                                <button @click="applyStyle('textAlign', 'left')" class="flex-1 p-2 hover:bg-gray-100 border-r"><i class="ph ph-text-align-left"></i></button>
+                                <button @click="applyStyle('textAlign', 'center')" class="flex-1 p-2 hover:bg-gray-100 border-r"><i class="ph ph-text-align-center"></i></button>
+                                <button @click="applyStyle('textAlign', 'right')" class="flex-1 p-2 hover:bg-gray-100"><i class="ph ph-text-align-right"></i></button>
+                            </div>
+                        </div>
+
+                        <hr class="my-4 border-gray-100">
+
+                        <div class="prop-group">
+                            <label class="prop-label">Background</label>
+                            <div class="flex gap-2">
+                                <input type="color" x-model="styles.backgroundColor" @input="applyStyle('backgroundColor', styles.backgroundColor)" class="h-8 w-10 p-0 border-0">
+                                <input type="text" x-model="styles.backgroundColor" @change="applyStyle('backgroundColor', styles.backgroundColor)" class="prop-input uppercase">
+                            </div>
+                        </div>
+
+                        <div class="prop-group">
+                            <label class="prop-label">Padding (Atas/Bawah - Kiri/Kanan)</label>
+                            <div class="prop-row">
+                                <input type="text" x-model="styles.paddingTop" @change="applyStyle('paddingTop', styles.paddingTop)" class="prop-input" placeholder="Top">
+                                <input type="text" x-model="styles.paddingBottom" @change="applyStyle('paddingBottom', styles.paddingBottom)" class="prop-input" placeholder="Bottom">
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div x-show="showConfig" x-cloak class="fixed inset-0 z-[100] bg-black/50 flex justify-end" @click.self="showConfig=false">
+    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex justify-end" @click.self="showSettings=false">
         <div class="w-96 bg-white h-full shadow-2xl p-6 flex flex-col">
-            <h2 class="font-bold text-lg mb-4">Pengaturan</h2>
+            <h2 class="font-bold text-lg mb-6 flex items-center gap-2"><i class="ph ph-gear text-indigo-600"></i> Pengaturan Halaman</h2>
             <div class="space-y-4 flex-1">
-                <div><label class="text-[10px] font-bold uppercase text-gray-400">Harga (Rp)</label><input type="number" x-model="page.config.price" class="w-full border p-2 rounded text-sm"></div>
-                <div><label class="text-[10px] font-bold uppercase text-gray-400">SEO Title</label><input x-model="page.config.settings.seo_title" class="w-full border p-2 rounded text-sm"></div>
-                <div><label class="text-[10px] font-bold uppercase text-gray-400">Pixel ID</label><input x-model="page.config.settings.fb_pixel" class="w-full border p-2 rounded text-sm"></div>
+                <div><label class="text-[10px] font-bold text-gray-400 uppercase">Harga Produk</label><input type="number" x-model="page.config.price" class="w-full mt-1 border rounded p-2 text-sm"></div>
+                <div><label class="text-[10px] font-bold text-gray-400 uppercase">SEO Title</label><input x-model="page.config.settings.seo_title" class="w-full mt-1 border rounded p-2 text-sm"></div>
+                <div><label class="text-[10px] font-bold text-gray-400 uppercase">Pixel ID</label><input x-model="page.config.settings.fb_pixel" class="w-full mt-1 border rounded p-2 text-sm"></div>
             </div>
-            <button @click="savePage(); showConfig=false" class="w-full bg-indigo-600 text-white py-3 rounded font-bold">Simpan</button>
+            <button @click="savePage(); showSettings=false" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold text-sm">SIMPAN CONFIG</button>
         </div>
+    </div>
+
+    <div class="fixed bottom-5 left-5 z-[100000] flex flex-col gap-2 pointer-events-none">
+        <template x-for="n in notifications" :key="n.id">
+            <div x-show="n.show" x-transition class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-l-4 bg-white border-green-500">
+                <i class="ph ph-check-circle text-2xl text-green-500"></i>
+                <div class="text-xs font-bold text-gray-800" x-text="n.title"></div>
+            </div>
+        </template>
     </div>
 
     <script>
     function ironApp() {
         return {
             device: 'desktop',
-            showConfig: false,
+            activeTab: 'widgets',
+            showSettings: false,
             saving: false,
+            notifications: [],
+            
+            // --- CORE DATA ---
             page: { id: 0, slug: '', title: '', config: { price: 0, settings: {} } },
+            selectedEl: null, // Elemen yang sedang diedit
+            tagName: '',
+            styles: { text: '', color: '#000000', backgroundColor: '#ffffff', fontSize: '', fontWeight: '', textAlign: '', paddingTop: '', paddingBottom: '' },
 
             async init() {
-                // 1. Load Widget & Page
-                await this.initWidgets(); 
+                await this.initWidgets();
                 const slug = new URLSearchParams(window.location.search).get('slug');
                 if(slug) await this.loadPage(slug);
-
-                // 2. Init Drag & Drop
                 this.initSortable();
             },
 
-            // --- BAGIAN INI MENGGUNAKAN VANILLA JS UNTUK RENDER SIDEBAR ---
-            // Ini untuk menghindari error "w is not defined" dari Alpine saat cloning
+            notify(title) { 
+                const id = Date.now(); this.notifications.push({ id, title, show: true }); 
+                setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); 
+            },
+
+            // --- 1. RENDER WIDGET (VANILLA JS ANTI-ERROR) ---
             async initWidgets() {
                 const container = document.getElementById('widget-container');
                 try {
                     const res = await fetch('/api/widgets');
                     const widgets = await res.json();
-                    
-                    container.innerHTML = ''; // Clear loading
+                    container.innerHTML = '';
                     
                     widgets.forEach(w => {
-                        // Kita simpan HTML asli di atribut data-html (Encoded untuk keamanan)
                         const el = document.createElement('div');
                         el.className = 'widget-item';
-                        // Simpan HTML string mentah-mentah
+                        // Simpan HTML mentah di dataset (Aman)
                         el.dataset.html = w.content; 
                         el.dataset.id = w.id;
-                        
                         el.innerHTML = `
                             <div class="widget-icon"><i class="ph ph-cube text-lg"></i></div>
                             <div class="flex-1 min-w-0">
@@ -171,124 +251,149 @@
                         `;
                         container.appendChild(el);
                     });
-                } catch(e) { container.innerHTML = '<div class="text-red-500 text-xs p-4">Gagal memuat widget</div>'; }
+                } catch(e) { container.innerHTML = 'Error loading widgets'; }
             },
 
-            async loadPage(slug) {
-                const res = await fetch(`/api/admin/pages/${slug}`);
-                const data = await res.json();
-                this.page.id = data.id; this.page.slug = data.slug; this.page.title = data.title;
-                if(data.product_config_json) this.page.config = typeof data.product_config_json === 'string' ? JSON.parse(data.product_config_json) : data.product_config_json;
-                
-                // Render HTML ke Canvas
-                const canvas = document.getElementById('editor-canvas');
-                if(data.html_content) {
-                    // Bersihkan script lama
-                    let cleanContent = data.html_content.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gm, "");
-                    canvas.innerHTML = cleanContent;
-                    this.hydrateCanvas(); // Pasang fitur edit
-                }
-            },
-
+            // --- 2. SORTABLE ENGINE ---
             initSortable() {
                 const sidebar = document.getElementById('widget-container');
                 const canvas = document.getElementById('editor-canvas');
 
-                // Sidebar Source
-                new Sortable(sidebar, {
-                    group: { name: 'shared', pull: 'clone', put: false },
-                    sort: false,
-                    animation: 150
-                });
+                new Sortable(sidebar, { group: { name: 'shared', pull: 'clone', put: false }, sort: false, animation: 150 });
 
-                // Canvas Target
                 new Sortable(canvas, {
-                    group: 'shared',
-                    animation: 150,
-                    ghostClass: 'sortable-ghost',
+                    group: 'shared', animation: 150, ghostClass: 'sortable-ghost',
                     onAdd: (evt) => {
                         const item = evt.item;
-                        const rawHtml = item.dataset.html; // Ambil HTML dari dataset
-                        
-                        // Buat elemen pembungkus editor
+                        const rawHtml = item.dataset.html;
                         const wrapper = document.createElement('div');
-                        wrapper.className = 'comp-wrapper group relative';
-                        wrapper.innerHTML = `
-                            <div class="comp-tools">
-                                <div class="tool-btn bg-red-500" onclick="this.closest('.comp-wrapper').remove()"><i class="ph ph-trash"></i></div>
-                                <div class="tool-btn cursor-move handle"><i class="ph ph-arrows-out-cardinal"></i></div>
-                            </div>
-                            <div class="comp-content">${rawHtml}</div>
-                        `;
-
+                        wrapper.className = 'comp-wrapper relative'; // Penanda
+                        wrapper.innerHTML = rawHtml;
                         item.replaceWith(wrapper);
                         
-                        // Hapus empty state
                         const empty = document.getElementById('empty-msg');
                         if(empty) empty.remove();
-
-                        this.hydrateCanvas(); // Aktifkan edit teks
                     }
                 });
             },
 
-            // Fungsi membuat teks bisa diedit
-            hydrateCanvas() {
-                const canvas = document.getElementById('editor-canvas');
+            // --- 3. LOGIKA SELEKSI (PENGGANTI STYLE MANAGER) ---
+            handleCanvasClick(e) {
+                // Hentikan seleksi jika klik di luar elemen konten
+                if (e.target.id === 'editor-canvas') { this.deselect(); return; }
                 
-                // 1. Bungkus elemen liar jika ada (dari load data lama)
-                // (Opsional, tapi bagus untuk konsistensi)
+                // Cegah link berpindah halaman
+                if (e.target.tagName === 'A') e.preventDefault();
+
+                // Hapus highlight lama
+                if (this.selectedEl) this.selectedEl.classList.remove('selected-element');
+
+                // Set elemen baru
+                this.selectedEl = e.target;
+                this.selectedEl.classList.add('selected-element');
+                this.activeTab = 'style'; // Pindah ke tab edit
                 
-                // 2. Aktifkan ContentEditable
-                canvas.querySelectorAll('h1, h2, h3, p, span, a, button, li, div').forEach(el => {
-                    // Hanya elemen yang punya teks langsung (daun)
-                    if(el.children.length === 0 && el.textContent.trim() !== '') {
-                        el.setAttribute('contenteditable', 'true');
-                        // Prevent Enter bikin div baru
-                        el.addEventListener('keydown', e => {
-                            if(e.key === 'Enter') {
-                                document.execCommand('insertLineBreak');
-                                e.preventDefault();
-                            }
-                        });
+                // Ambil Data Existing
+                this.tagName = this.selectedEl.tagName;
+                const computed = window.getComputedStyle(this.selectedEl);
+                
+                // Sync Form
+                this.styles.text = this.selectedEl.innerText;
+                this.styles.color = this.rgbToHex(computed.color);
+                this.styles.backgroundColor = this.rgbToHex(computed.backgroundColor);
+                this.styles.fontSize = computed.fontSize;
+                this.styles.fontWeight = computed.fontWeight;
+                this.styles.textAlign = computed.textAlign;
+                this.styles.paddingTop = computed.paddingTop;
+                this.styles.paddingBottom = computed.paddingBottom;
+            },
+
+            deselect() {
+                if (this.selectedEl) this.selectedEl.classList.remove('selected-element');
+                this.selectedEl = null;
+                this.activeTab = 'widgets';
+            },
+
+            deleteElement() {
+                if (this.selectedEl) {
+                    // Jika elemen ini adalah root wrapper, hapus semuanya. Jika anak, hapus anak.
+                    const wrapper = this.selectedEl.closest('.comp-wrapper');
+                    if (wrapper && wrapper.contains(this.selectedEl) && wrapper === this.selectedEl) {
+                        wrapper.remove();
+                    } else {
+                        this.selectedEl.remove();
                     }
-                });
+                    this.deselect();
+                }
+            },
+
+            // --- 4. STYLE APPLICATOR ---
+            applyStyle(prop, val) {
+                if (this.selectedEl) {
+                    this.selectedEl.style[prop] = val;
+                }
+            },
+            applyText() {
+                if (this.selectedEl) {
+                    this.selectedEl.innerText = this.styles.text;
+                }
+            },
+            // Helper warna
+            rgbToHex(rgb) {
+                if (!rgb || rgb === 'rgba(0, 0, 0, 0)') return '#ffffff';
+                if (rgb.startsWith('#')) return rgb;
+                const sep = rgb.indexOf(",") > -1 ? "," : " ";
+                const rgbArr = rgb.substr(4).split(")")[0].split(sep);
+                let r = (+rgbArr[0]).toString(16), g = (+rgbArr[1]).toString(16), b = (+rgbArr[2]).toString(16);
+                if (r.length == 1) r = "0" + r; if (g.length == 1) g = "0" + g; if (b.length == 1) b = "0" + b;
+                return "#" + r + g + b;
+            },
+
+            // --- 5. SAVE & LOAD ---
+            async loadPage(slug) {
+                try {
+                    const res = await fetch(`/api/admin/pages/${slug}`);
+                    const data = await res.json();
+                    this.page.id = data.id; this.page.slug = data.slug; this.page.title = data.title;
+                    if(data.product_config_json) this.page.config = typeof data.product_config_json === 'string' ? JSON.parse(data.product_config_json) : data.product_config_json;
+                    
+                    const canvas = document.getElementById('editor-canvas');
+                    if(data.html_content) {
+                        // Bersihkan script lama
+                        canvas.innerHTML = data.html_content.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gm, "");
+                    }
+                } catch(e) {}
             },
 
             async savePage() {
                 this.saving = true;
                 const canvas = document.getElementById('editor-canvas');
-                
-                // 1. Clone untuk pembersihan
                 const clone = canvas.cloneNode(true);
                 
-                // 2. Bersihkan alat-alat editor
-                clone.querySelectorAll('.comp-tools').forEach(el => el.remove());
-                clone.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
-                
-                // Unwrap (Buang wrapper .comp-wrapper, sisakan isinya)
-                // Atau biarkan wrapper untuk layout? Lebih aman unwrap jika ingin bersih.
-                // Tapi untuk Sortable biar bisa re-edit nanti, kita PERTAHANKAN strukturnya, 
-                // Cuma bersihkan class editor.
-                
-                const cleanHtml = clone.innerHTML;
+                // Bersihkan class editor
+                clone.querySelectorAll('.selected-element').forEach(el => el.classList.remove('selected-element'));
+                clone.querySelectorAll('.comp-wrapper').forEach(el => {
+                    // Unwrap agar bersih di live? Atau biarkan? Biarkan saja biar struktur terjaga.
+                    el.classList.remove('sortable-drag', 'sortable-ghost'); 
+                });
+                const empty = clone.querySelector('#empty-msg');
+                if(empty) empty.remove();
 
-                // 3. INJECT SCRIPT LIVE (Countdown & Accordion)
-                // Script ini disuntikkan inline agar tidak 404
+                // INJECT LIVE SCRIPT (Countdown, dll)
                 const liveScript = `
                 <script>
                 document.addEventListener("DOMContentLoaded", function() {
-                    // COUNTDOWN LOGIC
-                    document.querySelectorAll('.js-countdown').forEach(el => {
+                    // COUNTDOWN
+                    document.querySelectorAll('.js-countdown').forEach(function(el) {
                         if(el.dataset.init) return; el.dataset.init="true";
-                        const expire = el.getAttribute("data-expire"); if(!expire) return;
-                        const update = () => {
-                            const now = new Date().getTime(); const dist = new Date(expire).getTime() - now;
+                        var expire = el.getAttribute("data-expire"); if(!expire) return;
+                        var update = function() {
+                            var now = new Date().getTime(); var dist = new Date(expire).getTime() - now;
                             if(dist < 0) { el.innerHTML = "EXPIRED"; return; }
-                            const d = Math.floor(dist / (1000*60*60*24));
-                            const h = Math.floor((dist % (1000*60*60*24)) / (1000*60*60));
-                            const m = Math.floor((dist % (1000*60*60)) / (1000*60));
-                            const s = Math.floor((dist % (1000*60)) / 1000);
+                            var d = Math.floor(dist/(1000*60*60*24));
+                            var h = Math.floor((dist%(1000*60*60*24))/(1000*60*60));
+                            var m = Math.floor((dist%(1000*60*60))/(1000*60));
+                            var s = Math.floor((dist%(1000*60))/1000);
                             if(el.querySelector(".days")) el.querySelector(".days").innerText = d;
                             if(el.querySelector(".hours")) el.querySelector(".hours").innerText = h;
                             if(el.querySelector(".minutes")) el.querySelector(".minutes").innerText = m;
@@ -296,14 +401,10 @@
                         };
                         setInterval(update, 1000); update();
                     });
-                    // ACCORDION LOGIC
-                    document.querySelectorAll("details").forEach(target => {
-                        target.addEventListener("click", () => {
-                            if (!target.open) {
-                                document.querySelectorAll("details").forEach(other => {
-                                    if (other !== target) other.removeAttribute("open");
-                                });
-                            }
+                    // ACCORDION
+                    document.querySelectorAll("details").forEach(function(t) {
+                        t.addEventListener("click", function() {
+                            if(!t.open) { document.querySelectorAll("details").forEach(function(o){ if(o!==t) o.removeAttribute("open") }) }
                         });
                     });
                 });
@@ -312,13 +413,13 @@
                 try {
                     const payload = {
                         id: this.page.id, slug: this.page.slug, title: this.page.title,
-                        html: cleanHtml + liveScript,
+                        html: clone.innerHTML + liveScript,
                         css: '', 
                         product_config: this.page.config
                     };
                     const res = await fetch('/api/admin/pages', { method: 'POST', body: JSON.stringify(payload), headers: {'Content-Type': 'application/json'} });
-                    if(res.ok) alert('Berhasil Publish!'); else throw new Error('Gagal');
-                } catch(e) { alert(e.message); }
+                    if(res.ok) this.notify('Berhasil Publish!');
+                } catch(e) { this.notify('Gagal Simpan'); }
                 
                 this.saving = false;
             }
