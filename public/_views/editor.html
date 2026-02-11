@@ -161,7 +161,7 @@
         </div>
     </div>
 
-    <div id="iconify-picker-modal" class="fixed inset-0 hidden z-[99999] bg-black/40 flex items-start justify-center p-6 backdrop-blur-sm">
+    <div id="iconify-picker-modal" class="fixed inset-0 hidden z-[999999] bg-black/40 flex items-start justify-center p-6 backdrop-blur-sm">
         <div class="bg-white rounded-xl w-full max-w-xl shadow-2xl mt-10 overflow-hidden">
             <div class="flex items-center justify-between p-4 border-b bg-gray-50"><input id="iconify-picker-search" placeholder="Cari icon..." class="w-full bg-transparent outline-none text-sm" /><button id="iconify-picker-close"><i class="ph ph-x text-lg"></i></button></div>
             <div id="iconify-picker-results" class="p-4 grid grid-cols-6 gap-3 max-h-[300px] overflow-y-auto"></div>
@@ -195,14 +195,14 @@
 
     function editorApp() {
         return {
-            mobileMenu: false, // State Sidebar Mobile
+            mobileMenu: false,
             device: 'desktop', tab: 'blocks', settingsTab: 'commerce', showSettings: false, loading: false, notifications: [],
-            paymentProviders: [{ slug: 'paspay', name: 'Paspay QRIS' }, { slug: 'paspay-va', name: 'Paspay VA' }, { slug: 'midtrans', name: 'Midtrans' }],
+            paymentProviders: [{ slug: 'paspay', name: 'Paspay QRIS' }, { slug: 'midtrans', name: 'Midtrans' }],
             page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, active_payments: [], settings: { seo_title:'', seo_description:'', favicon:'', og_image:'', fb_pixel:'', tiktok_pixel:'', ga_id:'', scripts_header:'', scripts_footer:'' } } },
 
             async init() {
                 this.initGrapes();
-                await this.loadWidgets(); // Load Widget Dulu
+                await this.loadWidgets(); 
                 const slug = new URLSearchParams(window.location.search).get('slug');
                 if (slug) await this.loadPageData(slug);
             },
@@ -212,7 +212,6 @@
                 setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); 
             },
 
-            // --- FUNGSI LOAD WIDGET (ANTI CRASH) ---
             async loadWidgets() {
                 try {
                     const res = await fetch('/api/widgets');
@@ -225,29 +224,23 @@
                     
                     widgets.forEach(w => {
                         appBuilderCache[w.id] = w;
-
+                        let safeScript = null;
                         if (w.script && w.script.trim() !== "") {
-                            // VALIDASI & FILTER SCRIPT
-                            // Jika script mengandung karakter yang menandakan SQL Injection (seperti 'replace('), kita SKIP scriptnya.
                             if (!w.script.includes('replace(')) {
                                 try {
-                                    // Coba compile script
-                                    const testFn = new Function(w.script);
-                                    // Jika sukses, daftarkan script ke komponen agar jalan di Editor
+                                    safeScript = new Function(w.script);
                                     domc.addType(w.id, {
                                         model: {
                                             defaults: {
-                                                script: testFn, // Editor pakai Function agar reaktif
+                                                script: safeScript,
                                                 attributes: { 'data-gjs-type': w.id }
                                             }
                                         }
                                     });
                                 } catch(e) {
-                                    // Script error (SyntaxError), tetap daftarkan widget tapi TANPA script
                                     domc.addType(w.id, { model: { defaults: { attributes: { 'data-gjs-type': w.id } } } });
                                 }
                             } else {
-                                // Script terdeteksi korup, skip script
                                 domc.addType(w.id, { model: { defaults: { attributes: { 'data-gjs-type': w.id } } } });
                             }
                         } else {
@@ -303,10 +296,8 @@
                     if (window.editor) {
                         let safeHtml = data.html_content || '';
                         safeHtml = safeHtml.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gm, ""); 
-                        
                         window.editor.setComponents(safeHtml);
                         window.editor.setStyle(data.css_content || '');
-                        
                         setTimeout(() => {
                             window.editor.getWrapper().find('details').forEach(d => d.addAttributes({ open: 'true' }));
                         }, 600);
@@ -322,11 +313,7 @@
                     const html = window.editor.getHtml();
                     const css = window.editor.getCss();
                     const rawJs = window.editor.getJs();
-                    
-                    // --- LIVE SCRIPT FIX ---
-                    // Membungkus script dalam Event Listener agar jalan di frontend
                     const safeJs = `document.addEventListener("DOMContentLoaded", function() { try { ${rawJs} } catch(e) { console.warn("Widget JS Error:", e); } });`;
-
                     const payload = {
                         id: this.page.id, slug: this.page.slug, title: this.page.title,
                         html: `${html}<script>${safeJs}<\/script>`,
@@ -373,31 +360,27 @@
                     styleManager: { 
                         appendTo: '#styles-container', 
                         sectors: [
-                            { name: 'Typography', open: 1, buildProps: ['font-family', 'font-size', 'font-weight', 'letter-spacing', 'line-height', 'color', 'text-align', 'text-decoration', 'font-style', 'text-transform', 'text-shadow'] }, 
-                            { name: 'Layout', open: 0, buildProps: ['width', 'height', 'padding', 'margin', 'display', 'flex-direction', 'justify-content', 'align-items', 'position', 'top', 'bottom', 'left', 'right', 'z-index'] },
-                            { name: 'Background', open: 0, buildProps: ['background-color', 'background-image', 'background-repeat', 'background-size', 'background-position'] },
-                            { name: 'Border & Effects', open: 0, buildProps: ['border', 'border-radius', 'box-shadow', 'opacity', 'cursor', 'overflow'] }
+                            { name: 'Typography', open: 1, buildProps: ['font-family', 'font-size', 'font-weight', 'color', 'text-align'] }, 
+                            { name: 'Layout', open: 0, buildProps: ['width', 'height', 'padding', 'margin', 'display'] },
+                            { name: 'Decoration', open: 0, buildProps: ['background-color', 'border', 'border-radius', 'box-shadow'] }
                         ] 
                     }
                 });
 
-                // REGISTER CUSTOM TRAITS
                 const domc = window.editor.DomComponents;
                 const tm = window.editor.Traits;
 
-                // Text Editor Trait
                 tm.addType('textarea', {
                     createInput({ trait }) {
                         const el = document.createElement('textarea');
-                        el.className = 'w-full p-2 text-xs border border-gray-300 rounded bg-gray-50 text-gray-800 focus:outline-none focus:border-indigo-500 transition';
-                        el.style.minHeight = '80px';
+                        el.className = 'w-full p-2 text-xs border border-gray-300 rounded bg-gray-50 text-gray-800 outline-none focus:border-indigo-500 transition';
+                        el.style.minHeight = '100px';
                         el.addEventListener('input', (e) => this.onChange(e));
                         return el;
                     },
                     onUpdate({ elInput, component }) { elInput.value = component.get(this.model.get('name')) || component.get('content') || ''; },
                 });
 
-                // Icon Picker Trait
                 domc.addType('iconify-icon', {
                     model: {
                         defaults: { tagName: 'iconify-icon', traits: [{ type: 'button', text: 'GANTI ICON', command: (ed, t) => window.openIconifyPicker(t.target) }] }
