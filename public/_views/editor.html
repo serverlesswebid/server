@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - Final Fixed</title>
+    <title>LandingBuilder Pro - Fix Complete</title>
     
     <script>
         (function() {
@@ -43,10 +43,16 @@
             display: flex; align-items: center; justify-content: space-between; padding: 0 16px;
         }
 
+        .mobile-tools {
+            display: none; height: 50px; width: 100%; position: fixed; top: 60px; left: 0; z-index: 90;
+            background: #f8fafc; border-bottom: 1px solid #e2e8f0;
+            align-items: center; justify-content: center; gap: 15px;
+        }
+
         .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; }
         #gjs { position: relative !important; flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; }
 
-        /* SIDEBAR PANEL & MOBILE FIX */
+        /* PERBAIKAN CSS SIDEBAR PANEL (MOBILE FIX) */
         .sidebar-panel {
             position: relative; width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0;
             z-index: 50; display: flex; flex-direction: column; flex-shrink: 0;
@@ -54,39 +60,51 @@
         }
 
         @media (max-width: 768px) {
+            .mobile-tools { display: flex; }
+            .workspace { top: 110px; } 
+            #gjs { right: 0 !important; bottom: 60px !important; }
             .sidebar-panel {
-                position: fixed; right: 0; top: 60px; bottom: 0; width: 85% !important; max-width: 320px;
+                position: fixed; right: 0; top: 110px; bottom: 60px; width: 85% !important; max-width: 320px;
                 z-index: 9999 !important; 
-                transform: translateX(100%); /* Default Tertutup di Mobile */
-                box-shadow: -5px 0 25px rgba(0,0,0,0.1);
+                transform: translateX(100%); /* Default Tertutup */
+                box-shadow: -5px 0 20px rgba(0,0,0,0.1);
             }
             .sidebar-panel.open { transform: translateX(0); } /* Class pembuka */
             
             .mobile-overlay { 
-                position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9000; top: 60px; 
+                position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9000; top: 110px; bottom: 60px; 
                 display: none; 
             }
             .mobile-overlay.show { display: block; }
         }
 
-        /* GRAPESJS OVERRIDES */
+        /* HIDE GRAPESJS DEFAULT PANELS */
         .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; width: 0 !important; }
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
 
-        /* CARDS */
-        details.group > summary { list-style: none; }
-        details.group > summary::-webkit-details-marker { display: none; }
-        .block-card { cursor: pointer; background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: all 0.2s; user-select: none; }
-        .block-card:hover { border-color: #6366f1; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15); transform: translateY(-2px); }
-        .block-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #4b5563; text-align: center; }
+        /* WIDGET BUTTONS */
+        .gjs-blocks-c { 
+            display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 4px !important; padding: 6px !important; 
+        }
+        .gjs-block { 
+            width: 100% !important; min-height: 45px !important; padding: 4px !important; background: #fff; border: 1px solid #e5e7eb; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; transition: 0.2s;
+        }
+        .gjs-block-label { font-size: 7px !important; font-weight: 800; text-transform: uppercase; color: #4b5563; text-align: center; }
+        .gjs-block i, .gjs-block iconify-icon { font-size: 14px !important; color: #6366f1; }
 
-        /* TOOLBAR */
-        .gjs-toolbar { background-color: #1f2937 !important; border-radius: 6px !important; border: 1px solid #ffffff33 !important; box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important; display: flex !important; gap: 5px !important; padding: 6px 10px !important; position: absolute !important; top: 10px !important; left: 50% !important; transform: translateX(-50%) !important; right: auto !important; width: auto !important; height: auto !important; z-index: 99999 !important; }
-        .gjs-toolbar-item { color: white !important; width: 30px !important; height: 30px !important; display: flex !important; align-items: center; justify-content: center !important; cursor: pointer !important; transition: 0.2s !important; }
-        .gjs-toolbar-item:hover { color: #818cf8 !important; transform: scale(1.1); background: rgba(255,255,255,0.1); border-radius: 4px; }
+        .custom-scroll { overflow-y: auto; height: 100%; -webkit-overflow-scrolling: touch; }
+        .gjs-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px; }
+
+        /* TOOLBAR FIX */
+        .gjs-toolbar { background-color: #1f2937 !important; border-radius: 6px !important; border: 1px solid #ffffff33 !important; box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important; display: flex !important; flex-direction: column !important; gap: 5px !important; padding: 6px 0 !important; position: absolute !important; top: 10px !important; left: auto !important; right: 10px !important; width: 36px !important; height: auto !important; z-index: 99999 !important; transform: none !important; }
+        .gjs-toolbar-item { color: white !important; width: 100% !important; height: 26px !important; display: flex !important; align-items: center; justify-content: center !important; cursor: pointer !important; transition: 0.2s !important; }
+        .gjs-toolbar-item:hover { color: #818cf8 !important; transform: scale(1.1); background: rgba(255,255,255,0.1); }
         
-        .sp-container { z-index: 1000000 !important; position: fixed !important; transform: translateX(-240px) !important; }
-        .gjs-field-color-picker { width: 100%; height: 24px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
+        /* COLOR PICKER FIX */
+        .gjs-field-color-picker { width: 25px !important; height: 25px !important; flex-shrink: 0 !important; border: 1px solid #ccc !important; border-radius: 4px !important; cursor: pointer !important; display: inline-block !important; }
+        .gjs-field-color { display: flex !important; align-items: center !important; gap: 8px !important; overflow: visible !important; }
+        .sp-container { z-index: 999999 !important; position: fixed !important; transform: translateX(-235px) !important; background: #ffffff !important; border: 1px solid #ddd !important; box-shadow: -5px 5px 20px rgba(0,0,0,0.3) !important; padding: 8px !important; }
+        .gjs-field-color-input { flex-grow: 1 !important; height: 28px !important; }
     </style>
     </head>
     <body x-data="editorApp()">
@@ -120,11 +138,18 @@
         </div>
     </header>
 
+    <div class="mobile-tools">
+        <button @click="setDevice('desktop')" :class="device=='desktop'?'text-indigo-600 bg-white shadow-sm':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-desktop text-lg"></i></button>
+        <button @click="setDevice('tablet')" :class="device=='tablet'?'text-indigo-600 bg-white shadow-sm':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-tablet text-lg"></i></button>
+        <button @click="setDevice('mobile')" :class="device=='mobile'?'text-indigo-600 bg-white shadow-sm':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile text-lg"></i></button>
+        <div class="w-px h-4 bg-gray-300"></div>
+        <button @click="cmd('core:undo')" class="text-gray-500"><i class="ph ph-arrow-u-up-left text-lg"></i></button>
+        <button @click="cmd('core:redo')" class="text-gray-500"><i class="ph ph-arrow-u-up-right text-lg"></i></button>
+    </div>
+
     <div class="workspace">
         <div id="gjs"></div>
-        
         <div class="mobile-overlay md:hidden" :class="mobileMenuOpen ? 'show' : ''" @click="mobileMenuOpen = false"></div>
-        
         <div class="sidebar-panel" :class="mobileMenuOpen ? 'open' : ''">
             <div class="flex border-b border-gray-200 bg-white shrink-0">
                 <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-squares-four text-xl"></i></button>
@@ -132,12 +157,8 @@
                 <button @click="tab='traits'" :class="tab=='traits'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-sliders text-xl"></i></button>
                 <button @click="tab='layers'" :class="tab=='layers'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-stack text-xl"></i></button>
             </div>
-            <div class="flex-1 bg-white custom-scroll relative w-full overflow-y-auto">
-                <div x-show="tab=='blocks'" class="h-full pb-20 p-2">
-                    <div id="blocks-custom-renderer" class="space-y-2">
-                        <div class="text-center py-10 text-gray-400 text-xs animate-pulse">Memuat Widget...</div>
-                    </div>
-                </div>
+            <div class="flex-1 bg-white custom-scroll relative w-full">
+                <div x-show="tab=='blocks'" class="h-full pb-20"><div id="blocks-container" class="p-2"></div></div>
                 <div x-show="tab=='styles'" class="h-full pb-20">
                     <div id="selectors-container" class="p-3 bg-gray-50 border-b"></div>
                     <div id="styles-container" class="p-1"></div>
@@ -148,31 +169,129 @@
         </div>
     </div>
 
+    <div class="md:hidden fixed bottom-0 left-0 w-full h-[60px] bg-white border-t border-gray-200 flex items-center justify-around z-[300] px-2 shadow-lg">
+        <button @click="cmd('core:preview')" class="flex flex-col items-center justify-center w-16 text-gray-500"><i class="ph ph-eye text-2xl"></i><span class="text-[9px] font-bold">View</span></button>
+        <button @click="showSettings=true" class="flex flex-col items-center justify-center w-16 text-gray-500"><i class="ph ph-gear-six text-2xl"></i><span class="text-[9px] font-bold">Config</span></button>
+        <button @click="savePage" :disabled="loading" class="bg-indigo-600 text-white px-6 py-2 rounded-full shadow-lg text-xs font-bold uppercase">Publish</button>
+    </div>
+
     <div x-show="showSettings" x-cloak class="fixed inset-0 z-[400] bg-slate-900/50 backdrop-blur-sm flex justify-end" @click.self="showSettings = false">
-        <div class="w-full md:w-[480px] h-full bg-white shadow-2xl flex flex-col border-l border-gray-200">
-            <div class="p-5 border-b flex justify-between items-center bg-gray-50">
-                <h2 class="font-bold text-gray-800 flex items-center gap-2"><i class="ph ph-faders text-indigo-600 text-xl"></i> Page Settings</h2>
-                <button @click="showSettings = false" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button>
-            </div>
-            <div class="flex border-b text-[11px] font-black uppercase bg-white">
-                <button @click="settingsTab='commerce'" :class="settingsTab==='commerce'?'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 py-4">Commerce</button>
-                <button @click="settingsTab='seo'" :class="settingsTab==='seo'?'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 py-4">SEO</button>
-            </div>
-            <div class="flex-1 overflow-y-auto p-6 space-y-6">
-                <div x-show="settingsTab === 'commerce'" class="space-y-4">
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Judul Halaman</label><input x-model="page.title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Slug</label><input x-model="page.slug" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Harga (Rp)</label><input type="number" x-model="page.config.price" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
+    <div class="w-full md:w-[480px] h-full bg-white shadow-2xl flex flex-col border-l border-gray-200">
+        
+        <div class="p-5 border-b flex justify-between items-center bg-gray-50">
+            <h2 class="font-bold text-gray-800 flex items-center gap-2"><i class="ph ph-faders text-indigo-600 text-xl"></i> Page Settings</h2>
+            <button @click="showSettings = false" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button>
+        </div>
+
+        <div class="flex border-b text-[11px] font-black uppercase bg-white">
+            <button @click="settingsTab='commerce'" :class="settingsTab==='commerce'?'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 py-4">Commerce</button>
+            <button @click="settingsTab='seo'" :class="settingsTab==='seo'?'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 py-4">SEO</button>
+            <button @click="settingsTab='advanced'" :class="settingsTab==='advanced'?'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 py-4">Scripts & Pixel</button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+            <div x-show="settingsTab === 'commerce'" class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Nama Halaman</label>
+                    <input x-model="page.title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500 transition" placeholder="Judul Halaman">
                 </div>
-                <div x-show="settingsTab === 'seo'" class="space-y-4">
-                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">SEO Title</label><input x-model="page.config.settings.seo_title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
+                <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">URL Slug</label>
+                    <input x-model="page.slug" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500 transition">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tipe Produk</label>
+                    <select x-model="page.product_type" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm">
+                        <option value="physical">Physical Product</option>
+                        <option value="digital">Digital Product</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Base Price (Rp)</label>
+                    <input type="number" x-model="page.config.price" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none">
                 </div>
             </div>
-            <div class="p-4 border-t bg-gray-50 flex justify-end gap-3">
-                <button @click="showSettings=false" class="px-5 py-2 text-xs font-bold text-gray-500">CANCEL</button>
-                <button @click="savePage(); showSettings=false" class="px-8 py-2 bg-indigo-600 text-white text-xs font-black rounded-xl shadow-lg transition-all">SIMPAN</button>
+
+            <div x-show="settingsTab === 'seo'" class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Meta Description</label>
+                    <textarea x-model="page.meta.description" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm h-24 outline-none resize-none" placeholder="Deskripsi pencarian Google..."></textarea>
+                </div>
+                
+                <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Favicon URL</label>
+                    <div class="flex gap-2 mt-2">
+                        <input x-model="page.meta.favicon" class="flex-1 px-4 py-2 bg-white border rounded-lg text-xs outline-none focus:border-indigo-500 transition" placeholder="https://...">
+                        <div class="w-10 h-10 bg-white border rounded flex items-center justify-center overflow-hidden shrink-0">
+                            <template x-if="page.meta.favicon"><img :src="page.meta.favicon" class="w-6 h-6 object-contain"></template>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Social Share Image (OG URL)</label>
+                    <input x-model="page.meta.og_image" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500" placeholder="https://...">
+                </div>
+            </div>
+
+            <div x-show="settingsTab === 'advanced'" class="space-y-6">
+                <div class="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 space-y-4">
+                    <h4 class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Tracking Analytics</h4>
+                    <div>
+                        <label class="text-[9px] font-bold text-indigo-400 uppercase">Facebook Pixel ID</label>
+                        <input x-model="page.analytics.fb_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none" placeholder="Contoh: 123456789">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-indigo-400 uppercase">TikTok Pixel ID</label>
+                        <input x-model="page.analytics.tiktok_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none" placeholder="Contoh: C123456">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-indigo-400 uppercase">Google Analytics ID</label>
+                        <input x-model="page.analytics.ga_id" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none" placeholder="G-XXXXXXXX">
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Custom Header Script</label>
+                        <textarea x-model="page.scripts.header" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none" placeholder="<script>...</script>"></textarea>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Custom Footer Script</label>
+                        <textarea x-model="page.scripts.footer" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none" placeholder="Sebelum </body>"></textarea>
+                    </div>
+                </div>
             </div>
         </div>
+        <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Metode Pembayaran Aktif</label>
+            <div class="grid grid-cols-2 gap-2 mt-3">
+                <label class="flex items-center gap-2 p-2 bg-white border rounded-lg cursor-pointer hover:border-indigo-500 transition">
+                    <input type="checkbox" value="whatsapp" x-model="page.config.active_payments" class="w-4 h-4 rounded text-indigo-600">
+                    <span class="text-[11px] font-medium text-gray-700">WhatsApp</span>
+                </label>
+                <template x-for="p in paymentProviders" :key="p.slug">
+                    <label class="flex items-center gap-2 p-2 bg-white border rounded-lg cursor-pointer hover:border-indigo-500 transition">
+                        <input type="checkbox" :value="p.slug" x-model="page.config.active_payments" class="w-4 h-4 rounded text-indigo-600">
+                        <span class="text-[11px] font-medium text-gray-700" x-text="p.name"></span>
+                    </label>
+                </template>
+            </div>
+        </div>
+        <div class="p-4 border-t bg-gray-50 flex justify-end gap-3">
+            <button @click="showSettings=false" class="px-5 py-2 text-xs font-bold text-gray-500">CANCEL</button>
+            <button @click="savePage(); showSettings=false" class="px-8 py-2 bg-indigo-600 text-white text-xs font-black rounded-xl shadow-lg shadow-indigo-200 active:scale-95 transition-all">SIMPAN PERUBAHAN</button>
+        </div>
+    </div>
+</div>
+
+    <div class="fixed bottom-5 left-5 z-[100000] flex flex-col gap-2 pointer-events-none">
+    <template x-for="n in notifications" :key="n.id">
+        <div x-show="n.show" x-transition class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-l-4 bg-white min-w-[280px] transform transition-all" :class="n.type==='success'?'border-green-500':'border-red-500'">
+            <i class="ph text-2xl" :class="n.type==='success'?'ph-check-circle text-green-500':'ph-warning-circle text-red-500'"></i>
+            <div><h4 class="text-xs font-bold text-gray-800 uppercase" x-text="n.title"></h4><p class="text-[10px] text-gray-500 font-medium" x-text="n.msg"></p></div>
+        </div>
+    </template>
     </div>
 
     <div id="iconify-picker-modal" class="fixed inset-0 hidden z-[99999] bg-black/40 flex items-start justify-center p-6 backdrop-blur-sm">
@@ -185,197 +304,337 @@
         </div>
     </div>
 
-    <div class="fixed bottom-5 left-5 z-[100000] flex flex-col gap-2 pointer-events-none">
-    <template x-for="n in notifications" :key="n.id">
-        <div x-show="n.show" x-transition class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-l-4 bg-white min-w-[280px]" :class="n.type==='success'?'border-green-500':'border-red-500'">
-            <i class="ph text-2xl" :class="n.type==='success'?'ph-check-circle text-green-500':'ph-warning-circle text-red-500'"></i>
-            <div><h4 class="text-xs font-bold text-gray-800 uppercase" x-text="n.title"></h4><p class="text-[10px] text-gray-500 font-medium" x-text="n.msg"></p></div>
-        </div>
-    </template>
-    </div>
-
     <script>
-    let appBuilderCache = {};
-
-    // --- ICONIFY LOGIC ---
+    // --- 1. ICONIFY PICKER LOGIC (TETAP ADA) ---
     (function(){
-        let activeModel = null; const modal = document.getElementById('iconify-picker-modal'); const input = document.getElementById('iconify-picker-search'); const results = document.getElementById('iconify-picker-results');
-        window.openIconifyPicker = function(model) { activeModel = model; modal.classList.remove('hidden'); input.value = ''; input.focus(); searchIcons('star'); };
+        let activeModel = null; 
+        const modal = document.getElementById('iconify-picker-modal'); 
+        const input = document.getElementById('iconify-picker-search'); 
+        const results = document.getElementById('iconify-picker-results');
+        
+        window.openIconifyPicker = function(model) { 
+            activeModel = model; 
+            modal.classList.remove('hidden'); 
+            input.value = ''; 
+            input.focus(); 
+            searchIcons('star'); 
+        };
+        
         document.getElementById('iconify-picker-close').onclick = () => modal.classList.add('hidden'); 
         input.oninput = (e) => searchIcons(e.target.value);
+        
         async function searchIcons(q) { 
             if(!q) return; 
-            try { const res = await fetch(`https://api.iconify.design/search?query=${q}&limit=30`); const data = await res.json(); results.innerHTML = ''; 
-                if(data.icons) data.icons.forEach(icon => { const btn = document.createElement('button'); btn.className = 'p-2 hover:bg-indigo-50 rounded flex flex-col items-center gap-1 transition'; btn.innerHTML = `<iconify-icon icon="${icon}" width="24"></iconify-icon><span class="text-[9px] text-gray-400 truncate w-full text-center">${icon.split(':')[1]}</span>`; btn.onclick = () => { if(activeModel) activeModel.setAttributes({ icon: icon }); modal.classList.add('hidden'); }; results.appendChild(btn); }); 
-            } catch(e) {} 
+            try { 
+                const res = await fetch(`https://api.iconify.design/search?query=${q}&limit=30`); 
+                const data = await res.json(); 
+                results.innerHTML = ''; 
+                if(data.icons) { 
+                    data.icons.forEach(icon => { 
+                        const btn = document.createElement('button'); 
+                        btn.className = 'p-2 hover:bg-indigo-50 rounded flex flex-col items-center gap-1 transition'; 
+                        btn.innerHTML = `<iconify-icon icon="${icon}" width="24"></iconify-icon><span class="text-[9px] text-gray-400 truncate w-full text-center">${icon.split(':')[1]}</span>`; 
+                        btn.onclick = () => { 
+                            if(activeModel) activeModel.setAttributes({ icon: icon }); 
+                            modal.classList.add('hidden'); 
+                        }; 
+                        results.appendChild(btn); 
+                    }); 
+                } 
+            } catch(e) { console.error(e); } 
         }
     })();
 
-    // --- APP LOGIC ---
+    // --- 2. MAIN EDITOR APP (ALPINE JS) - FULL CONFIG RESTORED ---
     function editorApp() {
         return {
-            device: 'desktop', tab: 'blocks', settingsTab: 'commerce', mobileMenuOpen: false, showSettings: false, loading: false, notifications: [],
-            page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, active_payments: [], settings: {} } },
+            // STATE VARIABLES (LENGKAP)
+            device: 'desktop', 
+            tab: 'blocks', 
+            settingsTab: 'commerce', 
+            clipboard: null, 
+            mobileMenuOpen: false, 
+            showSettings: false, 
+            loading: false, 
+            notifications: [], 
+            paymentProviders: [],
+            
+            // PAGE DATA (LENGKAP)
+            page: { 
+                id: 0, 
+                slug: '', 
+                title: '', 
+                product_type: 'physical', 
+                slug_payment: 'whatsapp',
+                meta: { description: '', keywords: '', og_image: '', favicon: '' },
+                analytics: { fb_pixel: '', ga_id: '', tiktok_pixel: '' },
+                scripts: { header: '', footer: '' },
+                config: { 
+                    price: 0, 
+                    active_payments: [], 
+                    variants: [], 
+                    shipping: { weight: 1000, cod: false }, 
+                    order_bump: { active: false }, 
+                    coupons: [], 
+                    settings: {} 
+                } 
+            },
 
+            // --- INITIALIZATION ---
             async init() {
                 this.initGrapes();
                 const slug = new URLSearchParams(window.location.search).get('slug');
                 if (slug) await this.loadPageData(slug);
-            },
-
-            notify(title, msg, type = 'success') { 
-                const id = Date.now(); this.notifications.push({ id, title, msg, type, show: true }); 
-                setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); 
-            },
-
-            addWidgetToCanvas(id) {
-                const w = appBuilderCache[id];
-                if (w) {
-                    let html = w.content;
-                    const div = document.createElement('div'); div.innerHTML = html;
-                    const root = div.firstElementChild;
-                    if(root) { root.classList.add('js-widget-root'); root.setAttribute('data-widget-type', w.id); html = div.innerHTML; }
-                    try { 
-                        window.editor.addComponents(html);
-                        this.mobileMenuOpen = false; // FIX: Tutup menu setelah add
-                        if(w.script && w.script.trim()) {
-                            setTimeout(() => {
-                                const allWidgets = window.editor.getWrapper().find(`[data-widget-type="${w.id}"]`);
-                                const el = allWidgets[allWidgets.length - 1];
-                                if(el) try { (new Function(w.script)).call(el.getEl()); } catch(e) {}
-                            }, 150);
-                        }
-                    } catch(e) { console.error(e); }
+                else { 
+                    this.page.slug = 'halaman-' + Date.now(); 
+                    this.page.title = 'Halaman Baru'; 
                 }
             },
 
+            // --- LOAD DATA ---
             async loadPageData(slug) {
                 this.loading = true;
                 try {
-                    const res = await fetch(`/api/admin/pages/${slug}`);
-                    const data = await res.json();
-                    this.page.id = data.id; this.page.slug = data.slug; this.page.title = data.title || '';
-                    if (data.product_config_json) { const conf = typeof data.product_config_json === 'string' ? JSON.parse(data.product_config_json) : data.product_config_json; this.page.config = { ...this.page.config, ...conf }; }
-                    if (window.editor) {
-                        let safeHtml = data.html_content || ''; safeHtml = safeHtml.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gm, ""); 
-                        window.editor.setComponents(safeHtml); window.editor.setStyle(data.css_content || '');
-                        setTimeout(() => {
-                            window.editor.getWrapper().find('[data-widget-type]').forEach(comp => {
-                                const wid = comp.getAttributes()['data-widget-type']; const wData = appBuilderCache[wid];
-                                if(wData && wData.script) try { (new Function(wData.script)).call(comp.getEl()); } catch(e) {}
-                            });
-                        }, 800);
+                    const res = await fetch(`/api/admin/pages/${slug}`, { credentials: 'same-origin' });
+                    if(res.ok) {
+                        const data = await res.json();
+                        if (data) {
+                            this.page.id = data.id || 0; 
+                            this.page.slug = data.slug || slug; 
+                            this.page.title = data.title || '';
+                            if (data.meta) this.page.meta = typeof data.meta === 'string' ? JSON.parse(data.meta) : data.meta;
+                            
+                            // Load Config
+                            try {
+                                const c = JSON.parse(data.product_config_json || '{}');
+                                this.page.config = { ...this.page.config, ...c };
+                            } catch(e) {}
+
+                            // Load Content to Editor
+                            if (window.editor) {
+                                if (data.html_content) window.editor.setComponents(data.html_content);
+                                if (data.css_content) window.editor.setStyle(data.css_content);
+                            }
+                        }
                     }
-                } catch (e) { this.notify('Error', e.message, 'error'); }
+                } catch (e) { this.notify('Error', 'Gagal memuat data', 'error'); }
                 this.loading = false;
             },
 
+            // --- SAVE DATA ---
             async savePage() {
                 this.loading = true;
                 try {
-                    const html = window.editor.getHtml(); const css = window.editor.getCss(); const safeJs = `<script>/* Logic Here */<\/script>`;
-                    const payload = { id: this.page.id, slug: this.page.slug, title: this.page.title, html: html + safeJs, css: css, product_config: this.page.config };
-                    const res = await fetch('/api/admin/pages', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
-                    if(res.ok) this.notify('Sukses', 'Saved!'); else throw new Error('Save failed');
-                } catch (e) { this.notify('Gagal', e.message, 'error'); }
+                    const payload = {
+                        id: this.page.id, 
+                        slug: this.page.slug, 
+                        title: this.page.title,
+                        html: `${window.editor.getHtml()}<script>${window.editor.getJs()}<\/script>`,
+                        css: window.editor.getCss(), 
+                        meta: this.page.meta, 
+                        product_config: this.page.config
+                    };
+                    const res = await fetch('/api/admin/pages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    this.notify(res.ok ? 'Sukses' : 'Error', res.ok ? 'Berhasil disimpan!' : 'Gagal menyimpan', res.ok ? 'success' : 'error');
+                } catch (e) { this.notify('Error', 'Masalah koneksi', 'error'); }
                 this.loading = false;
             },
 
+            // --- UTILS ---
+            notify(title, msg, type = 'success') { 
+                const id = Date.now(); 
+                this.notifications.push({ id, title, msg, type, show: true }); 
+                setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); 
+            },
             setDevice(d) { this.device = d; if (window.editor) window.editor.setDevice(d); },
+            cmd(c) { window.editor.runCommand(c); },
 
+            // --- GRAPESJS SETUP ---
             initGrapes() {
-                const bridgeCSS = `body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; padding-top: 65px !important; } img { max-width: 100% !important; height: auto !important; display: block; }`; 
+                const bridgeCSS = `
+                    body { min-height: 100vh; background: #fff; overflow-x: hidden; font-family: 'Inter', sans-serif; }
+                    [x-cloak] { display: none !important; }
+                    .countdown-item { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 60px; }
+                    .countdown-number { font-weight: 900; font-size: 2rem; line-height: 1; }
+                    .countdown-label { font-size: 0.65rem; text-transform: uppercase; font-weight: 700; margin-top: 4px; opacity: 0.8; }
+                    @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+                    .animate-marquee { display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite; }
+                    .product-gallery { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+                    .gallery-main img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 12px; }
+                    .gallery-thumbs { display: flex; gap: 10px; overflow-x: auto; padding: 5px 0; }
+                    .thumb-item { width: 60px; height: 60px; border-radius: 8px; cursor: pointer; opacity: 0.6; object-fit: cover; }
+                    .thumb-item.active { border: 2px solid #4f46e5; opacity: 1; }
+                    /* CAROUSEL FIXED & RESPONSIVE */
+                    .editable-carousel { position: relative; width: 100%; overflow: hidden; aspect-ratio: 16/9; min-height: 300px; }
+                    .editable-carousel .slides { display: flex; flex-direction: row; width: 100%; height: 100%; transition: transform 0.5s ease-in-out; }
+                    .editable-carousel .slide { min-width: 100%; flex: 0 0 100%; position: relative; height: 100%; overflow: hidden; }
+                    .editable-carousel .slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+                    .editable-carousel .carousel-controls { position: absolute; inset: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 1rem; pointer-events: none; z-index: 10; }
+                    .editable-carousel .carousel-controls button { pointer-events: auto; background: rgba(0,0,0,0.3); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); transition: 0.2s; cursor: pointer; }
+                    .editable-carousel .carousel-controls button:hover { background: rgba(0,0,0,0.6); transform: scale(1.1); }
+                `;
 
                 window.editor = grapesjs.init({
-                    container: '#gjs', height: '100%', width: 'auto', storageManager: false, panels: { defaults: [] }, allowScripts: 1, 
-                    assetManager: { uploadText: 'Upload Gambar', uploadFile: async (e) => { /* logic upload */ } },
+                    container: '#gjs', height: '100%', storageManager: false, panels: { defaults: [] },
+                    
+                    // --- 1. KONFIGURASI API UPLOAD (ASLI)
+                    assetManager: {
+                        uploadText: 'Drop files here or click to upload',
+                        uploadFile: async (e) => {
+                            const files = e.dataTransfer ? e.dataTransfer.files : e.target.files;
+                            const file = files[0];
+                            if(!file) return;
+                    
+                            const toBase64 = f => new Promise((resolve, reject) => {
+                                const reader = new FileReader();
+                                reader.readAsDataURL(f);
+                                reader.onload = () => resolve(reader.result);
+                                reader.onerror = error => reject(error);
+                            });
+                    
+                            try {
+                                const base64Image = await toBase64(file);
+                                const response = await fetch('/api/admin/upload-image', {
+                                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: base64Image, filename: file.name })
+                                });
+                                const result = await response.json();
+                                if (result.data) { window.editor.AssetManager.add(result.data); } else { alert('Upload Gagal: ' + (result.message || 'Error API')); }
+                            } catch (err) { console.error('Upload Error:', err); alert('Gagal koneksi ke server.'); }
+                        }
+                    },
                     canvas: {
                         scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
-                        styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
+                        styles: ['https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap', 'https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
                         content: `<style>${bridgeCSS}</style>`
                     },
-                    plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg'],
+                    plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-tabs', 'grapesjs-custom-code', 'grapesjs-tooltip', 'grapesjs-blocks-flexbox', 'grapesjs-typed', 'grapesjs-style-bg'],
                     deviceManager: { devices: [{ id: 'desktop', width: '' }, { id: 'tablet', width: '768px' }, { id: 'mobile', width: '375px' }] },
-                    styleManager: { appendTo: '#styles-container' }
+                    blockManager: { appendTo: '#blocks-container' },
+                    layerManager: { appendTo: '#layers-container' },
+                    selectorManager: { appendTo: '#selectors-container' },
+                    traitManager: { appendTo: '#traits-container' },
+                    styleManager: { appendTo: '#styles-container', sectors: [{ name: 'Typography', open:true, buildProps:['font-family','font-size','font-weight','color','text-align'] }, { name: 'Decorations', buildProps:['background-color','border','border-radius','box-shadow'] }, { name: 'Dimensions', buildProps:['width','padding','margin'] }] }
                 });
 
                 const domc = window.editor.DomComponents;
+                const bm = window.editor.BlockManager;
                 const cmds = window.editor.Commands;
+                domc.addType('link', { model: { defaults: { traits: ['href', 'target', 'title'] } } });
 
-                // --- 1. REGISTER COMMAND ICON PICKER ---
+                // ==========================================
+                // FIX 1: COMMAND & DEFINISI ICON PICKER (MUTLAK)
+                // ==========================================
                 cmds.add('open-icon-picker', {
                     run(editor, sender) {
                         const selected = editor.getSelected();
                         if (selected && window.openIconifyPicker) {
                             window.openIconifyPicker(selected);
                         } else {
-                            alert('Pilih icon dulu');
+                            alert('Pilih komponen icon terlebih dahulu');
                         }
                     }
                 });
 
-                // --- 2. DEFINE ICONIFY COMPONENT MANUALLY ---
-                // Definisi manual ini menjamin traits muncul.
-                domc.addType('iconify-icon', {
-                    model: {
-                        defaults: {
-                            tagName: 'iconify-icon',
-                            draggable: true, droppable: false,
-                            attributes: { icon: 'ph:star-fill', width: '24' },
+                // Set Gambar (Fitur Asli)
+                cmds.add('set-img-src', {
+                    run(editor, sender) {
+                        const component = editor.getSelected();
+                        editor.runCommand('open-assets', {
+                            target: component,
+                            onSelect() {
+                                const asset = editor.AssetManager.getSelection();
+                                if(asset && asset.length) {
+                                    const imageUrl = asset[0].getSrc();
+                                    component.addAttributes({ 'img-src': imageUrl });
+                                    const imgEl = component.view.el.querySelector('img');
+                                    if(imgEl) imgEl.src = imageUrl;
+                                }
+                                editor.Modal.close();
+                            }
+                        });
+                    }
+                });
+
+                // DEFINISI MANUAL ICONIFY (AGAR TRAITS SELALU MUNCUL)
+                domc.addType('iconify-icon', { 
+                    model: { 
+                        defaults: { 
+                            tagName: 'iconify-icon', 
+                            attributes: { icon: 'ph:star-fill', width: '24' }, 
                             traits: [
-                                { type: 'button', text: 'Ganti Icon', full: true, command: 'open-icon-picker' }
-                            ]
-                        }
-                    }
+                                { type: 'button', text: 'Ganti Icon', command: 'open-icon-picker' } 
+                            ] 
+                        } 
+                    } 
                 });
 
-                // --- 3. AUTO CLOSE MOBILE PANEL ---
+                // ==========================================
+                // FIX 2: MOBILE PANEL AUTO-CLOSE
+                // ==========================================
                 window.editor.on('component:selected', () => { this.mobileMenuOpen = false; });
                 window.editor.on('canvas:click', () => { this.mobileMenuOpen = false; });
+                window.editor.on('block:drag:stop', () => { this.mobileMenuOpen = false; });
 
-                // --- 4. FETCH WIDGETS ---
+                // --- 2. FETCH WIDGETS DARI DB ---
                 fetch('/api/widgets').then(res => res.json()).then(widgets => {
-                    const renderer = document.getElementById('blocks-custom-renderer'); renderer.innerHTML = ''; const groups = {};
+                    // CLEAR DEFAULT BLOCKS
+                    bm.getAll().reset();
                     
                     widgets.forEach(w => {
-                        appBuilderCache[w.id] = w;
-                        
-                        // PENTING: Jangan overwrite 'iconify-icon' dari DB!
-                        if (w.id !== 'iconify-icon') {
-                            domc.addType(w.id, { model: { defaults: { attributes: { 'data-widget-type': w.id } } } });
+                        // FIX: LINDUNGI DEFINISI ICONIFY MANUAL
+                        if (w.id === 'iconify-icon') return;
+
+                        // DEFINISI COMPONENT DARI DB
+                        if (w.attributes) {
+                             try {
+                                const attr = JSON.parse(w.attributes);
+                                domc.addType(w.id, { model: { defaults: attr } });
+                             } catch(e) {}
                         }
 
+                        // DEFINISI BLOCK (TAMPILAN DI SIDEBAR)
                         if (w.category !== 'System') {
-                            if (!groups[w.category]) groups[w.category] = [];
-                            groups[w.category].push(w);
+                            bm.add(w.id, {
+                                label: w.label,
+                                category: w.category,
+                                content: w.content
+                            });
                         }
-                    });
-
-                    Object.keys(groups).sort().forEach(catName => {
-                        const details = document.createElement('details'); details.className = 'group border border-gray-200 rounded-lg bg-white mb-2'; details.open = true;
-                        const summary = document.createElement('summary'); summary.className = 'p-3 bg-gray-50 text-xs font-bold cursor-pointer flex justify-between items-center hover:bg-gray-100';
-                        summary.innerHTML = `<span>${catName}</span> <i class="ph ph-caret-down group-open:rotate-180 transition"></i>`;
-                        const contentDiv = document.createElement('div'); contentDiv.className = 'grid grid-cols-3 gap-2 p-2';
-                        groups[catName].forEach(w => {
-                            const btn = document.createElement('div'); btn.className = 'block-card'; 
-                            btn.onclick = () => this.addWidgetToCanvas(w.id);
-                            btn.innerHTML = `<div class="text-indigo-600 mb-1"><i class="ph ph-cube text-xl"></i></div><div class="block-label">${w.label}</div>`; 
-                            contentDiv.appendChild(btn);
-                        });
-                        details.appendChild(summary); details.appendChild(contentDiv); renderer.appendChild(details);
                     });
                 });
-
-                window.editor.on('component:selected', (c) => { 
+                
+                // CONFIG TOOLBAR (VERTICAL COMPLETE)
+                editor.on('component:selected', (c) => {
                     c.set('toolbar', [
-                        { attributes: { class: 'fa' }, command: 'tlb-move', label: '<i class="ph ph-arrows-out-cardinal text-lg"></i>' },
-                        { attributes: { class: 'fa' }, command: e => e.runCommand('core:component-exit'), label: '<i class="ph ph-arrow-fat-up text-lg"></i>' },
-                        { attributes: { class: 'fa' }, command: 'tlb-delete', label: '<i class="ph ph-trash text-lg text-red-400"></i>' }
+                        { attributes: { class: 'fa fa-arrows', title: 'Geser' }, command: 'tlb-move', label: '<iconify-icon icon="ph:arrows-out-cardinal-bold" style="font-size:20px;"></iconify-icon>' },
+                        { attributes: { class: 'fa fa-arrow-up', title: 'Parent' }, command: (e) => e.runCommand('core:component-exit'), label: '<iconify-icon icon="ph:arrow-fat-up-bold" style="font-size:20px;"></iconify-icon>' },
+                        { attributes: { class: 'fa fa-scissors', title: 'Cut' }, command: (e) => { e.runCommand('core:copy'); e.getSelected().remove(); }, label: '<iconify-icon icon="ph:scissors-bold" style="font-size:18px; color:#fbbf24;"></iconify-icon>' },
+                        { attributes: { class: 'fa fa-copy', title: 'Copy' }, command: (e) => e.runCommand('core:copy'), label: '<iconify-icon icon="ph:copy-bold" style="font-size:18px; color:#38bdf8;"></iconify-icon>' },
+                        { attributes: { class: 'fa fa-paste', title: 'Paste' }, command: (e) => e.runCommand('core:paste'), label: '<iconify-icon icon="ph:clipboard-text-bold" style="font-size:18px; color:#4ade80;"></iconify-icon>' },
+                        { attributes: { class: 'fa fa-trash', title: 'Delete' }, command: 'tlb-delete', label: '<iconify-icon icon="ph:trash-bold" style="font-size:18px; color:#ef4444;"></iconify-icon>' }
                     ]);
                 });
-            }
-        };
-    }
-    </script>
+                
+                // CUSTOM CLICK HANDLER FOR BLOCKS
+                setTimeout(() => {
+                    const container = document.getElementById('blocks-container');
+                    if (container) {
+                        container.addEventListener('click', (e) => {
+                            const blockEl = e.target.closest('.gjs-block');
+                            if (blockEl) {
+                                const id = blockEl.getAttribute('title') || blockEl.innerText.trim();
+                                const block = window.editor.BlockManager.get(id);
+                                if (block) {
+                                    window.editor.addComponents(block.get('content'));
+                                    this.mobileMenuOpen = false;
+                                }
+                            }
+                        });
+                    }
+                }, 1500);
+            } // END INIT GRAPES
+        }; // END RETURN
+    } // END EDITOR APP
+</script>
 </body>
 </html>
