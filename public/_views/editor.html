@@ -390,7 +390,46 @@
                 });
 
                 const domc = window.editor.DomComponents;
+                // ==========================================
+                // 1. MULAI KODE ICONIFY
+                // ==========================================
+                
+                const cmds = window.editor.Commands;
 
+                // A. Daftarkan Command "open-icon-picker"
+                cmds.add('open-icon-picker', {
+                    run(editor, sender) {
+                        const selected = editor.getSelected();
+                        if (selected && window.openIconifyPicker) {
+                            window.openIconifyPicker(selected);
+                        } else {
+                            alert('Pilih komponen icon terlebih dahulu');
+                        }
+                    }
+                });
+
+                // B. Definisi Manual Iconify (Agar Traits terbaca di awal)
+                domc.addType('iconify-icon', {
+                    model: {
+                        defaults: {
+                            tagName: 'iconify-icon',
+                            draggable: true,
+                            droppable: false,
+                            attributes: { icon: 'ph:star-fill', width: '24' },
+                            traits: [
+                                {
+                                    type: 'button',
+                                    text: 'Ganti Icon',
+                                    full: true,
+                                    command: 'open-icon-picker'
+                                }
+                            ]
+                        }
+                    }
+                });
+                // ==========================================
+                // SELESAI KODE ICONIFY
+                // ==========================================
                 // --- FETCH WIDGETS ---
                 fetch('/api/widgets').then(res => res.json()).then(widgets => {
                     const renderer = document.getElementById('blocks-custom-renderer');
