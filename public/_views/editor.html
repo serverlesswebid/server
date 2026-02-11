@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - Stabilized Core</title>
+    <title>LandingBuilder Pro - Crash Proof Edition</title>
     
     <script>
-        // Suppress console spam
         (function() {
             const originalWarn = console.warn;
             console.warn = function(...args) {
@@ -46,38 +45,21 @@
         
         .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; }
         
-        /* STICKY TOOLBAR: Tetap di pojok kiri atas canvas */
+        /* STICKY TOOLBAR FIX */
         .gjs-toolbar { 
-            position: fixed !important; 
-            top: 60px !important; 
-            left: 0 !important;
-            right: auto !important;
-            transform: none !important;
-            background-color: #1f2937 !important; 
-            border-radius: 0 0 8px 0 !important; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
-            display: flex !important; 
-            gap: 4px !important; 
-            padding: 6px 10px !important;
-            z-index: 9999 !important; 
-            border: 1px solid rgba(255,255,255,0.1) !important;
-            border-top: none !important;
-            border-left: none !important;
-            opacity: 1;
-            transition: opacity 0.2s;
+            position: fixed !important; top: 60px !important; left: 0 !important; right: auto !important; transform: none !important;
+            background-color: #1f2937 !important; border-radius: 0 0 8px 0 !important; box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+            display: flex !important; gap: 4px !important; padding: 6px 10px !important; z-index: 9999 !important; border: 1px solid rgba(255,255,255,0.1) !important;
+            opacity: 1; transition: opacity 0.2s;
         }
-
         .gjs-toolbar.ghost-mode { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; }
-
         .gjs-toolbar-item { color: white !important; width: 30px !important; height: 30px !important; display: flex !important; align-items: center; justify-content: center !important; cursor: pointer !important; border-radius: 4px; }
         .gjs-toolbar-item:hover { background-color: #4f46e5 !important; }
 
-        /* GrapesJS UI Reset */
         .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; }
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
         .gjs-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px; }
         
-        /* Sidebar Elements */
         details.group > summary { list-style: none; }
         details.group > summary::-webkit-details-marker { display: none; }
         .block-card { cursor: pointer; background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: all 0.2s; user-select: none; }
@@ -112,7 +94,6 @@
 
     <div class="workspace">
         <div id="gjs"></div>
-        
         <div class="sidebar-panel">
             <div class="flex border-b border-gray-200 bg-white shrink-0">
                 <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-squares-four text-xl"></i></button>
@@ -140,13 +121,11 @@
                 <h2 class="font-bold text-gray-800 flex items-center gap-2"><i class="ph ph-faders text-indigo-600 text-xl"></i> Page Settings</h2>
                 <button @click="showSettings = false" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button>
             </div>
-            
             <div class="flex border-b text-[11px] font-black uppercase bg-white">
                 <button @click="settingsTab='commerce'" :class="settingsTab==='commerce'?'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 py-4">Commerce</button>
                 <button @click="settingsTab='seo'" :class="settingsTab==='seo'?'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 py-4">SEO</button>
                 <button @click="settingsTab='advanced'" :class="settingsTab==='advanced'?'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 py-4">Scripts</button>
             </div>
-
             <div class="flex-1 overflow-y-auto p-6 space-y-6">
                 <div x-show="settingsTab === 'commerce'" class="space-y-4">
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Judul Halaman</label><input x-model="page.title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500 transition"></div>
@@ -163,14 +142,12 @@
                         </div>
                     </div>
                 </div>
-
                 <div x-show="settingsTab === 'seo'" class="space-y-4">
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">SEO Browser Title</label><input x-model="page.config.settings.seo_title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none" placeholder="Judul di Google"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">SEO Title</label><input x-model="page.config.settings.seo_title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Meta Description</label><textarea x-model="page.config.settings.seo_description" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm h-24 outline-none resize-none"></textarea></div>
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Favicon URL</label><input x-model="page.config.settings.favicon" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Social Share Image (OG)</label><input x-model="page.config.settings.og_image" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Social Image</label><input x-model="page.config.settings.og_image" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
                 </div>
-
                 <div x-show="settingsTab === 'advanced'" class="space-y-6">
                     <div class="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 space-y-4">
                         <h4 class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Pixels & Analytics</h4>
@@ -184,7 +161,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="p-4 border-t bg-gray-50 flex justify-end gap-3">
                 <button @click="showSettings=false" class="px-5 py-2 text-xs font-bold text-gray-500">BATAL</button>
                 <button @click="savePage(); showSettings=false" class="px-8 py-2 bg-indigo-600 text-white text-xs font-black rounded-xl shadow-lg active:scale-95 transition-all">SIMPAN</button>
@@ -228,11 +204,7 @@
     function editorApp() {
         return {
             device: 'desktop', tab: 'blocks', settingsTab: 'commerce', showSettings: false, loading: false, notifications: [],
-            paymentProviders: [
-                { slug: 'paspay', name: 'Paspay QRIS' },
-                { slug: 'paspay-va', name: 'Paspay VA' },
-                { slug: 'midtrans', name: 'Midtrans' }
-            ],
+            paymentProviders: [{ slug: 'paspay', name: 'Paspay QRIS' }, { slug: 'paspay-va', name: 'Paspay VA' }, { slug: 'midtrans', name: 'Midtrans' }],
             page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, active_payments: [], settings: { seo_title:'', seo_description:'', favicon:'', og_image:'', fb_pixel:'', tiktok_pixel:'', ga_id:'', scripts_header:'', scripts_footer:'' } } },
 
             async init() {
@@ -250,7 +222,6 @@
                 const w = appBuilderCache[id];
                 if (w) {
                     let html = w.content;
-                    // FORCE GJS-TYPE FOR SCRIPT BINDING
                     if(w.script) {
                         const div = document.createElement('div'); div.innerHTML = html;
                         const root = div.firstElementChild;
@@ -287,11 +258,10 @@
                     window.editor.getWrapper().find('details').forEach(d => d.addAttributes({ open: null }));
                     const html = window.editor.getHtml();
                     const css = window.editor.getCss();
-                    
-                    // --- LIVE SCRIPT SAFETY: WRAP DALAM TRY-CATCH ---
+                    // AMBIL SCRIPT GRAPESJS
                     const rawJs = window.editor.getJs();
-                    // Teknik ini mengisolasi setiap block script agar jika satu error, yang lain tetap jalan
-                    const safeJs = `try { ${rawJs} } catch(err) { console.warn('Widget Script Error:', err); }`;
+                    // --- LIVE SCRIPT FIX: WRAP DALAM DOMContentLoaded & TRY-CATCH ---
+                    const safeJs = `document.addEventListener("DOMContentLoaded", function() { try { ${rawJs} } catch(e) { console.warn("Live Script Error:", e); } });`;
 
                     const payload = {
                         id: this.page.id, slug: this.page.slug, title: this.page.title,
@@ -349,7 +319,7 @@
 
                 const domc = window.editor.DomComponents;
 
-                // --- ROBUST WIDGET REGISTRATION ---
+                // --- ROBUST REGISTER: VALIDATOR KETAT UNTUK MENCEGAH CRASH ---
                 fetch('/api/widgets').then(res => res.json()).then(widgets => {
                     const renderer = document.getElementById('blocks-custom-renderer');
                     renderer.innerHTML = ''; const groups = {};
@@ -358,20 +328,22 @@
                         appBuilderCache[w.id] = w;
 
                         if (w.script && w.script.trim() !== "") {
+                            // VALIDASI SCRIPT SEBELUM REGISTER
                             try {
-                                // WRAP SCRIPT DALAM IIFE AMAN UNTUK EDITOR
-                                // Ini mencegah error Syntax jika ada karakter liar
-                                const safeScript = `try { ${w.script} } catch(e) { console.error('Widget ${w.id} Error:', e) }`;
-                                
+                                const testFn = new Function(w.script); // Cek Syntax Error
+                                // Jika lolos validasi, baru daftarkan
                                 domc.addType(w.id, {
                                     model: {
                                         defaults: {
-                                            script: new Function(safeScript), // Function wrapper aman
+                                            script: testFn, // Gunakan fungsi valid
                                             attributes: { 'data-gjs-type': w.id }
                                         }
                                     }
                                 });
-                            } catch(e) { console.warn('Script Register Error widget:', w.id); }
+                            } catch(e) {
+                                console.warn('Script Widget Rusak (Dibuang):', w.id); 
+                                // JANGAN register script jika error, tapi tetap register widget (tanpa script)
+                            }
                         }
 
                         if (w.category !== 'System') {
