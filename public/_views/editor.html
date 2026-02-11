@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - Crash Proof</title>
+    <title>LandingBuilder Pro - Crash Proof Core</title>
     
     <script>
         (function() {
@@ -45,7 +45,7 @@
         
         .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; }
         
-        /* STICKY TOOLBAR (FIXED) */
+        /* STICKY TOOLBAR FIX (DIAM DI POJOK) */
         .gjs-toolbar { 
             position: fixed !important; 
             top: 60px !important; 
@@ -75,7 +75,7 @@
         .block-card:hover { border-color: #6366f1; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15); transform: translateY(-2px); }
         .block-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #4b5563; text-align: center; }
         
-        /* COLOR PICKER FIX (Z-INDEX SUPER TINGGI) */
+        /* FIX COLOR PICKER PALETTE (Z-INDEX 1 JUTA) */
         .sp-container { z-index: 1000000 !important; position: fixed !important; }
         .gjs-field-color-picker { width: 100%; height: 24px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
     </style>
@@ -152,10 +152,10 @@
                     </div>
                 </div>
                 <div x-show="settingsTab === 'seo'" class="space-y-4">
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">SEO Browser Title</label><input x-model="page.config.settings.seo_title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">SEO Title</label><input x-model="page.config.settings.seo_title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Meta Description</label><textarea x-model="page.config.settings.seo_description" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm h-24 outline-none resize-none"></textarea></div>
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Favicon URL</label><input x-model="page.config.settings.favicon" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Social Share Image (OG)</label><input x-model="page.config.settings.og_image" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Social Image</label><input x-model="page.config.settings.og_image" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
                 </div>
                 <div x-show="settingsTab === 'advanced'" class="space-y-6">
                     <div class="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 space-y-4">
@@ -214,7 +214,7 @@
         return {
             device: 'desktop', tab: 'blocks', settingsTab: 'commerce', showSettings: false, loading: false, notifications: [],
             paymentProviders: [{ slug: 'paspay', name: 'Paspay QRIS' }, { slug: 'paspay-va', name: 'Paspay VA' }, { slug: 'midtrans', name: 'Midtrans' }],
-            page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, active_payments: [], settings: { seo_title:'', seo_description:'', favicon:'', og_image:'', fb_pixel:'', ga_id:'', scripts_header:'', scripts_footer:'' } } },
+            page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, active_payments: [], settings: { seo_title:'', seo_description:'', favicon:'', og_image:'', fb_pixel:'', tiktok_pixel:'', ga_id:'', scripts_header:'', scripts_footer:'' } } },
 
             async init() {
                 this.initGrapes();
@@ -267,9 +267,10 @@
                     window.editor.getWrapper().find('details').forEach(d => d.addAttributes({ open: null }));
                     const html = window.editor.getHtml();
                     const css = window.editor.getCss();
-                    // --- LIVE SCRIPT FIX: WRAP AMAN UNTUK FRONTEND ---
                     const rawJs = window.editor.getJs();
-                    // Teknik ini mengisolasi setiap block script agar jika satu error, yang lain tetap jalan
+                    
+                    // --- LIVE SCRIPT FIX: WRAP AMAN UNTUK FRONTEND ---
+                    // Ini mencegah halaman mati jika ada satu script widget yang error
                     const safeJs = `document.addEventListener("DOMContentLoaded", function() { try { ${rawJs} } catch(err) { console.warn('Widget Script Error:', err); } });`;
 
                     const payload = {
@@ -328,7 +329,7 @@
 
                 const domc = window.editor.DomComponents;
 
-                // --- ROBUST REGISTER: ANTI-CRASH FILTER ---
+                // --- ROBUST REGISTER: ANTI-CRASH FILTER UNTUK EDITOR ---
                 fetch('/api/widgets').then(res => res.json()).then(widgets => {
                     const renderer = document.getElementById('blocks-custom-renderer');
                     renderer.innerHTML = ''; const groups = {};
@@ -337,22 +338,21 @@
                         appBuilderCache[w.id] = w;
 
                         if (w.script && w.script.trim() !== "") {
-                            // --- VALIDASI SCRIPT SEBELUM DAFTAR ---
-                            // Jika script tidak valid (misal diawali titik), JANGAN DAFTARKAN SCRIPTNYA
-                            // Daftarkan komponennya saja agar editor tidak crash.
+                            // COBA PARSE DULU. JIKA GAGAL (KARENA SINTAKS NGAACO SEPERTI 'replace...'), SKIP SCRIPTNYA.
+                            // INI MENCEGAH EDITOR CRASH SAAT LOAD.
                             try {
-                                new Function(w.script); // Check syntax dulu
+                                const testFn = new Function(w.script);
                                 domc.addType(w.id, {
                                     model: {
                                         defaults: {
-                                            script: new Function(w.script), // Kalau aman, pakai.
+                                            script: testFn, // Hanya register jika script valid JS
                                             attributes: { 'data-gjs-type': w.id }
                                         }
                                     }
                                 });
                             } catch(e) {
-                                console.warn('Script Widget Rusak (Dilewati):', w.id);
-                                // Fallback: Tetap daftarkan tipe tanpa script
+                                console.warn(`Script Widget '${w.id}' RUSAK/CORRUPT dan akan dilewati agar editor tidak crash.`);
+                                // Register widget TANPA script agar HTML-nya tetap muncul
                                 domc.addType(w.id, {
                                     model: { defaults: { attributes: { 'data-gjs-type': w.id } } }
                                 });
