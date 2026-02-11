@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - Dispatcher Core</title>
+    <title>LandingBuilder Pro - Live Hydration Core</title>
     
     <script>
         (function() {
@@ -216,27 +216,28 @@
                 const w = appBuilderCache[id];
                 if (w) {
                     let html = w.content;
-                    // KUNCI: KITA TIDAK MENYIMPAN SCRIPT KE GJS COMPONENT
-                    // KITA EXECUTE MANUAL. INI MENCEGAH CRASH!
+                    // DISPATCHER MODE: Insert ID unik, lalu jalankan script manual
                     const div = document.createElement('div'); div.innerHTML = html;
                     const root = div.firstElementChild;
                     if(root) { 
-                        root.setAttribute('data-widget-id', w.id); // ID untuk Dispatcher Live
-                        // Tambahkan ID unik per instance agar script editor bisa target
-                        const instanceId = 'w-' + Date.now() + Math.floor(Math.random()*1000);
-                        root.setAttribute('id', instanceId);
+                        // ID Induk untuk Live Loader
+                        root.setAttribute('data-widget-id', w.id); 
+                        // ID Unik Instance untuk Editor Dispatcher
+                        const instId = 'w-' + Date.now() + Math.floor(Math.random()*1000);
+                        root.setAttribute('id', instId);
                         html = div.innerHTML; 
                     }
                     try { 
                         const added = window.editor.addComponents(html);
-                        // JALANKAN SCRIPT MANUAL DI EDITOR (DISPATCHER)
+                        // EDITOR MANUAL DISPATCHER (Agar Counter Jalan di Editor)
                         if(w.script && w.script.trim()) {
                             setTimeout(() => {
-                                const el = window.editor.getWrapper().find(`#${root.getAttribute('id')}`)[0].getEl();
+                                const wrapper = window.editor.getWrapper();
+                                const el = wrapper.find(`#${root.getAttribute('id')}`)[0];
                                 if(el) {
-                                    try { (new Function(w.script)).call(el); } catch(e) { console.warn('Exec Error', e); }
+                                    try { (new Function(w.script)).call(el.getEl()); } catch(e) { console.warn('Editor Exec Error', e); }
                                 }
-                            }, 100);
+                            }, 150);
                         }
                     } catch(e) { console.error('Add Error', e); }
                 }
@@ -253,25 +254,29 @@
                         this.page.config = { ...this.page.config, ...conf }; 
                     }
                     if (window.editor) {
-                        // SANITASI EXTREME: Buang semua <script> dari HTML
                         let safeHtml = data.html_content || '';
+                        // Sanitasi script lama yang mungkin rusak
                         safeHtml = safeHtml.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gm, ""); 
                         
                         window.editor.setComponents(safeHtml);
                         window.editor.setStyle(data.css_content || '');
                         
-                        // HYDRATE SCRIPT DI EDITOR SECARA MANUAL (ANTI CRASH)
+                        // EDITOR HYDRATION (Jalankan ulang semua script widget di editor)
                         setTimeout(() => {
-                            window.editor.getWrapper().find('[data-widget-id]').forEach(comp => {
+                            const wrapper = window.editor.getWrapper();
+                            
+                            // 1. Hydrate Widgets (Counter, dll)
+                            wrapper.find('[data-widget-id]').forEach(comp => {
                                 const wid = comp.getAttributes()['data-widget-id'];
                                 const wData = appBuilderCache[wid];
                                 if(wData && wData.script) {
                                     try { (new Function(wData.script)).call(comp.getEl()); } catch(e) {}
                                 }
                             });
-                            // Auto Open Accordion
-                            window.editor.getWrapper().find('details').forEach(d => d.addAttributes({ open: 'true' }));
-                        }, 600);
+
+                            // 2. Auto Open Accordion
+                            wrapper.find('details').forEach(d => d.addAttributes({ open: 'true' }));
+                        }, 800);
                     }
                 } catch (e) { this.notify('Error', e.message, 'error'); }
                 this.loading = false;
@@ -286,33 +291,38 @@
                     const html = window.editor.getHtml();
                     const css = window.editor.getCss();
                     
-                    // --- LIVE SCRIPT BUILDER MANUAL (Paling Stabil) ---
-                    // Kita kumpulkan semua script widget yang terpakai di canvas
-                    // Dan bungkus mereka dengan aman.
-                    let liveScripts = [];
-                    // Cari widget unik yang dipakai
-                    const usedWidgets = new Set();
-                    window.editor.getWrapper().find('[data-widget-id]').forEach(c => usedWidgets.add(c.getAttributes()['data-widget-id']));
-                    
-                    usedWidgets.forEach(wid => {
-                        const wData = appBuilderCache[wid];
-                        if(wData && wData.script && wData.script.trim()) {
-                            // Bungkus script agar dijalankan untuk SETIAP elemen widget tersebut
-                            liveScripts.push(`
-                                document.querySelectorAll('[data-widget-id="${wid}"]').forEach(function(el) {
-                                    try {
-                                        (function() { ${wData.script} }).call(el);
-                                    } catch(e) { console.warn("Widget ${wid} Error:", e); }
-                                });
-                            `);
+                    // --- LIVE SMART LOADER (THE FIX) ---
+                    // Kita kumpulkan script yang dipakai, lalu kita bungkus dalam JSON.
+                    // Ini menghindari Syntax Error akibat kutip/newline yang salah.
+                    const usedScripts = {};
+                    window.editor.getWrapper().find('[data-widget-id]').forEach(comp => {
+                        const wid = comp.getAttributes()['data-widget-id'];
+                        if(appBuilderCache[wid] && appBuilderCache[wid].script) {
+                            usedScripts[wid] = appBuilderCache[wid].script;
                         }
                     });
 
-                    const safeJs = `document.addEventListener("DOMContentLoaded", function() { ${liveScripts.join('\n')} });`;
+                    // Loader Script: Aman, Rapi, Terenkapsulasi
+                    const loaderScript = `
+                    <script>
+                    (function() {
+                        var widgetScripts = ${JSON.stringify(usedScripts)}; // MAGIC LINE: Mengubah script jadi data JSON
+                        document.addEventListener("DOMContentLoaded", function() {
+                            document.querySelectorAll('[data-widget-id]').forEach(function(el) {
+                                var id = el.getAttribute('data-widget-id');
+                                if(widgetScripts[id]) {
+                                    try {
+                                        (new Function(widgetScripts[id])).call(el); // Hidupkan widget
+                                    } catch(e) { console.error("Widget Error " + id, e); }
+                                }
+                            });
+                        });
+                    })();
+                    <\/script>`;
 
                     const payload = {
                         id: this.page.id, slug: this.page.slug, title: this.page.title,
-                        html: `${html}<script>${safeJs}<\/script>`,
+                        html: html + loaderScript, // Inject Loader di akhir body
                         css: css, product_config: this.page.config
                     };
                     const res = await fetch('/api/admin/pages', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
@@ -331,7 +341,8 @@
                 `; 
 
                 window.editor = grapesjs.init({
-                    container: '#gjs', height: '100%', width: 'auto', storageManager: false, panels: { defaults: [] }, allowScripts: 1, // Scripts allow but we manage manually
+                    container: '#gjs', height: '100%', width: 'auto', storageManager: false, panels: { defaults: [] }, allowScripts: 1, 
+                    // NOTICE: Kita TIDAK memakai script native GrapesJS untuk menghindari crash
                     assetManager: {
                         uploadText: 'Upload Gambar',
                         uploadFile: async (e) => {
@@ -366,16 +377,16 @@
 
                 const domc = window.editor.DomComponents;
 
-                // --- FETCH WIDGETS (TANPA REGISTER SCRIPT KE GJS) ---
+                // --- FETCH WIDGETS (NO SCRIPT REGISTRATION) ---
                 fetch('/api/widgets').then(res => res.json()).then(widgets => {
                     const renderer = document.getElementById('blocks-custom-renderer');
                     renderer.innerHTML = ''; const groups = {};
                     
                     widgets.forEach(w => {
-                        appBuilderCache[w.id] = w; // Simpan di cache untuk manual execution
+                        appBuilderCache[w.id] = w; 
 
-                        // DAFTARKAN WIDGET HANYA SEBAGAI STRUKTUR (TANPA SCRIPT)
-                        // Script akan dieksekusi oleh Dispatcher kita sendiri.
+                        // Kita HANYA mendaftarkan atribut, TIDAK script-nya.
+                        // Script akan dieksekusi oleh Dispatcher Manual kita.
                         domc.addType(w.id, {
                             model: { defaults: { attributes: { 'data-widget-id': w.id } } }
                         });
