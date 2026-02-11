@@ -3,283 +3,343 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Block Stacker Editor - Stabil & Ringan</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <title>AlpineBuilder - Robust & Fast</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
     <style>
+        /* UI EDITOR UTAMA */
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; overflow: hidden; height: 100vh; }
         [x-cloak] { display: none !important; }
         
-        /* HEADER */
-        header { height: 60px; background: white; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 50; position: fixed; top:0; left:0; right:0; }
-        
-        /* LAYOUT */
-        .editor-layout { display: flex; height: calc(100vh - 60px); margin-top: 60px; }
+        /* SCROLLBAR HALUS */
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         
         /* CANVAS AREA */
-        .canvas-wrapper { flex: 1; overflow-y: auto; padding: 40px; display: flex; justify-content: center; background: #e5e7eb; }
-        #canvas { 
+        .canvas-container { 
+            background-color: #e5e7eb; 
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
+        }
+
+        #canvas {
             background: white; 
             min-height: 800px; 
-            width: 100%; 
-            max-width: 1200px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
-            padding-bottom: 50px; /* Space for drop */
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin: 40px auto;
+            padding-bottom: 100px; /* Ruang untuk drop di bawah */
         }
-        
-        /* CANVAS MODE DEVICE */
-        #canvas.mobile { max-width: 375px; border-radius: 20px; border: 8px solid #333; }
-        #canvas.tablet { max-width: 768px; }
 
-        /* SIDEBAR WIDGETS */
-        .sidebar { width: 300px; background: white; border-left: 1px solid #e5e7eb; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        
-        /* WIDGET ITEM (DRAGGABLE) */
-        .widget-item { 
-            padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; cursor: grab; background: white; 
-            display: flex; align-items: center; gap: 10px; transition: all 0.2s; user-select: none;
-        }
-        .widget-item:hover { border-color: #4f46e5; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.1); transform: translateY(-1px); }
-        .widget-item:active { cursor: grabbing; }
-        
-        /* VISUAL SAAT DRAG */
-        .sortable-ghost { opacity: 0.4; background: #eef2ff; border: 2px dashed #6366f1; }
-        .sortable-drag { opacity: 1; background: white; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); transform: scale(1.02); }
+        /* DEVICE MODES */
+        #canvas.desktop { width: 100%; max-width: 1200px; }
+        #canvas.tablet { width: 768px; }
+        #canvas.mobile { width: 375px; border-radius: 12px; border: 8px solid #333; min-height: 700px; }
 
-        /* EDITABLE AREA HIGHLIGHT */
-        #canvas *:hover { outline: 1px dashed #6366f1; cursor: text; }
-        #canvas *:focus { outline: 2px solid #6366f1; background-color: rgba(99, 102, 241, 0.05); }
+        /* WIDGET ITEM (SIDEBAR) */
+        .widget-card { 
+            cursor: grab; user-select: none; transition: transform 0.1s; 
+            border: 1px solid #e2e8f0;
+        }
+        .widget-card:hover { border-color: #6366f1; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1); }
+        .widget-card:active { cursor: grabbing; }
+
+        /* BLOCK DI CANVAS (ACTIVE) */
+        .builder-block { position: relative; }
         
-        /* DELETE BUTTON (Hover on block) */
-        .block-wrapper { position: relative; }
-        .block-wrapper:hover::after {
-            content: "Klik Text untuk Edit | Drag untuk Pindah";
-            position: absolute; top: -20px; left: 0; background: #4f46e5; color: white; 
-            font-size: 10px; padding: 2px 6px; border-radius: 4px; pointer-events: none; z-index: 10;
+        /* HOVER EFFECT DI CANVAS */
+        .builder-block:hover { outline: 2px dashed #6366f1; outline-offset: -2px; z-index: 10; }
+        
+        /* TOOLBAR PADA BLOK (MUNCUL SAAT HOVER) */
+        .block-tools { 
+            position: absolute; top: 0; right: 0; 
+            display: none; gap: 2px; padding: 4px;
+            background: #6366f1; border-radius: 0 0 0 8px; z-index: 20;
         }
-        .delete-btn {
-            position: absolute; top: 5px; right: 5px; background: #ef4444; color: white; width: 24px; height: 24px;
-            border-radius: 4px; display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 20;
-        }
-        .block-wrapper:hover .delete-btn { display: flex; }
+        .builder-block:hover .block-tools { display: flex; }
+        .tool-btn { color: white; padding: 4px; cursor: pointer; border-radius: 4px; }
+        .tool-btn:hover { background: rgba(255,255,255,0.2); }
+
+        /* CONTENT EDITABLE HIGHLIGHT */
+        [contenteditable="true"]:hover { outline: 1px dashed #f59e0b; background: rgba(251, 191, 36, 0.1); cursor: text; }
+        [contenteditable="true"]:focus { outline: 2px solid #f59e0b; background: white; }
+
+        /* SORTABLE JS CLASSES */
+        .sortable-ghost { opacity: 0.4; background: #e0e7ff; border: 2px dashed #6366f1; height: 50px; }
+        .sortable-drag { cursor: grabbing; opacity: 1; background: white; transform: rotate(2deg); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
     </style>
 </head>
-<body x-data="stackerApp()">
+<body x-data="alpineBuilder()">
 
-    <header>
-        <div class="flex items-center gap-4 w-full max-w-[400px]">
-            <a href="/admin/pages" class="text-gray-400 hover:text-indigo-600"><i class="ph ph-arrow-left text-2xl"></i></a>
-            <div class="flex-1">
-                <input x-model="page.title" class="font-bold text-sm text-gray-800 outline-none w-full" placeholder="Judul Halaman">
-                <div class="text-[10px] text-gray-400 font-mono">/<input x-model="page.slug" class="bg-transparent outline-none w-[100px]" placeholder="slug"></div>
+    <header class="h-16 bg-white border-b flex items-center justify-between px-5 fixed top-0 left-0 right-0 z-50">
+        <div class="flex items-center gap-4 w-1/3">
+            <a href="/admin/pages" class="text-gray-400 hover:text-indigo-600 transition"><i class="ph ph-arrow-left text-2xl"></i></a>
+            <div>
+                <input x-model="page.title" class="font-bold text-gray-800 outline-none w-full" placeholder="Nama Halaman">
+                <div class="flex text-xs text-gray-400 font-mono">/<input x-model="page.slug" class="bg-transparent outline-none" placeholder="url-slug"></div>
             </div>
         </div>
 
-        <div class="flex gap-2 bg-gray-100 p-1 rounded-lg">
-            <button @click="device='desktop'" :class="device=='desktop'?'bg-white shadow text-indigo-600':''" class="p-2 rounded transition"><i class="ph ph-desktop"></i></button>
-            <button @click="device='tablet'" :class="device=='tablet'?'bg-white shadow text-indigo-600':''" class="p-2 rounded transition"><i class="ph ph-device-tablet"></i></button>
-            <button @click="device='mobile'" :class="device=='mobile'?'bg-white shadow text-indigo-600':''" class="p-2 rounded transition"><i class="ph ph-device-mobile"></i></button>
+        <div class="flex bg-gray-100 p-1 rounded-lg">
+            <button @click="device='desktop'" :class="device=='desktop'?'bg-white shadow text-indigo-600 text-lg':'text-gray-400'" class="p-2 rounded transition"><i class="ph ph-desktop"></i></button>
+            <button @click="device='tablet'" :class="device=='tablet'?'bg-white shadow text-indigo-600 text-lg':'text-gray-400'" class="p-2 rounded transition"><i class="ph ph-device-tablet"></i></button>
+            <button @click="device='mobile'" :class="device=='mobile'?'bg-white shadow text-indigo-600 text-lg':'text-gray-400'" class="p-2 rounded transition"><i class="ph ph-device-mobile"></i></button>
         </div>
 
-        <div class="flex gap-2">
-            <button @click="showSettings=true" class="px-4 py-2 border rounded-lg text-xs font-bold hover:bg-gray-50">CONFIG</button>
-            <button @click="savePage" class="px-6 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 shadow-lg flex items-center gap-2">
-                <span x-show="!saving">PUBLISH</span>
+        <div class="flex justify-end gap-2 w-1/3">
+            <button @click="showSettings=true" class="px-4 py-2 text-xs font-bold text-gray-600 border rounded hover:bg-gray-50">CONFIG</button>
+            <button @click="savePage" :disabled="saving" class="px-6 py-2 text-xs font-bold text-white bg-indigo-600 rounded hover:bg-indigo-700 shadow-lg flex items-center gap-2">
+                <span x-text="saving ? 'SAVING...' : 'PUBLISH'"></span>
                 <i x-show="saving" class="ph ph-spinner animate-spin"></i>
             </button>
         </div>
     </header>
 
-    <div class="editor-layout">
-        <div class="canvas-wrapper">
-            <div id="canvas" :class="device" class="transition-all duration-300">
-                <div class="p-10 text-center text-gray-400 border-2 border-dashed border-gray-300 m-10 rounded-xl pointer-events-none" id="empty-placeholder">
-                    Drag Widget dari Kanan ke Sini
+    <div class="flex h-screen pt-16">
+        
+        <div class="flex-1 canvas-container overflow-y-auto relative custom-scroll">
+            <div id="canvas" :class="device">
+                <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-50">
+                    <i class="ph ph-arrow-elbow-left-down text-4xl text-gray-300 mb-2"></i>
+                    <p class="text-gray-400 font-bold text-sm">Drag Widget ke Sini</p>
                 </div>
             </div>
         </div>
 
-        <div class="sidebar">
-            <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Widget Library</div>
-            <div id="widget-list" class="flex flex-col gap-2">
+        <div class="w-80 bg-white border-l flex flex-col z-40 shadow-xl">
+            <div class="p-4 border-b bg-gray-50 font-bold text-xs text-gray-500 uppercase tracking-widest">
+                Component Library
+            </div>
+            <div id="widget-list" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scroll">
                 <template x-for="w in widgets" :key="w.id">
-                    <div class="widget-item" :data-html="w.content">
+                    <div class="widget-card bg-white p-3 rounded-lg flex items-center gap-3" 
+                         :data-id="w.id" 
+                         :data-html="w.content">
                         <div class="w-8 h-8 rounded bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
                             <i class="ph ph-cube text-lg"></i>
                         </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="text-xs font-bold text-gray-700 truncate" x-text="w.label"></div>
+                        <div>
+                            <div class="text-xs font-bold text-gray-700" x-text="w.label"></div>
                             <div class="text-[9px] text-gray-400 uppercase" x-text="w.category"></div>
                         </div>
-                        <i class="ph ph-dots-six-vertical text-gray-300"></i>
                     </div>
                 </template>
+                <div x-show="widgets.length === 0" class="text-center py-10 text-gray-400 text-xs">Memuat Widget...</div>
             </div>
         </div>
     </div>
 
-    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[100] bg-black/50 flex justify-end" @click.self="showSettings=false">
-        <div class="w-[400px] h-full bg-white shadow-2xl flex flex-col">
-            <div class="p-5 border-b font-bold flex justify-between items-center">
-                <span>Page Settings</span>
-                <button @click="showSettings=false"><i class="ph ph-x text-xl"></i></button>
+    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex justify-end" @click.self="showSettings=false">
+        <div class="w-96 bg-white h-full shadow-2xl p-6 flex flex-col">
+            <h2 class="font-bold text-lg mb-6 flex items-center gap-2"><i class="ph ph-gear text-indigo-600"></i> Pengaturan Halaman</h2>
+            <div class="space-y-4 flex-1">
+                <div><label class="text-[10px] font-bold text-gray-400 uppercase">Harga Produk</label><input type="number" x-model="page.config.price" class="w-full mt-1 border rounded p-2 text-sm"></div>
+                <div><label class="text-[10px] font-bold text-gray-400 uppercase">SEO Title</label><input x-model="page.config.settings.seo_title" class="w-full mt-1 border rounded p-2 text-sm"></div>
+                <div><label class="text-[10px] font-bold text-gray-400 uppercase">Pixel ID</label><input x-model="page.config.settings.fb_pixel" class="w-full mt-1 border rounded p-2 text-sm"></div>
             </div>
-            <div class="flex-1 overflow-y-auto p-6 space-y-6">
-                <div>
-                    <label class="text-[10px] font-bold text-gray-400 uppercase">Harga Produk (Rp)</label>
-                    <input type="number" x-model="page.config.price" class="w-full mt-1 px-3 py-2 border rounded text-sm">
-                </div>
-                <div>
-                    <label class="text-[10px] font-bold text-gray-400 uppercase">SEO Title</label>
-                    <input x-model="page.config.settings.seo_title" class="w-full mt-1 px-3 py-2 border rounded text-sm">
-                </div>
-                <div>
-                    <label class="text-[10px] font-bold text-gray-400 uppercase">Pixel / Analytics ID</label>
-                    <input x-model="page.config.settings.fb_pixel" class="w-full mt-1 px-3 py-2 border rounded text-sm mb-2" placeholder="FB Pixel ID">
-                    <input x-model="page.config.settings.tiktok_pixel" class="w-full mt-1 px-3 py-2 border rounded text-sm" placeholder="TikTok Pixel ID">
-                </div>
-            </div>
-            <div class="p-4 border-t bg-gray-50 text-right">
-                <button @click="showSettings=false" class="px-4 py-2 bg-indigo-600 text-white rounded text-sm font-bold">Simpan Config</button>
-            </div>
+            <button @click="savePage(); showSettings=false" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold text-sm">SIMPAN CONFIG</button>
         </div>
     </div>
 
     <script>
-        function stackerApp() {
-            return {
-                device: 'desktop',
-                showSettings: false,
-                saving: false,
-                widgets: [],
-                page: { id: 0, slug: '', title: '', config: { price: 0, settings: {} } },
+    function alpineBuilder() {
+        return {
+            device: 'desktop',
+            showSettings: false,
+            saving: false,
+            widgets: [],
+            page: { id: 0, slug: '', title: '', config: { price:0, settings:{} } },
 
-                async init() {
-                    // 1. Load Widget dari Database
-                    await this.loadWidgets();
+            async init() {
+                // Load Data
+                await this.fetchWidgets();
+                const slug = new URLSearchParams(window.location.search).get('slug');
+                if(slug) await this.loadPage(slug);
+
+                // Init Drag & Drop Engine
+                this.initSortable();
+            },
+
+            async fetchWidgets() {
+                const res = await fetch('/api/widgets');
+                this.widgets = await res.json();
+            },
+
+            async loadPage(slug) {
+                const res = await fetch(`/api/admin/pages/${slug}`);
+                const data = await res.json();
+                this.page.id = data.id; this.page.slug = data.slug; this.page.title = data.title;
+                if(data.product_config_json) this.page.config = typeof data.product_config_json === 'string' ? JSON.parse(data.product_config_json) : data.product_config_json;
+                
+                // Render HTML ke Canvas
+                const canvas = document.getElementById('canvas');
+                if(data.html_content) {
+                    // Bersihkan script lama saat load di editor (SAFETY)
+                    let cleanContent = data.html_content.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gm, "");
+                    canvas.innerHTML = cleanContent;
                     
-                    // 2. Load Halaman jika ada slug
-                    const slug = new URLSearchParams(window.location.search).get('slug');
-                    if(slug) await this.loadPage(slug);
+                    // Re-attach Editor Tools (Tombol hapus, editable text)
+                    this.hydrateCanvas();
+                }
+            },
 
-                    // 3. Inisialisasi Drag & Drop (SortableJS)
-                    this.initSortable();
-                },
+            initSortable() {
+                const sidebar = document.getElementById('widget-list');
+                const canvas = document.getElementById('canvas');
 
-                async loadWidgets() {
-                    const res = await fetch('/api/widgets');
-                    this.widgets = await res.json();
-                },
+                // 1. Sidebar (Source)
+                new Sortable(sidebar, {
+                    group: { name: 'shared', pull: 'clone', put: false },
+                    sort: false,
+                    animation: 150,
+                    onStart: () => document.body.classList.add('dragging') // Opsional: styling cursor
+                });
 
-                async loadPage(slug) {
-                    const res = await fetch(`/api/admin/pages/${slug}`);
-                    const data = await res.json();
-                    this.page.id = data.id; this.page.slug = data.slug; this.page.title = data.title;
-                    if(data.product_config_json) this.page.config = typeof data.product_config_json === 'string' ? JSON.parse(data.product_config_json) : data.product_config_json;
-                    
-                    // Load HTML ke Canvas
-                    if(data.html_content) {
-                        document.getElementById('canvas').innerHTML = data.html_content;
-                        this.makeCanvasEditable(); // Bikin teks bisa diedit
+                // 2. Canvas (Target)
+                new Sortable(canvas, {
+                    group: 'shared',
+                    animation: 150,
+                    ghostClass: 'sortable-ghost',
+                    onAdd: (evt) => {
+                        // KETIKA WIDGET DI-DROP:
+                        const item = evt.item;
+                        const rawHtml = item.getAttribute('data-html');
+                        
+                        // 1. Buat Wrapper Editor
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'builder-block relative group'; // Class penanda
+                        wrapper.innerHTML = rawHtml; // Masukkan HTML widget
+
+                        // 2. Ganti item list dengan widget asli
+                        item.replaceWith(wrapper);
+
+                        // 3. Pasang Tools (Delete Btn & Text Edit)
+                        this.attachTools(wrapper);
+                        
+                        // 4. Hapus Empty State
+                        const empty = document.getElementById('empty-state');
+                        if(empty) empty.remove();
                     }
-                },
+                });
+            },
 
-                initSortable() {
-                    // A. Sidebar (Sumber)
-                    new Sortable(document.getElementById('widget-list'), {
-                        group: { name: 'shared', pull: 'clone', put: false }, // Clone saat ditarik
-                        sort: false,
-                        animation: 150
-                    });
+            // Fungsi untuk memasang "jiwa" editor ke dalam HTML mati
+            hydrateCanvas() {
+                const canvas = document.getElementById('canvas');
+                // Cari elemen root widget (biasanya div pertama) jika belum ada wrapper
+                // Tapi untuk amannya, kita asumsikan HTML tersimpan sudah bersih.
+                // Kita bungkus ulang atau pasang tools ke elemen yang ada.
+                
+                // Logika simple: Anggap setiap direct child di canvas adalah blok
+                Array.from(canvas.children).forEach(child => {
+                    if(child.id === 'empty-state') return;
+                    child.classList.add('builder-block', 'relative', 'group');
+                    this.attachTools(child);
+                });
+            },
 
-                    // B. Canvas (Tujuan)
-                    new Sortable(document.getElementById('canvas'), {
-                        group: 'shared',
-                        animation: 150,
-                        ghostClass: 'bg-indigo-50',
-                        onAdd: (evt) => {
-                            // SAAT DIDROP: Ubah kotak widget menjadi HTML aslinya!
-                            const item = evt.item;
-                            const rawHtml = item.getAttribute('data-html');
-                            
-                            // Bungkus HTML dalam wrapper agar bisa dihapus
-                            const wrapper = document.createElement('div');
-                            wrapper.className = 'block-wrapper relative group';
-                            wrapper.innerHTML = `
-                                <div class="delete-btn" onclick="this.closest('.block-wrapper').remove()"><i class="ph ph-trash"></i></div>
-                                <div class="editable-content">${rawHtml}</div>
-                            `;
-                            
-                            item.replaceWith(wrapper);
-                            
-                            // Hapus placeholder jika ada
-                            const ph = document.getElementById('empty-placeholder');
-                            if(ph) ph.remove();
+            attachTools(element) {
+                // 1. Tambahkan Toolbar (Hapus, Move)
+                if(!element.querySelector('.block-tools')) {
+                    const tools = document.createElement('div');
+                    tools.className = 'block-tools';
+                    tools.innerHTML = `
+                        <div class="tool-btn bg-red-500" onclick="this.closest('.builder-block').remove()" title="Hapus"><i class="ph ph-trash"></i></div>
+                        <div class="tool-btn bg-blue-500 handle" title="Geser"><i class="ph ph-arrows-out-cardinal"></i></div>
+                    `;
+                    element.appendChild(tools);
+                }
 
-                            this.makeCanvasEditable();
-                        }
-                    });
-                },
-
-                makeCanvasEditable() {
-                    // Fitur "Click to Edit" Text
-                    // Cari semua elemen teks dan bikin contenteditable
-                    const canvas = document.getElementById('canvas');
-                    canvas.querySelectorAll('h1, h2, h3, p, span, button, a').forEach(el => {
+                // 2. Bikin Text Bisa Diedit
+                element.querySelectorAll('h1, h2, h3, h4, p, span, a, button, div').forEach(el => {
+                    // Hanya elemen yang punya teks langsung
+                    if (el.children.length === 0 && el.textContent.trim() !== "") {
                         el.setAttribute('contenteditable', 'true');
-                        // Mencegah enter bikin div baru (opsional, biar rapi)
+                        // Prevent Enter bikin div baru
                         el.addEventListener('keydown', e => {
-                            if (e.key === 'Enter') {
+                            if(e.key === 'Enter') {
                                 document.execCommand('insertLineBreak');
                                 e.preventDefault();
                             }
                         });
-                    });
-                },
+                    }
+                });
+            },
 
-                async savePage() {
-                    this.saving = true;
-                    
-                    // 1. Bersihkan Canvas sebelum simpan
-                    // Kita perlu clone canvas agar tampilan editor tidak berubah saat save
-                    const canvasClone = document.getElementById('canvas').cloneNode(true);
-                    
-                    // Hapus tombol delete dan class editor
-                    canvasClone.querySelectorAll('.delete-btn').forEach(el => el.remove());
-                    canvasClone.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
-                    canvasClone.querySelectorAll('.block-wrapper').forEach(el => {
-                        // Unwarp: Ambil isinya saja, buang wrapper editor
-                        const content = el.querySelector('.editable-content').innerHTML;
-                        el.outerHTML = content; 
-                    });
+            async savePage() {
+                this.saving = true;
+                const canvas = document.getElementById('canvas');
+                
+                // 1. CLONE CANVAS (Agar tampilan editor tidak rusak)
+                const clone = canvas.cloneNode(true);
+                
+                // 2. BERSIHKAN DARI TOOLS EDITOR
+                clone.querySelectorAll('.block-tools').forEach(el => el.remove());
+                clone.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+                clone.querySelectorAll('.builder-block').forEach(el => {
+                    el.classList.remove('builder-block', 'relative', 'group', 'sortable-drag', 'sortable-ghost');
+                });
+                const empty = clone.querySelector('#empty-state');
+                if(empty) empty.remove();
 
-                    const cleanHtml = canvasClone.innerHTML;
+                const cleanHtml = clone.innerHTML;
 
-                    // 2. Kirim ke Server
-                    // Inject Script Countdown Manual (Agar Live jalan)
-                    const finalHtml = cleanHtml + '<script src="/js/countdown.js"><\/script><script src="/js/shortcodes.js"><\/script>';
-
-                    try {
-                        const payload = {
-                            id: this.page.id, slug: this.page.slug, title: this.page.title,
-                            html: finalHtml,
-                            css: '', // CSS ikut Tailwind global
-                            product_config: this.page.config
+                // 3. INJECT SCRIPT "OTAK" LIVE (Shortcode + Countdown)
+                // Ini script yang sama dengan solusi sebelumnya, menjamin live jalan.
+                const liveScript = `
+                <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    // Logic Countdown
+                    document.querySelectorAll('.js-countdown').forEach(function(el) {
+                        if(el.dataset.init) return; el.dataset.init = "true";
+                        var expire = el.getAttribute("data-expire"); if(!expire) return;
+                        var update = function() {
+                            var now = new Date().getTime(); var dist = new Date(expire).getTime() - now;
+                            if(dist < 0) { el.innerHTML = "EXPIRED"; return; }
+                            var d = Math.floor(dist / (1000 * 60 * 60 * 24));
+                            var h = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                            var m = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60));
+                            var s = Math.floor((dist % (1000 * 60)) / 1000);
+                            if(el.querySelector(".days")) el.querySelector(".days").innerText = d;
+                            if(el.querySelector(".hours")) el.querySelector(".hours").innerText = h;
+                            if(el.querySelector(".minutes")) el.querySelector(".minutes").innerText = m;
+                            if(el.querySelector(".seconds")) el.querySelector(".seconds").innerText = s;
                         };
-                        const res = await fetch('/api/admin/pages', { method: 'POST', body: JSON.stringify(payload), headers: {'Content-Type': 'application/json'} });
-                        if(res.ok) alert('Berhasil Disimpan!');
-                    } catch(e) { alert('Gagal Simpan'); }
-                    
-                    this.saving = false;
-                }
+                        setInterval(update, 1000); update();
+                    });
+                    // Logic Accordion
+                    document.querySelectorAll("details").forEach(function(t) {
+                        t.addEventListener("click", function() {
+                            if (!t.open) { document.querySelectorAll("details").forEach(function(o) { if (o !== t) o.removeAttribute("open"); }); }
+                        });
+                    });
+                });
+                <\/script>`;
+
+                // 4. KIRIM API
+                try {
+                    const payload = {
+                        id: this.page.id, slug: this.page.slug, title: this.page.title,
+                        html: cleanHtml + liveScript,
+                        css: '', // CSS ikut Tailwind
+                        product_config: this.page.config
+                    };
+                    const res = await fetch('/api/admin/pages', { 
+                        method: 'POST', body: JSON.stringify(payload), headers: {'Content-Type': 'application/json'} 
+                    });
+                    if(res.ok) alert('Berhasil Publish!'); else alert('Gagal');
+                } catch(e) { alert('Error: ' + e.message); }
+                
+                this.saving = false;
             }
-        }
+        };
+    }
     </script>
 </body>
 </html>
