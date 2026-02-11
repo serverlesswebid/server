@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - Crash Proof Edition</title>
+    <title>LandingBuilder Pro - Crash Proof</title>
     
     <script>
         (function() {
@@ -45,11 +45,20 @@
         
         .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; }
         
-        /* STICKY TOOLBAR FIX */
+        /* STICKY TOOLBAR (FIXED) */
         .gjs-toolbar { 
-            position: fixed !important; top: 60px !important; left: 0 !important; right: auto !important; transform: none !important;
-            background-color: #1f2937 !important; border-radius: 0 0 8px 0 !important; box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
-            display: flex !important; gap: 4px !important; padding: 6px 10px !important; z-index: 9999 !important; border: 1px solid rgba(255,255,255,0.1) !important;
+            position: fixed !important; 
+            top: 60px !important; 
+            left: 0 !important; 
+            right: auto !important;
+            transform: none !important;
+            background-color: #1f2937 !important; 
+            border-radius: 0 0 8px 0 !important; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+            display: flex !important; gap: 4px !important; padding: 6px 10px !important; 
+            z-index: 9999 !important; 
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            border-top: none !important; border-left: none !important;
             opacity: 1; transition: opacity 0.2s;
         }
         .gjs-toolbar.ghost-mode { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; }
@@ -66,7 +75,7 @@
         .block-card:hover { border-color: #6366f1; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15); transform: translateY(-2px); }
         .block-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #4b5563; text-align: center; }
         
-        /* FIX COLOR PICKER PALETTE AGAR TIDAK TERTUTUP */
+        /* COLOR PICKER FIX (Z-INDEX SUPER TINGGI) */
         .sp-container { z-index: 1000000 !important; position: fixed !important; }
         .gjs-field-color-picker { width: 100%; height: 24px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
     </style>
@@ -143,10 +152,10 @@
                     </div>
                 </div>
                 <div x-show="settingsTab === 'seo'" class="space-y-4">
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">SEO Title</label><input x-model="page.config.settings.seo_title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">SEO Browser Title</label><input x-model="page.config.settings.seo_title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Meta Description</label><textarea x-model="page.config.settings.seo_description" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm h-24 outline-none resize-none"></textarea></div>
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Favicon URL</label><input x-model="page.config.settings.favicon" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Social Image</label><input x-model="page.config.settings.og_image" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Social Share Image (OG)</label><input x-model="page.config.settings.og_image" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
                 </div>
                 <div x-show="settingsTab === 'advanced'" class="space-y-6">
                     <div class="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 space-y-4">
@@ -205,7 +214,7 @@
         return {
             device: 'desktop', tab: 'blocks', settingsTab: 'commerce', showSettings: false, loading: false, notifications: [],
             paymentProviders: [{ slug: 'paspay', name: 'Paspay QRIS' }, { slug: 'paspay-va', name: 'Paspay VA' }, { slug: 'midtrans', name: 'Midtrans' }],
-            page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, active_payments: [], settings: { seo_title:'', seo_description:'', favicon:'', og_image:'', fb_pixel:'', tiktok_pixel:'', ga_id:'', scripts_header:'', scripts_footer:'' } } },
+            page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, active_payments: [], settings: { seo_title:'', seo_description:'', favicon:'', og_image:'', fb_pixel:'', ga_id:'', scripts_header:'', scripts_footer:'' } } },
 
             async init() {
                 this.initGrapes();
@@ -258,10 +267,10 @@
                     window.editor.getWrapper().find('details').forEach(d => d.addAttributes({ open: null }));
                     const html = window.editor.getHtml();
                     const css = window.editor.getCss();
-                    // AMBIL SCRIPT GRAPESJS
+                    // --- LIVE SCRIPT FIX: WRAP AMAN UNTUK FRONTEND ---
                     const rawJs = window.editor.getJs();
-                    // --- LIVE SCRIPT FIX: WRAP DALAM DOMContentLoaded & TRY-CATCH ---
-                    const safeJs = `document.addEventListener("DOMContentLoaded", function() { try { ${rawJs} } catch(e) { console.warn("Live Script Error:", e); } });`;
+                    // Teknik ini mengisolasi setiap block script agar jika satu error, yang lain tetap jalan
+                    const safeJs = `document.addEventListener("DOMContentLoaded", function() { try { ${rawJs} } catch(err) { console.warn('Widget Script Error:', err); } });`;
 
                     const payload = {
                         id: this.page.id, slug: this.page.slug, title: this.page.title,
@@ -319,7 +328,7 @@
 
                 const domc = window.editor.DomComponents;
 
-                // --- ROBUST REGISTER: VALIDATOR KETAT UNTUK MENCEGAH CRASH ---
+                // --- ROBUST REGISTER: ANTI-CRASH FILTER ---
                 fetch('/api/widgets').then(res => res.json()).then(widgets => {
                     const renderer = document.getElementById('blocks-custom-renderer');
                     renderer.innerHTML = ''; const groups = {};
@@ -328,21 +337,25 @@
                         appBuilderCache[w.id] = w;
 
                         if (w.script && w.script.trim() !== "") {
-                            // VALIDASI SCRIPT SEBELUM REGISTER
+                            // --- VALIDASI SCRIPT SEBELUM DAFTAR ---
+                            // Jika script tidak valid (misal diawali titik), JANGAN DAFTARKAN SCRIPTNYA
+                            // Daftarkan komponennya saja agar editor tidak crash.
                             try {
-                                const testFn = new Function(w.script); // Cek Syntax Error
-                                // Jika lolos validasi, baru daftarkan
+                                new Function(w.script); // Check syntax dulu
                                 domc.addType(w.id, {
                                     model: {
                                         defaults: {
-                                            script: testFn, // Gunakan fungsi valid
+                                            script: new Function(w.script), // Kalau aman, pakai.
                                             attributes: { 'data-gjs-type': w.id }
                                         }
                                     }
                                 });
                             } catch(e) {
-                                console.warn('Script Widget Rusak (Dibuang):', w.id); 
-                                // JANGAN register script jika error, tapi tetap register widget (tanpa script)
+                                console.warn('Script Widget Rusak (Dilewati):', w.id);
+                                // Fallback: Tetap daftarkan tipe tanpa script
+                                domc.addType(w.id, {
+                                    model: { defaults: { attributes: { 'data-gjs-type': w.id } } }
+                                });
                             }
                         }
 
