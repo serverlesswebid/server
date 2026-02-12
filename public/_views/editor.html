@@ -96,10 +96,13 @@
         .gjs-toolbar-item { padding: 8px 10px !important; color: white !important; }
         .gjs-resizer-h { width: 20px !important; height: 20px !important; background: #4f46e5 !important; border: 3px solid #fff !important; border-radius: 50% !important; z-index: 10 !important; }
 
-        /* 9. Z-INDEX FIXES */
+        /* 9. CUSTOM ELEMENTS & Z-INDEX */
         .sp-container { z-index: 9999999 !important; background: white; border: 1px solid #cbd5e1; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-radius: 8px; }
         .trait-upload-btn { width: 100%; background: #4f46e5; color: white; padding: 10px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 5px; text-transform: uppercase; }
         .trait-upload-btn:hover { background: #4338ca; }
+        
+        .input-field { width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 13px; outline: none; }
+        .label-field { display: block; font-size: 10px; font-weight: 800; text-transform: uppercase; color: #6b7280; margin-bottom: 4px; letter-spacing: 0.5px; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -139,7 +142,7 @@
                     <span x-text="loading ? 'SAVING...' : 'PUBLISH'"></span>
                 </button>
             </div>
-            <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden p-2 rounded-lg border border-gray-200 text-gray-700" :class="mobileMenuOpen ? 'bg-indigo-50 text-indigo-600' : 'bg-white'">
+            <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden p-2 rounded-lg border border-gray-200 text-gray-700 bg-white">
                 <i class="ph" :class="mobileMenuOpen ? 'ph-x' : 'ph-list'" style="font-size: 24px;"></i>
             </button>
         </div>
@@ -160,14 +163,28 @@
         <div class="sidebar-panel" :class="mobileMenuOpen ? 'open' : ''">
             <div class="flex border-b border-gray-200 bg-white shrink-0">
                 <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-squares-four text-xl"></i></button>
+                <button @click="tab='traits'" :class="tab=='traits'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-gear text-xl"></i></button>
                 <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-paint-brush text-xl"></i></button>
-                <button @click="tab='traits'" :class="tab=='traits'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-sliders text-xl"></i></button>
                 <button @click="tab='layers'" :class="tab=='layers'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-stack text-xl"></i></button>
             </div>
             <div class="flex-1 bg-white custom-scroll relative w-full overflow-y-auto">
-                <div x-show="tab=='blocks'" class="h-full pb-20"><div id="blocks-container" class="p-2"></div></div>
-                <div x-show="tab=='styles'" class="h-full pb-20"><div id="selectors-container" class="p-3"></div><div id="styles-container" class="p-1"></div></div>
+                <div x-show="tab=='blocks'" class="h-full pb-20">
+                    <template x-for="(widgets, category) in groupedWidgets" :key="category">
+                        <details class="category-group" open>
+                            <summary class="list-none cursor-pointer bg-gray-50 p-3 text-[10px] font-black uppercase text-gray-500 border-b" x-text="category || 'General'"></summary>
+                            <div class="widget-grid">
+                                <template x-for="w in widgets" :key="w.id">
+                                    <div class="block-card" @click="addBlockToCanvas(w)">
+                                        <div class="text-indigo-600 text-xl"><i class="ph ph-cube"></i></div>
+                                        <div class="text-[10px] font-bold text-gray-700 text-center" x-text="w.label"></div>
+                                    </div>
+                                </template>
+                            </div>
+                        </details>
+                    </template>
+                </div>
                 <div x-show="tab=='traits'" class="h-full pb-20"><div id="traits-container" class="p-4"></div></div>
+                <div x-show="tab=='styles'" class="h-full pb-20"><div id="selectors-container" class="p-3 border-b bg-gray-50"></div><div id="styles-container" class="p-1"></div></div>
                 <div x-show="tab=='layers'" class="h-full pb-20"><div id="layers-container"></div></div>
             </div>
         </div>
@@ -193,27 +210,16 @@
                 <h2 class="font-bold text-gray-800 flex items-center gap-2"><i class="ph ph-faders text-indigo-600 text-xl"></i> Page Settings</h2>
                 <button @click="showSettings = false" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button>
             </div>
-            <div class="flex border-b text-[11px] font-black uppercase bg-white">
-                <button @click="settingsTab='commerce'" :class="settingsTab==='commerce'?'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 py-4">Commerce</button>
-                <button @click="settingsTab='seo'" :class="settingsTab==='seo'?'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 py-4">SEO</button>
-            </div>
             <div class="flex-1 overflow-y-auto p-6 space-y-6">
-                <div x-show="settingsTab === 'commerce'" class="space-y-4">
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Nama Halaman</label>
-                    <input x-model="page.title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">URL Slug</label>
-                    <input x-model="page.slug" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Harga (IDR)</label>
-                    <input x-model="page.config.price" type="number" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500"></div>
-                </div>
-                <div x-show="settingsTab === 'seo'" class="space-y-4">
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">FB Pixel ID</label>
-                    <input x-model="page.config.settings.fb_pixel" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500"></div>
+                <div class="space-y-4">
+                    <div><label class="label-field">Nama Halaman</label><input x-model="page.title" class="input-field"></div>
+                    <div><label class="label-field">URL Slug</label><input x-model="page.slug" class="input-field"></div>
+                    <div><label class="label-field">Harga (IDR)</label><input x-model="page.config.price" type="number" class="input-field"></div>
+                    <div><label class="label-field">Pixel ID</label><input x-model="page.config.settings.fb_pixel" class="input-field"></div>
                 </div>
             </div>
-            <div class="p-4 border-t bg-gray-50 flex justify-end gap-3">
-                <button @click="showSettings=false" class="px-5 py-2 text-xs font-bold text-gray-500 uppercase">Cancel</button>
-                <button @click="savePage(); showSettings=false" class="px-8 py-2 bg-indigo-600 text-white text-xs font-black rounded-xl shadow-lg">Simpan</button>
+            <div class="p-4 border-t bg-gray-50 text-right">
+                <button @click="savePage(); showSettings=false" class="px-8 py-2 bg-indigo-600 text-white text-xs font-black rounded-xl shadow-lg uppercase">Simpan</button>
             </div>
         </div>
     </div>
@@ -238,14 +244,28 @@
 
 function editorApp() {
     return {
-        device: 'desktop', tab: 'blocks', clipboard: null, mobileMenuOpen: false, showSettings: false, settingsTab: 'commerce', loading: false, notifications: [],
+        device: 'desktop', tab: 'blocks', clipboard: null, mobileMenuOpen: false, showSettings: false, loading: false, notifications: [],
         page: { id: 0, slug: '', title: '', config: { price: 0, settings: {} } },
+        groupedWidgets: {}, widgetScripts: {},
 
         async init() {
+            await this.loadWidgets();
             this.initGrapes();
-            const params = new URLSearchParams(window.location.search);
-            const slug = params.get('slug');
+            const slug = new URLSearchParams(window.location.search).get('slug');
             if (slug) await this.loadPageData(slug);
+        },
+
+        async loadWidgets() {
+            try {
+                const res = await fetch('/api/widgets');
+                const widgets = await res.json();
+                widgets.forEach(w => {
+                    if(w.script) this.widgetScripts[w.id] = w.script;
+                    const cat = w.category || 'General';
+                    if(!this.groupedWidgets[cat]) this.groupedWidgets[cat] = [];
+                    this.groupedWidgets[cat].push(w);
+                });
+            } catch(e) {}
         },
 
         async loadPageData(slug) {
@@ -271,8 +291,8 @@ function editorApp() {
                 const html = window.editor.getHtml(); const css = window.editor.getCss();
                 const payload = { id: this.page.id, slug: this.page.slug, title: this.page.title, html: html, css: css, product_config: this.page.config };
                 const res = await fetch('/api/admin/pages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                this.notify(res.ok ? 'Sukses' : 'Error', res.ok ? 'Halaman tersimpan' : 'Gagal simpan');
-            } catch (e) { this.notify('Error', 'Masalah koneksi'); }
+                this.notify(res.ok ? 'Sukses' : 'Error', res.ok ? 'Tersimpan' : 'Gagal');
+            } catch (e) { this.notify('Error', 'Koneksi bermasalah'); }
             this.loading = false;
         },
 
@@ -292,17 +312,13 @@ function editorApp() {
                 canvas: {
                     scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
                     styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
+                    content: `<style>body{padding:20px;} .hidden{display:none!important;}</style>`
                 },
-                plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-tabs', 'grapesjs-custom-code', 'grapesjs-tooltip', 'grapesjs-blocks-flexbox', 'grapesjs-plugin-export', 'grapesjs-typed', 'grapesjs-style-bg'],
-                blockManager: { appendTo: '#blocks-container' },
-                layerManager: { appendTo: '#layers-container' },
+                plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-tabs', 'grapesjs-custom-code', 'grapesjs-tooltip', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg', 'grapesjs-component-countdown'],
                 selectorManager: { appendTo: '#selectors-container' },
                 traitManager: { appendTo: '#traits-container' },
                 styleManager: { appendTo: '#styles-container', sectors: [{ name: 'Typography', buildProps:['font-size','font-weight','color','text-align'] }, { name: 'Decor', buildProps:['background-color','border-radius'] }] }
             });
-
-            const domc = window.editor.DomComponents;
-            const bm = window.editor.BlockManager;
 
             // --- 1. TRAIT UPLOAD IMAGE (BASE64) ---
             window.editor.TraitManager.addType('file-upload', {
@@ -330,23 +346,12 @@ function editorApp() {
                 }
             });
 
-            domc.addType('image', { model: { defaults: { traits: [{ type: 'text', name: 'src', label: 'URL' }, { type: 'file-upload', name: 'up', label: ' ' }, { type: 'text', name: 'alt' }] } } });
-
-            // --- 2. TRAIT ICON PICKER ---
-            window.editor.TraitManager.addType('icon-picker-btn', {
-                createInput({ trait }) {
-                    const btn = document.createElement('button'); btn.className = 'trait-upload-btn'; btn.innerHTML = 'CARI ICON';
-                    btn.onclick = () => window.openIconifyPicker(trait.target);
-                    return btn;
-                }
+            window.editor.DomComponents.addType('image', { 
+                model: { defaults: { traits: [{ type: 'text', name: 'src', label: 'URL' }, { type: 'file-upload', name: 'up', label: ' ' }, { type: 'text', name: 'alt' }] } } 
             });
 
-            domc.addType('iconify-icon', {
-                model: { defaults: { tagName: 'iconify-icon', attributes: { icon: 'ph:star-fill', width: '32' }, traits: [{ type: 'icon-picker-btn', name: 'p', label: ' ' }, { type: 'text', name: 'icon', label: 'Kode' }, { type: 'color', name: 'color', changeProp: 1 }] }, init() { this.on('change:color', () => this.addStyle({color: this.get('color')})) } }
-            });
-
-            // --- 3. COUNTDOWN PRO EDITABLE ---
-            domc.addType('countdown-smart', {
+            // --- 2. COUNTDOWN SMART (EDITABLE) ---
+            window.editor.DomComponents.addType('countdown-smart', {
                 model: {
                     defaults: {
                         attributes: { 'data-widget-type': 'countdown-smart', 'expire': '2025-12-31 23:59', 'msg': 'Selesai' },
@@ -354,7 +359,7 @@ function editorApp() {
                         script: function() {
                             const el = this;
                             const timer = () => {
-                                const diff = new Date(el.getAttribute('expire') || '2025-12-31').getTime() - new Date().getTime();
+                                const diff = new Date(el.getAttribute('expire') || '2025-12-31 23:59').getTime() - new Date().getTime();
                                 const msgEl = el.querySelector('.js-expired-msg'); const wrap = el.querySelector('.js-wrap');
                                 if (diff <= 0) {
                                     if(msgEl) { msgEl.innerText = el.getAttribute('msg') || 'Selesai'; msgEl.classList.remove('hidden'); }
@@ -371,47 +376,37 @@ function editorApp() {
                 }
             });
 
-            // --- LISTENERS ---
-            window.editor.on('component:selected', (model) => {
-                const toolbar = model.get('toolbar'); if (toolbar.find(item => item.id === 'cut-comp')) return;
-                toolbar.unshift(
-                    { id: 'move-up', command: () => { const i = model.index(); if (i > 0) model.parent().components().add(model, { at: i - 1 }); }, label: '<i class="ph ph-arrow-up"></i>' },
-                    { id: 'move-down', command: () => { const i = model.index(); model.parent().components().add(model, { at: i + 2 }); }, label: '<i class="ph ph-arrow-down"></i>' },
-                    { id: 'cut-comp', command: () => { this.clipboard = model.toHTML(); model.remove(); }, label: '<i class="ph ph-scissors"></i>' }
-                );
-                model.set('toolbar', toolbar);
+            // --- 3. TRAIT ICON PICKER ---
+            window.editor.TraitManager.addType('icon-picker-btn', {
+                createInput({ trait }) {
+                    const btn = document.createElement('button'); btn.className = 'trait-upload-btn'; btn.innerHTML = 'CARI ICON';
+                    btn.onclick = () => window.openIconifyPicker(trait.target);
+                    return btn;
+                }
             });
 
-            // --- BLOCK MANAGER (RESTORED ALL 400+ LINE CONTENT) ---
-            bm.add('text-heading', { label: 'Heading', category: 'Basic', content: '<h2 class="text-3xl font-black mb-4">Judul</h2>' });
-            bm.add('text-paragraph', { label: 'Paragraph', category: 'Basic', content: '<p class="text-gray-600 mb-4">Isi paragraf di sini.</p>' });
-            bm.add('ui-button', { label: 'Button-Pro', category: 'Basic', content: '<a href="#" class="btn btn-primary px-6 py-3 rounded-lg font-bold text-white shadow-lg">Click Me</a>' });
-            bm.add('ui-image', { label: 'Picture', category: 'Basic', content: { type: 'image' } });
-            bm.add('iconify-blk', { label: 'Icon', category: 'Basic', content: { type: 'iconify-icon' } });
-            bm.add('countdown-blk', { label: 'Countdown', category: 'Basic', content: { type: 'countdown-smart', content: '<div class="p-6 bg-indigo-900 text-white rounded-2xl text-center"><div class="js-wrap flex justify-center gap-4 font-black"><div class="js-d">00</div>:<div class="js-h">00</div>:<div class="js-m">00</div>:<div class="js-s">00</div></div><div class="js-expired-msg hidden">Selesai</div></div>' } });
+            window.editor.DomComponents.addType('iconify-icon', {
+                model: { defaults: { tagName: 'iconify-icon', traits: [{ type: 'icon-picker-btn', name: 'p', label: ' ' }, { type: 'text', name: 'icon' }, { type: 'color', name: 'color', changeProp: 1 }] }, init() { this.on('change:color', () => this.addStyle({color: this.get('color')})) } }
+            });
 
-            bm.add('hero-simple', { label: 'Hero Simple', category: '1. Header & Hero', content: `<section class="py-20 text-center"><h1 class="text-5xl font-black mb-6">Headline</h1><button class="btn btn-primary px-8">Mulai</button></section>` });
-            bm.add('feature-grid', { label: 'Features', category: '3. Content', content: `<section class="py-16"><div class="grid md:grid-cols-3 gap-8"><div class="p-6 border rounded-xl text-center"><h3 class="font-bold">Fast</h3><p>Speed is key.</p></div></div></section>` });
-            bm.add('pricing-table', { label: 'Pricing', category: '4. Commerce', content: `<div class="p-8 border-2 border-indigo-600 rounded-2xl max-w-sm mx-auto text-center"><h3 class="text-xl font-bold">Pro</h3><div class="text-3xl font-black my-4">Rp 99rb</div><button class="btn btn-primary w-full">Pilih</button></div>` });
-            bm.add('container', { label: 'Container', category: '5. Basic', content: `<div class="container mx-auto p-8 border-2 border-dashed border-gray-200">Drop here</div>` });
+            // --- 4. LOAD DYNAMIC WIDGETS ---
+            if(this.widgetScripts) {
+                Object.keys(this.widgetScripts).forEach(id => {
+                    if(id !== 'countdown-smart' && id !== 'iconify-icon') {
+                        window.editor.DomComponents.addType(id, {
+                            model: { defaults: { attributes: { 'data-widget-type': id }, script: this.widgetScripts[id] } }
+                        });
+                    }
+                });
+            }
 
             // AUTO SELECT TAB
             window.editor.on('component:selected', () => { this.tab = 'traits'; });
+        },
 
-            // CLICK-TO-ADD LOGIC
-            setTimeout(() => {
-                const container = document.getElementById('blocks-container');
-                if (container) {
-                    container.addEventListener('click', (e) => {
-                        const blockEl = e.target.closest('.gjs-block');
-                        if (blockEl) {
-                            const id = blockEl.getAttribute('title') || blockEl.innerText.trim();
-                            const block = window.editor.BlockManager.get(id);
-                            if (block) window.editor.addComponents(block.get('content'));
-                        }
-                    });
-                }
-            }, 1000); 
+        addBlockToCanvas(w) { 
+            window.editor.addComponents({ type: w.id, content: w.content }); 
+            if(window.innerWidth < 768) this.mobileMenuOpen = false; 
         }
     }; 
 }
