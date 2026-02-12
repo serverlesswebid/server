@@ -8,93 +8,52 @@ import * as widgetModule from '../src/modules/widget'
 
 const app = new Hono()
 const JWT_SECRET = 'BantarCaringin1BantarCaringin2BantarCaringin3'
-
-// --- KONFIGURASI RELAY ---
 const RELAY_URL = "https://pasdigi-relay.hf.space/proxy";
 const RELAY_SECRET = "BantarCaringin1";
 
-// Global Helper untuk Analytics Engine
+// --- HELPERS ---
 const trackVisit = (c, page, referrer) => {
     try {
         if (c.env.ANALYTICS_ENGINE && typeof c.env.ANALYTICS_ENGINE.writeData === 'function') {
             c.env.ANALYTICS_ENGINE.writeData({
-                blobs: [
-                    page.slug,            // blob1
-                    page.title,           // blob2
-                    referrer || 'direct', // blob3
-                    'view'                // blob4
-                ],
+                blobs: [page.slug, page.title, referrer || 'direct', 'view'],
                 indexes: [String(page.id)] 
             });
         }
-    } catch (e) {
-        console.error("AE Tracking Error:", e.message);
-    }
+    } catch (e) { console.error("AE Error:", e.message); }
 };
 
-// ===============================================
-// 0. UTILS & DATABASE INIT
-// ===============================================
 async function sha256(message) {
     const msgBuffer = new TextEncoder().encode(message);
     const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// --- INIT DB ---
 async function initDB(db) {
-    // Tabel Utama System
     await db.prepare(`CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT UNIQUE, password TEXT, name TEXT, role TEXT)`).run();
     await db.prepare(`CREATE TABLE IF NOT EXISTS pages (id INTEGER PRIMARY KEY AUTOINCREMENT, slug TEXT UNIQUE, title TEXT, html_content TEXT, css_content TEXT, product_config_json TEXT, product_type TEXT, provider TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)`).run();
     await db.prepare(`CREATE TABLE IF NOT EXISTS credentials (provider_slug TEXT PRIMARY KEY, encrypted_data TEXT, iv TEXT)`).run();
     await db.prepare(`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)`).run();
-    
-    // Tabel Transaksi & Analytics
     await db.prepare(`CREATE TABLE IF NOT EXISTS payment_templates (slug TEXT PRIMARY KEY, name TEXT, api_endpoint TEXT, method TEXT, headers_json TEXT, body_json TEXT, response_mapping TEXT, webhook_config TEXT)`).run();
     await db.prepare(`CREATE TABLE IF NOT EXISTS shipping_templates (slug TEXT PRIMARY KEY, name TEXT, api_endpoint TEXT, method TEXT, headers_json TEXT, body_json TEXT, response_mapping TEXT)`).run();
     await db.prepare(`CREATE TABLE IF NOT EXISTS transactions (id INTEGER PRIMARY KEY AUTOINCREMENT, order_id TEXT UNIQUE, page_id INTEGER, amount INTEGER, status TEXT, customer_info TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)`).run();
     await db.prepare(`CREATE TABLE IF NOT EXISTS analytics (id INTEGER PRIMARY KEY AUTOINCREMENT, page_id INTEGER, event_type TEXT, referrer TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)`).run();
     await widgetModule.initWidgetDB(db);
-    
-    // Tabel Pesan (Contact Form)
-    await db.prepare(`CREATE TABLE IF NOT EXISTS messages (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        page_id INTEGER,
-        subject TEXT, 
-        name TEXT, 
-        email TEXT, 
-        phone TEXT, 
-        message TEXT, 
-        status TEXT DEFAULT 'unread', 
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`).run();
-
-    // Tabel Rekap Analytics (D1)
-    await db.prepare(`CREATE TABLE IF NOT EXISTS analytics_rekap (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        slug TEXT,
-        views INTEGER,
-        period_start DATETIME,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`).run();
+    await db.prepare(`CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, page_id INTEGER, subject TEXT, name TEXT, email TEXT, phone TEXT, message TEXT, status TEXT DEFAULT 'unread', created_at DATETIME DEFAULT CURRENT_TIMESTAMP)`).run();
+    await db.prepare(`CREATE TABLE IF NOT EXISTS analytics_rekap (id INTEGER PRIMARY KEY AUTOINCREMENT, slug TEXT, views INTEGER, period_start DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)`).run();
 }
 
-// ===============================================
-// 1. ENGINE PEMBAYARAN
-// ===============================================
+// --- ENGINE PEMBAYARAN ---
 async function executeGenericAPI(c, type, slug, payload) {
     const table = type === 'shipping' ? 'shipping_templates' : 'payment_templates';
-    
-    // 1. Ambil Template
     const template = await c.env.DB.prepare(`SELECT * FROM ${table} WHERE slug = ?`).bind(slug).first();
     if (!template) throw new Error(`Template '${slug}' tidak ditemukan.`);
 
-    // 2. Ambil Credentials
     const providerSlug = slug.split('-')[0]; 
     const credRow = await c.env.DB.prepare(`SELECT encrypted_data, iv FROM credentials WHERE provider_slug = ?`).bind(providerSlug).first();
     if (!credRow) throw new Error(`Credentials untuk '${providerSlug}' belum disetting.`);
 
-    // 3. Dekripsi Data
     let creds;
     try {
         const secret = c.env.APP_MASTER_KEY || JWT_SECRET;
@@ -103,8 +62,6 @@ async function executeGenericAPI(c, type, slug, payload) {
     } catch (e) { throw new Error("Gagal dekripsi kredensial."); }
 
     let extraHeaders = {};
-    
-    // --- AUTH RELAY (FLASHPAY) ---
     if (slug.includes('flashpay')) {
         const authRes = await fetch(RELAY_URL, {
             method: 'POST',
@@ -116,31 +73,23 @@ async function executeGenericAPI(c, type, slug, payload) {
                 target_payload: { client_key: creds.client_key, server_key: creds.server_key }
             })
         });
-        
         const authData = await authRes.json();
         if (!authRes.ok || !authData?.data?.token) throw new Error("Auth Relay Gagal");
-        
         extraHeaders['Authorization'] = `Bearer ${authData.data.token}`;
         extraHeaders['X-Client-Key'] = creds.client_key;
     }
 
-    // Replace Variable {{...}}
-    const replaceVars = (str) => {
-        return str.replace(/{{(.*?)}}/g, (match, key) => {
-            const keys = key.trim().split('.');
-            let val = payload;
-            for (let k of keys) val = val?.[k];
-            return val !== undefined ? val : match;
-        });
-    };
+    const replaceVars = (str) => str.replace(/{{(.*?)}}/g, (m, k) => {
+        const keys = k.trim().split('.');
+        let val = payload;
+        for (let key of keys) val = val?.[key];
+        return val !== undefined ? val : m;
+    });
 
     let bodyRaw = template.body_json || '{}';
     if (slug.includes('flashpay')) {
-        if (payload.customer?.phone) {
-            payload.customer.phone_clean = payload.customer.phone.replace(/[^0-9]/g, '');
-        }
-        
-        const fpPayload = {
+        if (payload.customer?.phone) payload.customer.phone_clean = payload.customer.phone.replace(/[^0-9]/g, '');
+        bodyRaw = JSON.stringify({
             external_id: "INV-" + Date.now(),
             payment_type: [slug.toUpperCase().replace(/-/g, '_')],
             currency: "IDR",
@@ -148,66 +97,36 @@ async function executeGenericAPI(c, type, slug, payload) {
             customer_id: String(payload.customer.phone).replace(/[^0-9]/g, ''),
             va_type: "CLOSE_AMOUNT",
             va_reusability: "SINGLE_USE",
-            customer_details: {
-                name: payload.customer.name,
-                email: "customer@mail.com",
-                phone: payload.customer.phone
-            },
-            item_details: [{
-                item_id: "ITEM-01",
-                information: payload.item_name || "Produk",
-                amount: Number(payload.amount),
-                beneficiary_bank: "MNC",
-                beneficiary_account: "5279910282",
-                beneficiary_name: "PASDIGI"
-            }]
-        };
-        bodyRaw = JSON.stringify(fpPayload);
+            customer_details: { name: payload.customer.name, email: "customer@mail.com", phone: payload.customer.phone },
+            item_details: [{ item_id: "ITEM-01", information: payload.item_name || "Produk", amount: Number(payload.amount), beneficiary_bank: "MNC", beneficiary_account: "5279910282", beneficiary_name: "PASDIGI" }]
+        });
     }
     
     const bodyFinal = replaceVars(bodyRaw);
-    let headersFinal = JSON.parse(template.headers_json || '{}');
-    headersFinal = { ...headersFinal, ...extraHeaders }; 
+    let headersFinal = { ...JSON.parse(template.headers_json || '{}'), ...extraHeaders }; 
 
-    // KIRIM REQUEST
     let res;
     if (slug.includes('flashpay')) {
         res = await fetch(RELAY_URL, {
             method: 'POST',
             headers: { "Content-Type": "application/json", "X-Relay-Secret": RELAY_SECRET },
-            body: JSON.stringify({
-                target_url: template.api_endpoint,
-                target_method: template.method || 'POST',
-                target_headers: headersFinal,
-                target_payload: JSON.parse(bodyFinal)
-            })
+            body: JSON.stringify({ target_url: template.api_endpoint, target_method: template.method || 'POST', target_headers: headersFinal, target_payload: JSON.parse(bodyFinal) })
         });
     } else {
-        res = await fetch(template.api_endpoint, {
-            method: template.method || 'POST',
-            headers: headersFinal,
-            body: bodyFinal
-        });
+        res = await fetch(template.api_endpoint, { method: template.method || 'POST', headers: headersFinal, body: bodyFinal });
     }
 
     const resData = await res.json();
     const mapping = JSON.parse(template.response_mapping || '{}');
     const result = {};
-    const getVal = (path, source) => path.split('.').reduce((o, i) => o?.[i], source);
-    for (const [key, path] of Object.entries(mapping)) {
-        result[key] = getVal(path, resData) || null;
-    }
+    const getVal = (path, src) => path.split('.').reduce((o, i) => o?.[i], src);
+    for (const [key, path] of Object.entries(mapping)) result[key] = getVal(path, resData) || null;
     result._raw = resData; 
     return result;
 }
 
-// ===============================================
-// 2. GLOBAL HANDLER & HELPER
-// ===============================================
-app.onError((err, c) => {
-    console.error(`[ERROR] ${err.message}`);
-    return c.json({ success: false, message: err.message }, 500);
-});
+// --- HANDLER & MIDDLEWARE ---
+app.onError((err, c) => { console.error(err); return c.json({ success: false, message: err.message }, 500); });
 
 async function serveAsset(c, path) {
     try {
@@ -222,30 +141,15 @@ async function serveAsset(c, path) {
     } catch (e) { return c.text('Not Found', 404); }
 }
 
-// ===============================================
-// 3. MIDDLEWARE (LOGIKA YANG BENAR: BLACKLIST ADMIN)
-// ===============================================
 const requireAuth = async (c, next) => {
     const url = new URL(c.req.url);
     const path = url.pathname;
-    
-    // 1. DEFINISI AREA TERLARANG (Hanya Area Admin & API Admin)
     const isAdminUI = path.startsWith('/admin');
     const isAdminAPI = path.startsWith('/api/admin');
 
-    // 2. LOGIKA PUBLIC (DEFAULT ALLOW)
-    if (!isAdminUI && !isAdminAPI) {
-        await next();
-        return;
-    }
+    if (!isAdminUI && !isAdminAPI) { await next(); return; }
+    if (path === '/admin/login' || path === '/admin/login.html') { await next(); return; }
 
-    // 3. PENGECUALIAN KHUSUS DI DALAM AREA ADMIN
-    if (path === '/admin/login' || path === '/admin/login.html') {
-        await next();
-        return;
-    }
-
-    // --- DI BAWAH SINI ADALAH ZONA PROTEKSI (HANYA UNTUK ADMIN) ---
     let token = getCookie(c, 'auth_token');
     const authHeader = c.req.header('Authorization');
     if (!token && authHeader && authHeader.startsWith('Bearer ')) token = authHeader.split(' ')[1];
@@ -255,50 +159,33 @@ const requireAuth = async (c, next) => {
         return c.redirect('/login'); 
     }
 
-    // Verifikasi Token
     try {
         const secret = c.env.APP_MASTER_KEY || JWT_SECRET;
         const payload = await verify(token, secret, 'HS256');
         c.set('user', payload);
-        await next(); // Token valid
+        await next(); 
     } catch (e) {
         deleteCookie(c, 'auth_token');
         if (isAdminAPI) return c.json({ success: false, message: 'Session Expired' }, 401);
         return c.redirect('/login');
     }
 };
-
 app.use('*', requireAuth); 
 
-// ===============================================
-// 4. AUTH ROUTES
-// ===============================================
+// --- ROUTES ---
 app.post('/api/login', async (c) => {
     try {
         const { email, password } = await c.req.json();
         await initDB(c.env.DB);
         const user = await c.env.DB.prepare("SELECT * FROM users WHERE email = ?").bind(email).first();
-        
         if (!user) return c.json({ success: false, message: 'Email tidak ditemukan' }, 401);
-        
         const inputHash = await sha256(password);
-        let isValid = false;
-        let needMigration = false;
-
-        if (user.password === inputHash) isValid = true;
-        else if (user.password === password) { isValid = true; needMigration = true; }
-
-        if (!isValid) return c.json({ success: false, message: 'Password salah' }, 401);
-
-        if (needMigration) {
-            await c.env.DB.prepare("UPDATE users SET password = ? WHERE id = ?").bind(inputHash, user.id).run();
-        }
-
+        if (user.password !== inputHash && user.password !== password) return c.json({ success: false, message: 'Password salah' }, 401);
+        
         const secret = c.env.APP_MASTER_KEY || JWT_SECRET;
         const token = await sign({ id: user.id, email: user.email, role: user.role, exp: Math.floor(Date.now() / 1000) + 86400 }, secret, 'HS256');
         setCookie(c, 'auth_token', token, { path: '/', secure: true, httpOnly: true, maxAge: 86400, sameSite: 'Lax' });
         return c.json({ success: true, token });
-
     } catch (e) { return c.json({ success: false, error: e.message }, 500); }
 });
 
@@ -311,546 +198,208 @@ app.post('/api/setup-first-user', async (c) => {
     } catch (e) { return c.json({ success: false, error: e.message }); }
 });
 
-// Pintu Rahasia
 app.get('/api/internal/rekap-analytics', async (c) => {
-    const cronSecret = c.req.header('x-cron-secret');
-    const MASTER_SECRET = "BantarCaringin1"; 
-
-    if (cronSecret !== MASTER_SECRET) {
-        return c.json({ success: false, message: "Kunci Salah!" }, 401);
-    }
-
+    if (c.req.header('x-cron-secret') !== "BantarCaringin1") return c.json({ success: false, message: "Kunci Salah!" }, 401);
     try {
         await runAnalyticsRekap(c.env);
         return c.json({ success: true, message: "Rekap Berhasil!" });
-    } catch (e) {
-        return c.json({ success: false, error: e.message }, 500);
-    }
+    } catch (e) { return c.json({ success: false, error: e.message }, 500); }
 });
 
 app.get('/api/logout', (c) => { deleteCookie(c, 'auth_token'); return c.redirect('/login'); });
-
-// ===============================================
-// 5. ADMIN ROUTES
-// ===============================================
 app.get('/login', (c) => serveAsset(c, '/login.html'));
 app.get('/admin', (c) => c.redirect('/admin/dashboard'));
 app.get('/admin/*', (c) => serveAsset(c, '/_views' + c.req.path.replace('/admin','').replace(/^\/$/,'/dashboard') + '.html'));
-// Di file worker.js
 app.post('/api/admin/upload-image', uploadImage);
-// --- MODULE: HOMEPAGE SETTING ---
-app.get('/api/admin/homepage-slug', async (c) => {
-    try {
-        const setting = await c.env.DB.prepare("SELECT value FROM settings WHERE key='homepage_slug'").first();
-        return c.json({ slug: setting?.value || null });
-    } catch (e) { return c.json({ error: e.message }, 500); }
-});
 
+// --- SETTINGS, PAGES, WIDGETS, ETC ---
+app.get('/api/admin/homepage-slug', async (c) => {
+    try { const s = await c.env.DB.prepare("SELECT value FROM settings WHERE key='homepage_slug'").first(); return c.json({ slug: s?.value || null }); } catch (e) { return c.json({ error: e.message }, 500); }
+});
 app.post('/api/admin/set-homepage', async (c) => {
     try {
         const { slug } = await c.req.json();
-        if (!slug) return c.json({ error: "Slug tidak valid" }, 400);
-
-        const page = await c.env.DB.prepare("SELECT id FROM pages WHERE slug = ?").bind(slug).first();
-        if (!page) return c.json({ error: "Halaman tidak ditemukan" }, 404);
-
         await c.env.DB.prepare(`INSERT INTO settings (key, value) VALUES ('homepage_slug', ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value`).bind(slug).run();
-        return c.json({ success: true, message: "Homepage berhasil diatur", slug });
+        return c.json({ success: true });
     } catch (e) { return c.json({ error: e.message }, 500); }
 });
-
-// --- MODULE: PAGES ---
-app.get('/api/admin/pages', async (c) => {
-    const res = await c.env.DB.prepare("SELECT id, slug, title, product_type, created_at FROM pages ORDER BY created_at DESC").all();
-    return c.json(res.results);
-});
-
+app.get('/api/admin/pages', async (c) => { const r = await c.env.DB.prepare("SELECT id, slug, title, product_type, created_at FROM pages ORDER BY created_at DESC").all(); return c.json(r.results); });
 app.post('/api/admin/pages', async (c) => {
     const { slug, title, html, css, product_config, product_type } = await c.req.json();
     await c.env.DB.prepare(`INSERT INTO pages (slug, title, html_content, css_content, product_config_json, product_type) VALUES (?,?,?,?,?,?) ON CONFLICT(slug) DO UPDATE SET title=excluded.title, html_content=excluded.html_content, css_content=excluded.css_content, product_config_json=excluded.product_config_json, product_type=excluded.product_type`).bind(slug, title, html, css, JSON.stringify(product_config), product_type || 'physical').run();
     return c.json({ success: true });
 });
-
 app.get('/api/admin/pages/:slug', async (c) => {
     const page = await c.env.DB.prepare("SELECT * FROM pages WHERE slug=?").bind(c.req.param('slug')).first();
     if(page) page.product_config_json = JSON.parse(page.product_config_json || '{}');
     return c.json(page || {});
 });
-
 app.delete('/api/admin/pages/:id', async (c) => {
-    try {
-        const id = c.req.param('id');
-        // Hapus dari database pages
-        await c.env.DB.prepare("DELETE FROM pages WHERE id = ?").bind(id).run();
-        // Opsional: Hapus juga pesan/analytics terkait halaman ini jika perlu
-        return c.json({ success: true });
-    } catch (e) {
-        return c.json({ error: e.message }, 500);
-    }
+    try { await c.env.DB.prepare("DELETE FROM pages WHERE id = ?").bind(c.req.param('id')).run(); return c.json({ success: true }); } catch (e) { return c.json({ error: e.message }, 500); }
 });
 
-// ===========================================
-// MODULE: WIDGETS MANAGEMENT (FIXED BINDING)
-// ===========================================
 const WIDGET_CACHE_KEY = 'widgets_data_full';
-
-// 1. GET ALL WIDGETS
 app.get('/api/widgets', async (c) => {
     try {
-        // A. Cek Cache KV (Gunakan nama binding WIDGET_CACHE)
-        if (c.env.WIDGET_CACHE) {
-            const cachedData = await c.env.WIDGET_CACHE.get(WIDGET_CACHE_KEY);
-            if (cachedData) {
-                return c.json(JSON.parse(cachedData));
-            }
-        }
-
-        // B. Jika Cache Kosong, Ambil dari DB
-        const widgets = await widgetModule.getWidgets(c.env);
-
-        // C. Simpan ke KV
-        if (c.env.WIDGET_CACHE && widgets.length > 0) {
-            await c.env.WIDGET_CACHE.put(WIDGET_CACHE_KEY, JSON.stringify(widgets), { expirationTtl: 3600 });
-        }
-
-        return c.json(widgets);
-    } catch (e) {
-        return c.json({ success: false, error: e.message }, 500);
-    }
+        if (c.env.WIDGET_CACHE) { const d = await c.env.WIDGET_CACHE.get(WIDGET_CACHE_KEY); if (d) return c.json(JSON.parse(d)); }
+        const w = await widgetModule.getWidgets(c.env);
+        if (c.env.WIDGET_CACHE && w.length) await c.env.WIDGET_CACHE.put(WIDGET_CACHE_KEY, JSON.stringify(w), { expirationTtl: 3600 });
+        return c.json(w);
+    } catch (e) { return c.json({ success: false, error: e.message }, 500); }
 });
-
-// 2. SAVE WIDGET
 app.post('/api/admin/widgets', async (c) => {
     try {
-        const body = await c.req.json();
-        if (!body.id || !body.content) return c.json({ error: 'ID and Content required' }, 400);
-        
-        await widgetModule.saveWidget(c.env, body);
-        
-        // Hapus Cache KV
+        await widgetModule.saveWidget(c.env, await c.req.json());
         if (c.env.WIDGET_CACHE) await c.env.WIDGET_CACHE.delete(WIDGET_CACHE_KEY);
-
-        return c.json({ success: true, message: 'Widget Saved & Cache Invalidated' });
-    } catch (e) {
-        return c.json({ success: false, error: e.message }, 500);
-    }
+        return c.json({ success: true });
+    } catch (e) { return c.json({ success: false, error: e.message }, 500); }
 });
-
-// 3. DELETE WIDGET
 app.delete('/api/admin/widgets/:id', async (c) => {
     try {
-        const id = c.req.param('id');
-        await widgetModule.deleteWidget(c.env, id);
-
-        // Hapus Cache KV
+        await widgetModule.deleteWidget(c.env, c.req.param('id'));
         if (c.env.WIDGET_CACHE) await c.env.WIDGET_CACHE.delete(WIDGET_CACHE_KEY);
-
-        return c.json({ success: true, message: 'Widget Deleted & Cache Invalidated' });
-    } catch (e) {
-        return c.json({ success: false, error: e.message }, 500);
-    }
+        return c.json({ success: true });
+    } catch (e) { return c.json({ success: false, error: e.message }, 500); }
 });
-
-// 4. MANUAL CLEAR CACHE (MODE: SAPU BERSIH)
 app.delete('/api/admin/cache/widgets', async (c) => {
     try {
-        if (!c.env.WIDGET_CACHE) {
-            return c.json({ success: false, message: "Binding 'WIDGET_CACHE' tidak ditemukan." }, 500);
-        }
-
-        // 1. Ambil daftar semua key yang ada di KV ini (termasuk sampah lama)
-        const list = await c.env.WIDGET_CACHE.list();
-        
-        // 2. Hapus satu per satu
-        const deletedKeys = [];
-        for (const key of list.keys) {
-            await c.env.WIDGET_CACHE.delete(key.name);
-            deletedKeys.push(key.name);
-        }
-
-        return c.json({ 
-            success: true, 
-            message: `Berhasil menghapus ${deletedKeys.length} cache item.`,
-            deleted_keys: deletedKeys 
-        });
-    } catch (e) {
-        return c.json({ success: false, error: e.message }, 500);
-    }
-});
-
-// --- MODULE: MESSAGES ---
-app.get('/api/admin/messages', async (c) => {
-    try {
-        const res = await c.env.DB.prepare("SELECT * FROM messages ORDER BY created_at DESC LIMIT 100").all();
-        return c.json(res.results);
-    } catch (e) { return c.json({ error: e.message }, 500); }
-});
-
-app.patch('/api/admin/messages/:id', async (c) => {
-    try {
-        const { status } = await c.req.json();
-        await c.env.DB.prepare("UPDATE messages SET status = ? WHERE id = ?").bind(status, c.req.param('id')).run();
+        if (!c.env.WIDGET_CACHE) return c.json({ success: false }, 500);
+        const l = await c.env.WIDGET_CACHE.list();
+        for (const k of l.keys) await c.env.WIDGET_CACHE.delete(k.name);
         return c.json({ success: true });
-    } catch (e) { return c.json({ error: e.message }, 500); }
+    } catch (e) { return c.json({ success: false }, 500); }
 });
 
-app.delete('/api/admin/messages/:id', async (c) => {
-    try {
-        await c.env.DB.prepare("DELETE FROM messages WHERE id = ?").bind(c.req.param('id')).run();
-        return c.json({ success: true });
-    } catch (e) { return c.json({ error: e.message }, 500); }
-});
+app.get('/api/admin/messages', async (c) => { try { const r = await c.env.DB.prepare("SELECT * FROM messages ORDER BY created_at DESC LIMIT 100").all(); return c.json(r.results); } catch (e) { return c.json({ error: e.message }, 500); } });
+app.patch('/api/admin/messages/:id', async (c) => { try { await c.env.DB.prepare("UPDATE messages SET status = ? WHERE id = ?").bind((await c.req.json()).status, c.req.param('id')).run(); return c.json({ success: true }); } catch (e) { return c.json({ error: e.message }, 500); } });
+app.delete('/api/admin/messages/:id', async (c) => { try { await c.env.DB.prepare("DELETE FROM messages WHERE id = ?").bind(c.req.param('id')).run(); return c.json({ success: true }); } catch (e) { return c.json({ error: e.message }, 500); } });
 
-// --- MODULE: ANALYTICS ---
 app.get('/api/admin/analytics/data', async (c) => {
     try {
-        const stats = await c.env.DB.prepare(`
-            SELECT 
-                SUM(views) as total_views,
-                SUM(CASE WHEN date(created_at) = date('now') THEN views ELSE 0 END) as today_views
-            FROM analytics_rekap
-        `).first();
-
-        const topPages = await c.env.DB.prepare(`
-            SELECT 
-                p.title, 
-                r.slug, 
-                SUM(r.views) as views
-            FROM analytics_rekap r
-            JOIN pages p ON LOWER(r.slug) = LOWER(p.slug)
-            GROUP BY r.slug
-            ORDER BY views DESC
-            LIMIT 10
-        `).all();
-
-        return c.json({ 
-            success: true,
-            stats: { 
-                total_views: stats?.total_views || 0, 
-                today_views: stats?.today_views || 0 
-            }, 
-            top_pages: topPages.results || [] 
-        });
+        const stats = await c.env.DB.prepare(`SELECT SUM(views) as total_views, SUM(CASE WHEN date(created_at) = date('now') THEN views ELSE 0 END) as today_views FROM analytics_rekap`).first();
+        const top = await c.env.DB.prepare(`SELECT p.title, r.slug, SUM(r.views) as views FROM analytics_rekap r JOIN pages p ON LOWER(r.slug) = LOWER(p.slug) GROUP BY r.slug ORDER BY views DESC LIMIT 10`).all();
+        return c.json({ success: true, stats: { total_views: stats?.total_views || 0, today_views: stats?.today_views || 0 }, top_pages: top.results || [] });
     } catch(e) { return c.json({ success: false, error: e.message }, 500); }
 });
-
 app.get('/api/admin/reports', async (c) => {
     try {
-        const weeklyStats = await c.env.DB.prepare(`SELECT DATE(created_at) as date, SUM(views) as views FROM analytics_rekap WHERE created_at >= date('now', '-7 days') GROUP BY DATE(created_at) ORDER BY date ASC`).all();
-        const leads = await c.env.DB.prepare(`SELECT count(*) as total FROM messages`).first();
-        const views = await c.env.DB.prepare(`SELECT sum(views) as total FROM analytics_rekap`).first();
-        return c.json({ success: true, chart_data: weeklyStats.results || [], summary: { total_leads: leads?.total || 0, total_views: views?.total || 0 } });
+        const w = await c.env.DB.prepare(`SELECT DATE(created_at) as date, SUM(views) as views FROM analytics_rekap WHERE created_at >= date('now', '-7 days') GROUP BY DATE(created_at) ORDER BY date ASC`).all();
+        const l = await c.env.DB.prepare(`SELECT count(*) as total FROM messages`).first();
+        const v = await c.env.DB.prepare(`SELECT sum(views) as total FROM analytics_rekap`).first();
+        return c.json({ success: true, chart_data: w.results || [], summary: { total_leads: l?.total || 0, total_views: v?.total || 0 } });
     } catch (e) { return c.json({ error: e.message }, 500); }
 });
 
-// --- MODULE: SETTINGS & TEMPLATES ---
 app.post('/api/admin/credentials', async (c) => {
     const { provider, data } = await c.req.json();
     const { encrypted, iv } = await encryptJSON(data, c.env.APP_MASTER_KEY || JWT_SECRET);
     await c.env.DB.prepare(`INSERT INTO credentials (provider_slug, encrypted_data, iv) VALUES (?, ?, ?) ON CONFLICT(provider_slug) DO UPDATE SET encrypted_data=excluded.encrypted_data, iv=excluded.iv`).bind(provider, encrypted, iv).run();
     return c.json({ success: true });
 });
-
-app.get('/api/admin/templates', async (c) => {
-    const type = c.req.query('type') === 'shipping' ? 'shipping_templates' : 'payment_templates';
-    const res = await c.env.DB.prepare(`SELECT * FROM ${type}`).all();
-    return c.json(res.results);
-});
-
+app.get('/api/admin/templates', async (c) => { const t = c.req.query('type') === 'shipping' ? 'shipping_templates' : 'payment_templates'; const r = await c.env.DB.prepare(`SELECT * FROM ${t}`).all(); return c.json(r.results); });
 app.post('/api/admin/templates', async (c) => {
     const { type, data } = await c.req.json();
-    const table = type === 'shipping' ? 'shipping_templates' : 'payment_templates';
-    await c.env.DB.prepare(`INSERT INTO ${table} (slug, name, api_endpoint, method, headers_json, body_json, response_mapping, webhook_config) VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(slug) DO UPDATE SET name=excluded.name, api_endpoint=excluded.api_endpoint, method=excluded.method, headers_json=excluded.headers_json, body_json=excluded.body_json, response_mapping=excluded.response_mapping, webhook_config=excluded.webhook_config`)
-        .bind(data.slug, data.name, data.api_endpoint, data.method, data.headers_json, data.body_json, data.response_mapping, data.webhook_config || '{}').run();
+    const t = type === 'shipping' ? 'shipping_templates' : 'payment_templates';
+    await c.env.DB.prepare(`INSERT INTO ${t} (slug, name, api_endpoint, method, headers_json, body_json, response_mapping, webhook_config) VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(slug) DO UPDATE SET name=excluded.name, api_endpoint=excluded.api_endpoint, method=excluded.method, headers_json=excluded.headers_json, body_json=excluded.body_json, response_mapping=excluded.response_mapping, webhook_config=excluded.webhook_config`).bind(data.slug, data.name, data.api_endpoint, data.method, data.headers_json, data.body_json, data.response_mapping, data.webhook_config || '{}').run();
     return c.json({ success: true });
 });
+app.delete('/api/admin/templates', async (c) => { const t = c.req.query('type') === 'shipping' ? 'shipping_templates' : 'payment_templates'; await c.env.DB.prepare(`DELETE FROM ${t} WHERE slug = ?`).bind(c.req.query('slug')).run(); return c.json({ success: true }); });
 
-app.delete('/api/admin/templates', async (c) => {
-    const type = c.req.query('type') === 'shipping' ? 'shipping_templates' : 'payment_templates';
-    await c.env.DB.prepare(`DELETE FROM ${type} WHERE slug = ?`).bind(c.req.query('slug')).run();
-    return c.json({ success: true });
-});
-
-// ===============================================
-// 6. PUBLIC API
-// ===============================================
-
-// --- PUBLIC CONTACT FORM ---
+// --- PUBLIC API ---
 app.post('/api/public/contact', async (c) => {
     try {
         await initDB(c.env.DB);
-        let body;
-        const contentType = c.req.header('Content-Type');
-        
-        if (contentType && contentType.includes('application/json')) {
-            body = await c.req.json();
-        } else {
-            body = await c.req.parseBody();
-        }
-
-        const { page_id, subject, name, email, phone, message } = body;
-
-        if (!name || !message) return c.json({ error: "Nama dan Pesan wajib diisi!" }, 400);
-
+        let b;
+        const ct = c.req.header('Content-Type');
+        if (ct && ct.includes('application/json')) b = await c.req.json(); else b = await c.req.parseBody();
+        if (!b.name || !b.message) return c.json({ error: "Isi nama & pesan!" }, 400);
         await c.env.DB.prepare(`INSERT INTO messages (page_id, subject, name, email, phone, message) VALUES (?, ?, ?, ?, ?, ?)`)
-            .bind(page_id || 0, subject || 'General', name, email || '', phone || '', message)
-            .run();
-
-        if (!contentType || !contentType.includes('application/json')) {
-            return c.redirect(c.req.header('Referer') + '?status=sent');
-        }
-
-        return c.json({ success: true, message: "Pesan terkirim!" });
+            .bind(b.page_id || 0, b.subject || 'General', b.name, b.email || '', b.phone || '', b.message).run();
+        if (!ct || !ct.includes('application/json')) return c.redirect(c.req.header('Referer') + '?status=sent');
+        return c.json({ success: true });
     } catch (e) { return c.json({ error: e.message }, 500); }
 });
 
-// --- PUBLIC CHECKOUT ---
 app.post('/api/public/checkout', async (c) => {
     try {
-        const body = await c.req.json();
-        const { slug_payment, customer, quantity } = body;
-        
-        if (!slug_payment || !customer?.phone) return c.json({ error: "Data tidak lengkap!" }, 400);
-
-        const page = await c.env.DB.prepare("SELECT * FROM pages WHERE id = ?").bind(body.page_id).first();
-        const config = JSON.parse(page.product_config_json || '{}');
-
-        // HITUNG HARGA
-        let unitPrice = 0;
-        let itemName = page.title;
-
-        if (config.variants && config.variants[body.variant_index]) {
-            unitPrice = Number(config.variants[body.variant_index].price);
-            itemName += ` (${config.variants[body.variant_index].name})`;
-        } else {
-            unitPrice = Number(config.price || 0);
+        const b = await c.req.json();
+        if (!b.slug_payment || !b.customer?.phone) return c.json({ error: "Data kurang!" }, 400);
+        const p = await c.env.DB.prepare("SELECT * FROM pages WHERE id = ?").bind(b.page_id).first();
+        const cfg = JSON.parse(p.product_config_json || '{}');
+        let price = Number(cfg.price || 0);
+        let name = p.title;
+        if (cfg.variants && cfg.variants[b.variant_index]) { price = Number(cfg.variants[b.variant_index].price); name += ` (${cfg.variants[b.variant_index].name})`; }
+        let amt = price * parseInt(b.quantity || 1);
+        if (b.take_bump && cfg.order_bump?.active) { amt += Number(cfg.order_bump.price); if (cfg.order_bump.title) name += ` + ${cfg.order_bump.title}`; }
+        if (b.coupon_code && cfg.coupons) {
+            const cp = cfg.coupons.find(x => x.code.toUpperCase() === b.coupon_code.toUpperCase());
+            if (cp) amt = Math.max(0, amt - (cp.type === 'percent' ? (amt * cp.value / 100) : cp.value));
         }
-
-        const qty = parseInt(quantity || 1);
-        let finalAmount = unitPrice * qty;
-
-        if (body.take_bump && config.order_bump?.active) {
-            const bumpPrice = Number(config.order_bump.price);
-            finalAmount += bumpPrice; 
-            if (config.order_bump.title) itemName += ` + ${config.order_bump.title}`;
-        }
-
-        if (body.coupon_code && config.coupons) {
-            const cp = config.coupons.find(x => x.code.toUpperCase() === body.coupon_code.toUpperCase());
-            if (cp) {
-                const disc = cp.type === 'percent' ? (finalAmount * cp.value / 100) : cp.value;
-                finalAmount = Math.max(0, finalAmount - disc);
-            }
-        }
-        
-        const apiPayload = {
-            ...body,
-            amount: finalAmount, 
-            item_name: itemName + (qty > 1 ? ` (x${qty})` : ''),
-        };
-
-        const result = await executeGenericAPI(c, 'payment', slug_payment, apiPayload);
-        return c.json({ payment_url: result.payment_url || result._raw?.data?.payment_url });
-
-    } catch (e) { return c.json({ error: "Proses Gagal: " + e.message }, 500); }
+        const res = await executeGenericAPI(c, 'payment', b.slug_payment, { ...b, amount: amt, item_name: name + (b.quantity > 1 ? ` (x${b.quantity})` : '') });
+        return c.json({ payment_url: res.payment_url || res._raw?.data?.payment_url });
+    } catch (e) { return c.json({ error: "Gagal: " + e.message }, 500); }
 });
 
 // ===============================================
-// 7. PUBLIC PAGE RENDERING
-// ===============================================
-
-// HOMEPAGE
-app.get('/', async (c) => {
-    try {
-        const setting = await c.env.DB.prepare("SELECT value FROM settings WHERE key='homepage_slug'").first();
-        if (!setting || !setting.value) {
-            return c.html(`<div style="font-family: sans-serif; text-align: center; padding: 50px;"><h1>Welcome</h1><p>Homepage belum diatur.</p><a href="/login" style="color: blue;">Login Admin</a></div>`);
-        }
-        const page = await c.env.DB.prepare("SELECT * FROM pages WHERE slug=?").bind(setting.value).first();
-        if (!page) return c.text(`Error: Halaman '${setting.value}' tidak ditemukan.`, 404);
-        trackVisit(c, page, 'direct-homepage');
-        return renderPage(c, page);
-    } catch (e) { return c.text(`Server Error: ${e.message}`, 500); }
-});
-
-// SLUG PAGE
-app.get('/:slug', async (c) => {
-    try {
-        const slug = c.req.param('slug');
-        if (slug.includes('.')) return c.env.ASSETS.fetch(c.req.raw);
-        const page = await c.env.DB.prepare("SELECT * FROM pages WHERE slug=?").bind(slug).first();
-        if(!page) return c.text('404 Not Found', 404);
-        trackVisit(c, page, c.req.header('Referer'));
-        return renderPage(c, page);
-    } catch(e) { return c.env.ASSETS.fetch(c.req.raw); }
-});
-
-// ===============================================
-// FUNGSI RENDER HALAMAN (MURNI DATABASE DRIVEN & HARDCODED COUNTDOWN)
+// 7. PUBLIC PAGE RENDERING (FINAL FIX)
 // ===============================================
 async function renderPage(c, page) {
     const config = JSON.parse(page.product_config_json || '{}');
-    const activePayments = config.active_payments || [];
-    
-    // 1. DATA SAVER
-    const serverData = {
-        page_id: page.id,
-        title: page.title,
-        config: config,
-        active_payments: activePayments
-    };
+    const bridgeCSS = `body { min-height: 100vh; background-color: #ffffff; overflow-x: hidden; font-family: 'Inter', sans-serif; } .swal2-container { z-index: 99999 !important; } .countdown-number { font-weight: 900; } [x-cloak] { display: none !important; }`;
+    const tailwindConfig = `tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { theme: { 50:'#eef2ff', 600:'#4f46e5' } } } } }`;
 
-    // 2. CSS Global
-    const bridgeCSS = `
-    body { min-height: 100vh; background-color: #ffffff; overflow-x: hidden; font-family: 'Inter', sans-serif; }
-    .swal2-container { z-index: 99999 !important; }
-    
-    /* Utility Classes Helper */
-    .countdown-number { font-weight: 900; }
-    @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-    .animate-marquee { display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite; }
-    [x-cloak] { display: none !important; }
-    `;
-
-    const tailwindConfig = `
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: { theme: { 50:'#eef2ff', 600:'#4f46e5' } }
-                }
-            }
-        }
-    `;
-
-    // 3. SYSTEM LOGIC (SYSTEM + COUNTDOWN ENGINE)
     const systemScripts = `
     <script>
-        // --- A. COUNTDOWN ENGINE (LIVE) ---
-        function initLiveCountdowns() {
-            // Cari elemen dengan class 'js-countdown' ATAU yang punya atribut 'data-expire'
-            const timers = document.querySelectorAll('.js-countdown, [data-expire]');
-            
-            timers.forEach(el => {
-                if(el.__isRunning) return;
-                el.__isRunning = true;
-
-                const expireStr = el.getAttribute('data-expire');
-                const msgStr = el.getAttribute('data-msg') || "WAKTU HABIS";
-                
-                const display = el.querySelector(".js-display") || el.querySelector(".js-countdown-display"); 
-                const expiredBox = el.querySelector(".js-expired-msg");
-                const expiredText = el.querySelector(".js-expired-text");
-
-                if (!expireStr) return;
-
-                const update = () => {
-                    const now = new Date().getTime();
-                    const target = new Date(expireStr).getTime();
-                    const distance = target - now;
-
-                    const setVal = (selector, val) => {
-                        const strVal = val < 10 ? "0" + val : val;
-                        el.querySelectorAll(selector).forEach(n => n.innerText = strVal);
-                    };
-
-                    if (distance < 0) {
-                        if (display) display.style.display = 'none';
-                        if (expiredBox) {
-                            expiredBox.classList.remove('hidden');
-                            expiredBox.style.display = 'block';
-                            if (expiredText) expiredText.innerText = msgStr;
-                            else expiredBox.innerText = msgStr;
-                        }
-                        if (el.__interval) clearInterval(el.__interval);
-                        return;
-                    }
-
-                    const d = Math.floor(distance / (1000 * 60 * 60 * 24));
-                    const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                    const s = Math.floor((distance % (1000 * 60)) / 1000);
-
-                    setVal('.days, .js-d', d);
-                    setVal('.hours, .js-h', h);
-                    setVal('.minutes, .js-m', m);
-                    setVal('.seconds, .js-s', s);
-                };
-
-                update(); 
-                el.__interval = setInterval(update, 1000);
-            });
-        }
-
-        // --- B. SYSTEM LOGIC ---
+        window.BS_DATA = ${JSON.stringify({ page_id: page.id, title: page.title, config: config, active_payments: config.active_payments || [] })};
+        
+        // --- LIVE COUNTDOWN ENGINE ---
         document.addEventListener('DOMContentLoaded', () => {
-            initLiveCountdowns();
-
-            const DATA = window.BS_DATA || {};
-            const config = DATA.config || {};
-            const activePayments = DATA.active_payments || [];
-
-            const params = new URLSearchParams(window.location.search);
-            if(params.get('status') === 'sent') {
-                Swal.fire({ icon: 'success', title: 'Terkirim!', text: 'Kami akan segera merespon.', confirmButtonColor: '#2563eb' });
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
-
-            const container = document.body;
-            if (container.innerHTML.includes('[ CHECKOUT ]')) {
-                const paymentHTML = activePayments.length > 0 ? activePayments.map(slug => 
-                    '<label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition border-gray-200 mb-2">' +
-                    '<input type="radio" name="pay_method" value="' + slug + '" class="mr-3 w-4 h-4 text-blue-600">' +
-                    '<span class="text-sm font-bold text-gray-700 uppercase">' + slug.split('-').join(' ') + '</span>' +
-                    '</label>'
-                ).join('') : '<p class="text-red-500 text-xs">Belum ada metode pembayaran.</p>';
-
-                const checkoutHTML = \`
-                    <div class="max-w-md mx-auto my-8 p-6 bg-white rounded-2xl shadow-xl border border-gray-100 font-sans">
-                        <h2 class="text-xl font-black text-gray-800 mb-6 text-center">Formulir Pemesanan</h2>
-                        <div class="flex justify-between items-center p-4 bg-blue-50 rounded-xl border border-blue-100 mb-6">
-                            <span class="font-bold text-blue-900">\${DATA.title}</span>
-                            <span class="font-black text-blue-700">Rp \${new Intl.NumberFormat('id-ID').format(config.price || 0)}</span>
-                        </div>
-                        <div class="space-y-4 mb-6">
-                            <input type="text" id="c_name" placeholder="Nama Lengkap" class="w-full p-3 border rounded-lg">
-                            <input type="tel" id="c_phone" placeholder="No. WhatsApp" class="w-full p-3 border rounded-lg">
-                        </div>
-                        <div class="mb-6">
-                            <label class="text-xs font-bold text-gray-400 uppercase block mb-2">Pembayaran</label>
-                            <div class="grid gap-2">\${paymentHTML}</div>
-                        </div>
-                        <button id="btn-submit-order" class="w-full py-4 bg-blue-600 text-white font-black rounded-xl shadow-lg hover:bg-blue-700 transition">
-                            BAYAR SEKARANG
-                        </button>
-                    </div>
-                \`;
+            const timers = document.querySelectorAll('.js-countdown, [data-expire]');
+            timers.forEach(el => {
+                if(el.__run) return; el.__run = true;
+                const exp = el.getAttribute('data-expire');
+                const msg = el.getAttribute('data-msg') || "WAKTU HABIS";
+                if(!exp) return;
                 
-                container.innerHTML = container.innerHTML.replace('[ CHECKOUT ]', checkoutHTML);
-
-                document.getElementById('btn-submit-order')?.addEventListener('click', async () => {
-                    const payMethod = document.querySelector('input[name="pay_method"]:checked')?.value;
-                    const name = document.getElementById('c_name').value;
-                    const phone = document.getElementById('c_phone').value;
-
-                    if(!name || !phone) return Swal.fire('Data Kurang', 'Lengkapi nama & WA', 'warning');
-                    if(!payMethod) return Swal.fire('Pilih Pembayaran', 'Metode pembayaran belum dipilih', 'warning');
-
-                    const btn = document.getElementById('btn-submit-order');
-                    btn.disabled = true; btn.innerText = 'Memproses...';
-
-                    try {
-                        const res = await fetch('/api/public/checkout', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ page_id: DATA.page_id, slug_payment: payMethod, quantity: 1, customer: { name, phone } })
-                        });
-                        const d = await res.json();
-                        if(d.payment_url) window.location.href = d.payment_url;
-                        else Swal.fire('Gagal', d.error || 'Terjadi kesalahan sistem', 'error');
-                    } catch(e) { Swal.fire('Error', 'Koneksi bermasalah', 'error'); }
+                const update = () => {
+                    const diff = new Date(exp).getTime() - new Date().getTime();
+                    const set = (sel, v) => el.querySelectorAll(sel).forEach(n => n.innerText = v < 10 ? "0"+v : v);
                     
+                    if(diff < 0) {
+                        const disp = el.querySelector(".js-display") || el.querySelector(".js-countdown-display");
+                        const box = el.querySelector(".js-expired-msg");
+                        const txt = el.querySelector(".js-expired-text");
+                        if(disp) disp.style.display = 'none';
+                        if(box) { box.classList.remove('hidden'); box.style.display = 'block'; if(txt) txt.innerText = msg; else box.innerText = msg; }
+                        clearInterval(el.__int); return;
+                    }
+                    const d = Math.floor(diff / 86400000);
+                    const h = Math.floor((diff % 86400000) / 3600000);
+                    const m = Math.floor((diff % 3600000) / 60000);
+                    const s = Math.floor((diff % 60000) / 1000);
+                    set('.days, .js-d', d); set('.hours, .js-h', h); set('.minutes, .js-m', m); set('.seconds, .js-s', s);
+                };
+                update(); el.__int = setInterval(update, 1000);
+            });
+
+            // CHECKOUT SYSTEM
+            const box = document.body;
+            if (box.innerHTML.includes('[ CHECKOUT ]')) {
+                const pays = window.BS_DATA.active_payments.map(s => \`<label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition border-gray-200 mb-2"><input type="radio" name="pay_method" value="\${s}" class="mr-3 w-4 h-4 text-blue-600"><span class="text-sm font-bold text-gray-700 uppercase">\${s.replace(/-/g, ' ')}</span></label>\`).join('') || '<p class="text-xs text-red-500">No payment method.</p>';
+                const form = \`<div class="max-w-md mx-auto my-8 p-6 bg-white rounded-2xl shadow-xl border border-gray-100 font-sans"><h2 class="text-xl font-black text-gray-800 mb-6 text-center">Formulir Pemesanan</h2><div class="flex justify-between items-center p-4 bg-blue-50 rounded-xl border border-blue-100 mb-6"><span class="font-bold text-blue-900">\${window.BS_DATA.title}</span><span class="font-black text-blue-700">Rp \${new Intl.NumberFormat('id-ID').format(window.BS_DATA.config.price||0)}</span></div><div class="space-y-4 mb-6"><input type="text" id="c_name" placeholder="Nama Lengkap" class="w-full p-3 border rounded-lg"><input type="tel" id="c_phone" placeholder="No. WhatsApp" class="w-full p-3 border rounded-lg"></div><div class="mb-6"><label class="text-xs font-bold text-gray-400 uppercase block mb-2">Pembayaran</label><div class="grid gap-2">\${pays}</div></div><button id="btn-submit-order" class="w-full py-4 bg-blue-600 text-white font-black rounded-xl shadow-lg hover:bg-blue-700 transition">BAYAR SEKARANG</button></div>\`;
+                box.innerHTML = box.innerHTML.replace('[ CHECKOUT ]', form);
+                
+                document.getElementById('btn-submit-order')?.addEventListener('click', async () => {
+                    const pm = document.querySelector('input[name="pay_method"]:checked')?.value;
+                    const nm = document.getElementById('c_name').value;
+                    const ph = document.getElementById('c_phone').value;
+                    if(!nm || !ph || !pm) return Swal.fire('Lengkapi Data', 'Nama, WA, dan Metode Pembayaran wajib diisi', 'warning');
+                    const btn = document.getElementById('btn-submit-order'); btn.disabled = true; btn.innerText = 'Memproses...';
+                    try {
+                        const r = await fetch('/api/public/checkout', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ page_id: window.BS_DATA.page_id, slug_payment: pm, quantity: 1, customer: { name: nm, phone: ph } }) });
+                        const d = await r.json();
+                        if(d.payment_url) window.location.href = d.payment_url; else Swal.fire('Gagal', d.error, 'error');
+                    } catch(e) { Swal.fire('Error', 'Koneksi gagal', 'error'); }
                     btn.disabled = false; btn.innerText = 'BAYAR SEKARANG';
                 });
             }
@@ -858,6 +407,22 @@ async function renderPage(c, page) {
     </script>
     `;
 
+    // --- REKONSTRUKSI HTML YANG BENAR ---
+    // 1. Ambil konten DB.
+    let content = page.html_content || '';
+    
+    // 2. Cek apakah ada <body> di dalam content DB
+    // Jika ada, kita INJECT script sebelum </body> penutup milik DB.
+    // Jika tidak ada (hanya div/section), kita bungkus manual.
+    if (content.includes('<body')) {
+        // Inject script sebelum closing body
+        content = content.replace('</body>', `${systemScripts}</body>`);
+    } else {
+        // Bungkus manual jika user hanya simpan div
+        content = `<body>${content}${systemScripts}</body>`;
+    }
+
+    // 3. Render HTML Utuh
     return c.html(`
     <!DOCTYPE html>
     <html lang='id'>
@@ -878,61 +443,32 @@ async function renderPage(c, page) {
             ${page.css_content || ''}
         </style>
     </head>
-    <body>
-        ${page.html_content || ''}
-        
-        <script>
-            window.BS_DATA = ${JSON.stringify(serverData)};
-        </script>
-        
-        ${systemScripts}
-    </body>
+    ${content}
     </html>
     `);
 }
 
-// ===============================================
-// HELPER ANALYTICS (TARUH DI LUAR ROUTE)
-// ===============================================
+// --- ANALYTICS JOB ---
 async function runAnalyticsRekap(env) {
     try {
-        const ACCOUNT_ID = env.CF_ACCOUNT_ID; 
-        const API_TOKEN = env.CF_API_TOKEN;   
-
-        const query = `
-            SELECT 
-                blob1 as slug, 
-                count() as total_views 
-            FROM paslanding_events 
-            WHERE timestamp >= now() - INTERVAL '15' MINUTE
-            GROUP BY slug
-        `;
-
-        const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/analytics_engine/sql`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${API_TOKEN}`,
-                'Content-Type': 'application/octet-stream',
-            },
-            body: query
-        });
-
-        const resData = await response.json();
-
-        if (resData.data && resData.data.length > 0) {
-            const stmt = env.DB.prepare(`
-                INSERT INTO analytics_rekap (slug, views, period_start) 
-                VALUES (?, ?, datetime('now', '-15 minutes'))
-            `);
-            await env.DB.batch(resData.data.map(row => stmt.bind(row.slug, row.total_views)));
-            console.log("Rekap Berhasil!");
+        const q = `SELECT blob1 as slug, count() as total_views FROM paslanding_events WHERE timestamp >= now() - INTERVAL '15' MINUTE GROUP BY slug`;
+        const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${env.CF_ACCOUNT_ID}/analytics_engine/sql`, { method: 'POST', headers: { 'Authorization': `Bearer ${env.CF_API_TOKEN}`, 'Content-Type': 'application/octet-stream' }, body: q });
+        const d = await r.json();
+        if (d.data?.length) {
+            const stmt = env.DB.prepare(`INSERT INTO analytics_rekap (slug, views, period_start) VALUES (?, ?, datetime('now', '-15 minutes'))`);
+            await env.DB.batch(d.data.map(x => stmt.bind(x.slug, x.total_views)));
         }
-    } catch (e) {
-        throw new Error("Gagal Rekap: " + e.message);
-    }
+    } catch (e) { throw new Error(e.message); }
 }
 
-app.use('/assets/*', async (c) => {
-  return c.env.ASSETS.fetch(c.req.raw);
+app.use('/assets/*', async (c) => c.env.ASSETS.fetch(c.req.raw));
+app.get('/', async (c) => {
+    try { const s = await c.env.DB.prepare("SELECT value FROM settings WHERE key='homepage_slug'").first(); if(!s?.value) return c.html("<h1>Welcome</h1>"); 
+    const p = await c.env.DB.prepare("SELECT * FROM pages WHERE slug=?").bind(s.value).first(); if(!p) return c.text("404"); trackVisit(c, p, 'home'); return renderPage(c, p); } catch(e){ return c.text(e.message, 500); }
 });
+app.get('/:slug', async (c) => {
+    try { const s = c.req.param('slug'); if(s.includes('.')) return c.env.ASSETS.fetch(c.req.raw); 
+    const p = await c.env.DB.prepare("SELECT * FROM pages WHERE slug=?").bind(s).first(); if(!p) return c.text("404", 404); trackVisit(c, p, c.req.header('Referer')); return renderPage(c, p); } catch(e){ return c.env.ASSETS.fetch(c.req.raw); }
+});
+
 export const onRequest = handle(app);
