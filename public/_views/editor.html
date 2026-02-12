@@ -3,8 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - BASE64 UPLOAD</title>
+    <title>LandingBuilder Pro - Full Feature Editor</title>
     
+    <script>
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0] && typeof args[0] === 'string' && (args[0].includes('cdn.tailwindcss.com') || args[0].includes('production'))) return;
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
@@ -12,7 +22,6 @@
     
     <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.2/dist/css/grapes.min.css">
     <script src="https://unpkg.com/grapesjs@0.21.2/dist/grapes.min.js"></script>
-    
     <script src="https://unpkg.com/grapesjs-blocks-basic@1.0.1"></script>
     <script src="https://unpkg.com/grapesjs-plugin-forms@2.0.5"></script> 
     <script src="https://unpkg.com/grapesjs-navbar@1.0.1"></script>
@@ -20,120 +29,137 @@
     <script src="https://unpkg.com/grapesjs-style-bg@2.0.1"></script>
     <script src="https://unpkg.com/grapesjs-component-countdown@1.0.1"></script>
     <script src="https://unpkg.com/grapesjs-tabs@1.0.6"></script>
+    <script src="https://unpkg.com/grapesjs-custom-code@1.0.1"></script>
+    <script src="https://unpkg.com/grapesjs-tooltip@0.1.7"></script>
 
     <style>
-        /* RESET & BASE */
+        /* 1. RESET & CORE LAYOUT */
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: #fff; }
         [x-cloak] { display: none !important; }
 
-        /* HEADER */
-        header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 40; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; }
-        .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; z-index: 0; }
-        
-        /* SIDEBAR (Z-INDEX 50) */
-        .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 4px 0 24px rgba(0,0,0,0.1); }
-        .mobile-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 45; backdrop-filter: blur(4px); }
-
-        #gjs { flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; position: relative; }
-        
-        /* --- FIX COLOR PICKER PALETTE (Z-INDEX PALING ATAS) --- */
-        .sp-container { 
-            z-index: 9999999 !important; 
-            background: white; 
-            border: 1px solid #cbd5e1; 
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2); 
-            border-radius: 8px; 
+        /* 2. HEADER & NAVIGATION */
+        header {
+            height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100;
+            background: white; border-bottom: 1px solid #e2e8f0;
+            display: flex; align-items: center; justify-content: space-between; padding: 0 16px;
         }
-        .sp-picker-container { border: none; }
-        
-        /* ALPINE MODAL */
-        .alpine-modal { z-index: 100; }
 
-        /* GRAPESJS UI TWEAKS */
+        /* 3. WORKSPACE */
+        .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; z-index: 0; }
+        #gjs { position: relative !important; flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; }
+
+        /* 4. SIDEBAR */
+        .sidebar-panel {
+            position: relative; width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0;
+            z-index: 50; display: flex; flex-direction: column; flex-shrink: 0;
+        }
+
+        /* 5. RESPONSIVE MOBILE FIXES (BOTTOM BAR) */
+        @media (max-width: 768px) {
+            .workspace { bottom: 60px; } 
+            .sidebar-panel {
+                position: fixed; right: 0; top: 60px; bottom: 60px; width: 100% !important;
+                z-index: 9999 !important; transform: translateX(100%);
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .sidebar-panel.open { transform: translateX(0); }
+            .mobile-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 150; top: 60px; bottom: 60px; display: none; }
+            .mobile-overlay.show { display: block; }
+        }
+
+        /* 6. UI CLEANUP & BLOCKS */
+        .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; width: 0 !important; }
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
-        .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; } 
-        
-        .gjs-field { border: 1px solid #e5e7eb; border-radius: 4px; background: #fff; color: #333; padding: 5px; }
-        .gjs-field input { color: #333; font-size: 12px; width: 100%; }
-        .gjs-field-color-picker { border: 1px solid #cbd5e1; margin-right: 5px; cursor: pointer; border-radius: 4px; min-width: 30px; padding: 2px; }
+        .widget-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 12px; }
+        .block-card { 
+            width: 100% !important; min-height: 90px !important; padding: 12px 8px !important; background: #fff; 
+            border: 1px solid #e5e7eb; border-radius: 12px; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; gap: 6px; cursor: pointer; transition: 0.2s;
+        }
+        .block-card:active { transform: scale(0.95); background: #f5f3ff; }
+        .custom-scroll { overflow-y: auto; height: 100%; -webkit-overflow-scrolling: touch; }
+        .gjs-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px; }
 
-        /* TRAIT BUTTON */
-        .trait-btn { width: 100%; background: #4f46e5; color: white; padding: 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; border: none; transition: background 0.2s; text-align: center; display:flex; align-items:center; justify-content:center; gap:6px; margin-top: 5px; }
-        .trait-btn:hover { background: #4338ca; }
-        .trait-btn.loading { background: #9ca3af; cursor: not-allowed; }
-        
-        /* ACCORDION */
-        details.category-group > summary { list-style: none; cursor: pointer; background: #f9fafb; padding: 12px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #4b5563; border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; }
-        details.category-group[open] > summary { border-bottom: 1px solid #e5e7eb; background: #fff; color: #4f46e5; border-left: 3px solid #4f46e5; }
-        
-        /* GRID & ICONS */
-        .widget-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px; background: #fff; }
-        .block-card { cursor: grab; background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: all 0.2s; user-select: none; }
-        .block-card:hover { border-color: #6366f1; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        
-        .icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); gap: 8px; max-height: 250px; overflow-y: auto; padding: 4px; }
-        .icon-item { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 22px; cursor: pointer; color: #64748b; transition: all 0.2s; position: relative; }
-        .icon-item:hover { background-color: #e0e7ff; color: #4f46e5; border-color: #6366f1; transform: scale(1.05); }
-        
-        .custom-scroll::-webkit-scrollbar { width: 5px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .input-field { width: 100%; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; outline: none; transition: border 0.2s; }
-        .input-field:focus { border-color: #4f46e5; ring: 1px solid #4f46e5; }
-        .label-field { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #6b7280; margin-bottom: 4px; }
+        /* 7. COLOR PICKER & INPUTS */
+        .gjs-field { border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px; background: white; color: #333; }
+        .gjs-field input { color: #333; font-size: 13px; width: 100%; }
+        .gjs-field-color-picker { border: 1px solid #cbd5e1; margin-right: 5px; cursor: pointer; border-radius: 4px; min-width: 30px; height: 30px; padding: 2px; }
+        .sp-container { z-index: 9999999 !important; border: 1px solid #ddd; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+
+        /* 8. CUSTOM TRAIT BUTTON */
+        .trait-btn-upload {
+            width: 100%; background-color: #4f46e5; color: white; 
+            padding: 10px; border-radius: 8px; font-weight: bold; font-size: 11px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: all 0.2s; border: none; margin-top: 5px; text-transform: uppercase;
+        }
+        .trait-btn-upload:hover { background-color: #4338ca; }
+        .trait-btn-upload:disabled { opacity: 0.7; cursor: wait; }
+
+        .input-field { width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 13px; outline: none; }
+        .label-field { display: block; font-size: 10px; font-weight: 800; text-transform: uppercase; color: #6b7280; margin-bottom: 4px; letter-spacing: 0.5px; }
     </style>
 </head>
-<body x-data="editorApp()" x-init="window.editorApp = $data">
+<body x-data="editorApp()">
+
+    <div class="fixed top-20 right-5 z-[9999] flex flex-col gap-2 pointer-events-none">
+        <template x-for="n in notifications" :key="n.id">
+            <div x-show="n.show" x-transition class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border-l-4 bg-white min-w-[250px]" :class="n.type==='success'?'border-green-500':'border-red-500'">
+                <i class="ph text-xl" :class="n.type==='success'?'ph-check-circle text-green-500':'ph-warning-circle text-red-500'"></i>
+                <div><h4 class="text-xs font-bold text-gray-800" x-text="n.title"></h4></div>
+            </div>
+        </template>
+    </div>
 
     <header>
-        <div class="flex items-center gap-3 flex-1 min-w-0">
-            <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden shrink-0 text-gray-600 bg-gray-100 hover:bg-gray-200 p-2 rounded-lg transition"><i class="ph ph-list text-2xl"></i></button>
-            <a href="/admin/pages" class="hidden md:block text-gray-400 hover:text-indigo-600 p-1.5 hover:bg-gray-50 rounded"><i class="ph ph-arrow-left text-xl"></i></a>
-            <div class="flex flex-col min-w-0 flex-1">
-                <input x-model="page.title" class="bg-transparent font-bold text-sm text-gray-800 outline-none w-full truncate placeholder-gray-300 focus:text-indigo-600" placeholder="Nama Halaman...">
-                <span class="text-[10px] text-gray-400 truncate font-mono hidden sm:block" x-text="page.slug ? '/'+page.slug : 'Draft Mode'"></span>
+        <div class="flex items-center gap-3 overflow-hidden w-full max-w-[250px]">
+            <a href="/admin/pages" class="text-gray-400 hover:text-indigo-600 transition p-1.5 rounded shrink-0"><i class="ph ph-arrow-left text-xl"></i></a>
+            <div class="flex-1 min-w-0">
+                <input x-model="page.title" class="bg-transparent font-bold text-xs text-gray-800 outline-none w-full truncate" placeholder="Nama Halaman">
+                <span class="text-[10px] text-gray-400 truncate font-mono block" x-text="page.slug ? '/'+page.slug : 'Draft Mode'"></span>
             </div>
         </div>
-        <div class="hidden md:flex bg-gray-100 rounded-lg p-1 border shadow-sm mx-4">
-            <button @click="setDevice('desktop')" :class="device=='desktop'?'bg-white shadow-sm text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-desktop"></i></button>
-            <button @click="setDevice('tablet')" :class="device=='tablet'?'bg-white shadow-sm text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-tablet"></i></button>
-            <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-white shadow-sm text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile"></i></button>
+
+        <div class="hidden md:flex absolute left-1/2 transform -translate-x-1/2 items-center bg-gray-100 rounded-lg p-1 border shadow-sm">
+            <button @click="setDevice('desktop')" :class="device=='desktop'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-desktop text-lg"></i></button>
+            <button @click="setDevice('tablet')" :class="device=='tablet'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-tablet text-lg"></i></button>
+            <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile text-lg"></i></button>
         </div>
-        <div class="flex items-center gap-2 shrink-0">
-            <button @click="showSettings=true" class="flex items-center gap-2 bg-white text-gray-600 px-3 py-2 rounded-lg text-xs font-bold border hover:bg-gray-50 transition shadow-sm"><i class="ph ph-gear"></i> <span class="hidden md:inline">CONFIG</span></button>
-            <button @click="savePage" :disabled="loading" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md shadow-indigo-200 transition active:scale-95">
-                <i class="ph ph-floppy-disk text-lg" x-show="!loading"></i><i class="ph ph-spinner animate-spin text-lg" x-show="loading"></i>
-                <span x-text="loading ? '...' : 'PUBLISH'" class="hidden sm:inline"></span>
+
+        <div class="flex items-center gap-2">
+            <div class="hidden md:flex items-center gap-2">
+                <button @click="showSettings=true" class="bg-white text-gray-600 px-3 py-2 rounded-lg text-xs font-bold border border-gray-200 hover:bg-gray-50 transition">Config</button>
+                <button @click="savePage" :disabled="loading" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-lg hover:bg-indigo-700 transition">
+                    <span x-text="loading ? 'SAVING...' : 'PUBLISH'"></span>
+                </button>
+            </div>
+            <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden p-2 rounded-lg border border-gray-200 text-gray-700 bg-white">
+                <i class="ph" :class="mobileMenuOpen ? 'ph-x' : 'ph-list'" style="font-size: 24px;"></i>
             </button>
         </div>
     </header>
 
     <div class="workspace">
         <div id="gjs"></div>
-        <div x-show="mobileMenuOpen" x-cloak class="mobile-backdrop" @click="mobileMenuOpen = false" x-transition.opacity></div>
-
-        <div class="sidebar-panel fixed inset-y-0 left-0 md:static transform duration-300 ease-in-out" :class="mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'">
-            <div class="md:hidden flex items-center justify-between p-4 border-b bg-gray-50">
-                <span class="font-bold text-gray-800 text-sm uppercase flex items-center gap-2"><i class="ph ph-toolbox"></i> Tools</span>
-                <button @click="mobileMenuOpen = false" class="text-gray-500 hover:text-red-600 bg-white p-1 rounded border"><i class="ph ph-x text-lg"></i></button>
-            </div>
-
+        <div class="mobile-overlay md:hidden" :class="mobileMenuOpen ? 'show' : ''" @click="mobileMenuOpen = false"></div>
+        
+        <div class="sidebar-panel" :class="mobileMenuOpen ? 'open' : ''">
             <div class="flex border-b border-gray-200 bg-white shrink-0">
-                <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition" title="Widgets"><i class="ph ph-squares-four text-xl"></i></button>
-                <button @click="tab='traits'" :class="tab=='traits'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition" title="Settings"><i class="ph ph-gear text-xl"></i></button>
-                <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition" title="Styles"><i class="ph ph-paint-brush text-xl"></i></button>
-                <button @click="tab='layers'" :class="tab=='layers'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition" title="Layers"><i class="ph ph-stack text-xl"></i></button>
+                <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-squares-four text-xl"></i></button>
+                <button @click="tab='traits'" :class="tab=='traits'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-gear text-xl"></i></button>
+                <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-paint-brush text-xl"></i></button>
+                <button @click="tab='layers'" :class="tab=='layers'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-stack text-xl"></i></button>
             </div>
-            
-            <div class="flex-1 bg-white relative w-full overflow-y-auto custom-scroll">
+            <div class="flex-1 bg-white custom-scroll relative w-full overflow-y-auto">
                 <div x-show="tab=='blocks'" class="h-full pb-20">
                     <template x-for="(widgets, category) in groupedWidgets" :key="category">
                         <details class="category-group" open>
-                            <summary x-text="category || 'General'"></summary>
+                            <summary class="list-none cursor-pointer bg-gray-50 p-3 text-[10px] font-black uppercase text-gray-500 border-b" x-text="category || 'General'"></summary>
                             <div class="widget-grid">
                                 <template x-for="w in widgets" :key="w.id">
-                                    <div class="block-card" @click="addBlockToCanvas(w)" draggable="true" @dragstart="handleDragStart($event, w)">
-                                        <div class="block-icon text-indigo-600 text-xl"><i class="ph ph-cube"></i></div>
-                                        <div class="block-label" x-text="w.label"></div>
+                                    <div class="block-card" @click="addBlockToCanvas(w)">
+                                        <div class="text-indigo-600 text-xl"><i class="ph ph-cube"></i></div>
+                                        <div class="text-[10px] font-bold text-gray-700 text-center" x-text="w.label"></div>
                                     </div>
                                 </template>
                             </div>
@@ -141,146 +167,127 @@
                     </template>
                 </div>
                 <div x-show="tab=='traits'" class="h-full pb-20">
-                    <div id="traits-container" class="p-3"></div>
-                    <div class="p-4 text-center">
-                        <p class="text-[10px] text-gray-400 bg-blue-50 text-blue-700 p-2 rounded border border-blue-100">
-                            <i class="ph ph-info"></i> Pilih elemen untuk edit properti khusus (Upload Gambar, Link, Icon).
-                        </p>
-                    </div>
+                    <div id="traits-container" class="p-4"></div>
                 </div>
-                <div x-show="tab=='styles'" class="h-full pb-20"><div id="selectors-container" class="p-3 border-b bg-gray-50"></div><div id="styles-container" class="p-1"></div></div>
-                <div x-show="tab=='layers'" class="h-full pb-20"><div id="layers-container" class="p-2"></div></div>
-            </div>
-        </div>
-    </div>
-
-    <div x-show="showIconPicker" x-cloak class="alpine-modal fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4" x-transition.opacity>
-        <div class="w-full max-w-lg bg-white rounded-xl shadow-2xl flex flex-col max-h-[80vh] border border-gray-100" @click.outside="closeIconPicker()">
-            <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-xl"><h3 class="font-bold text-gray-800">Cari Icon (Iconify)</h3><button @click="closeIconPicker()" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button></div>
-            <div class="p-4 space-y-4 overflow-hidden flex flex-col h-full">
-                <div class="flex gap-2">
-                    <div class="relative flex-1"><i class="ph ph-magnifying-glass absolute left-3 top-2.5 text-gray-400"></i><input x-model="iconSearch" @keyup.enter="searchIcons()" class="w-full pl-9 pr-3 py-2 border rounded text-sm font-mono focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Cth: whatsapp, user, cart..."></div>
-                    <button @click="searchIcons()" class="px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded shadow-sm hover:bg-indigo-700 transition"><span x-show="!loadingIcons">CARI</span><i x-show="loadingIcons" class="ph ph-spinner animate-spin"></i></button>
+                <div x-show="tab=='styles'" class="h-full pb-20">
+                    <div id="selectors-container" class="p-3 border-b bg-gray-50"></div>
+                    <div id="styles-container" class="p-1"></div>
                 </div>
-                <div class="flex-1 overflow-hidden flex flex-col">
-                    <div class="icon-grid custom-scroll" x-show="iconList.length > 0">
-                        <template x-for="icon in iconList" :key="icon">
-                            <div class="icon-item group" :title="icon" @click="applyIcon(icon)">
-                                <iconify-icon :icon="icon"></iconify-icon>
-                                <span class="hidden group-hover:block absolute bottom-full mb-1 left-1/2 -translate-x-1/2 text-[9px] bg-black text-white px-1 rounded whitespace-nowrap" x-text="icon"></span>
-                            </div>
-                        </template>
-                    </div>
+                <div x-show="tab=='layers'" class="h-full pb-20">
+                    <div id="layers-container"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div x-show="showSettings" x-cloak class="alpine-modal fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex justify-end" x-transition.opacity>
-        <div class="w-full md:w-[420px] h-full bg-white shadow-2xl flex flex-col border-l border-gray-200 transform transition-transform duration-300" x-transition:enter="translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="translate-x-0" x-transition:leave-end="translate-x-full" @click.outside="showSettings=false">
+    <div class="md:hidden fixed bottom-0 left-0 w-full h-[60px] bg-white border-t border-gray-200 flex items-center justify-around z-[300] px-2 shadow-lg">
+        <button @click="cmd('core:preview')" class="flex flex-col items-center justify-center w-16 text-gray-500">
+            <i class="ph ph-eye text-2xl"></i><span class="text-[9px] font-bold">View</span>
+        </button>
+        <button @click="showSettings=true" class="flex flex-col items-center justify-center w-16 text-gray-500">
+            <i class="ph ph-gear-six text-2xl"></i><span class="text-[9px] font-bold">Config</span>
+        </button>
+        <button @click="savePage" :disabled="loading" class="flex items-center justify-center gap-2 bg-indigo-600 text-white px-6 py-2 rounded-full shadow-lg">
+            <i x-show="!loading" class="ph ph-paper-plane-right-fill text-xl"></i>
+            <span x-show="loading" class="ph ph-spinner animate-spin text-xl"></span>
+            <span class="font-bold text-xs uppercase">Publish</span>
+        </button>
+    </div>
+
+    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[400] bg-slate-900/50 backdrop-blur-sm flex justify-end" @click.self="showSettings = false">
+        <div class="w-full md:w-[480px] h-full bg-white shadow-2xl flex flex-col border-l">
             <div class="p-5 border-b flex justify-between items-center bg-gray-50">
-                <div><h3 class="font-bold text-gray-800 text-lg">Konfigurasi Halaman</h3><p class="text-xs text-gray-500">Pengaturan Bisnis, SEO & Data</p></div>
-                <button @click="showSettings=false" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-2xl"></i></button>
+                <h2 class="font-bold text-gray-800 flex items-center gap-2"><i class="ph ph-faders text-indigo-600 text-xl"></i> Konfigurasi Halaman</h2>
+                <button @click="showSettings = false" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button>
             </div>
-            <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scroll">
+            <div class="flex-1 overflow-y-auto p-6 space-y-6">
                 <div class="space-y-4">
-                    <div class="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-wider border-b pb-1 mb-2">Identitas</div>
                     <div><label class="label-field">Judul Halaman</label><input x-model="page.title" class="input-field"></div>
-                    <div><label class="label-field">Slug URL</label><input x-model="page.slug" class="input-field"></div>
-                </div>
-                <div class="space-y-4">
-                    <div class="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-wider border-b pb-1 mb-2">Produk & Transaksi</div>
+                    <div><label class="label-field">URL Slug</label><input x-model="page.slug" class="input-field"></div>
                     <div><label class="label-field">Harga Produk (IDR)</label><input x-model="page.config.price" type="number" class="input-field"></div>
-                </div>
-                <div class="space-y-4">
-                    <div class="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-wider border-b pb-1 mb-2">SEO & Tracking</div>
                     <div><label class="label-field">Pixel ID</label><input x-model="page.config.settings.fb_pixel" class="input-field"></div>
                 </div>
             </div>
-            <div class="p-5 border-t bg-gray-50 text-right"><button @click="savePage(); showSettings=false" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded shadow-lg">SIMPAN & PUBLISH</button></div>
+            <div class="p-4 border-t bg-gray-50 flex justify-end gap-3">
+                <button @click="savePage(); showSettings=false" class="px-8 py-2 bg-indigo-600 text-white text-xs font-black rounded-xl shadow-lg uppercase">Simpan Perubahan</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="iconify-picker-modal" class="fixed inset-0 hidden z-[99999] bg-black/40 flex items-start justify-center p-6 backdrop-blur-sm">
+        <div class="bg-white rounded-xl w-full max-w-xl shadow-2xl overflow-hidden mt-10">
+            <div class="flex items-center justify-between p-4 border-b bg-gray-50">
+                <input id="iconify-picker-search" placeholder="Cari icon..." class="w-full bg-transparent outline-none text-sm" />
+                <button id="iconify-picker-close"><i class="ph ph-x text-lg"></i></button>
+            </div>
+            <div id="iconify-picker-results" class="p-4 grid grid-cols-6 gap-3 max-h-[300px] overflow-y-auto"></div>
         </div>
     </div>
 
     <script>
+    (function(){
+        let activeModel = null; const modal = document.getElementById('iconify-picker-modal'); const input = document.getElementById('iconify-picker-search'); const results = document.getElementById('iconify-picker-results');
+        window.openIconifyPicker = function(model) { activeModel = model; modal.classList.remove('hidden'); input.value = ''; input.focus(); searchIcons('star'); };
+        document.getElementById('iconify-picker-close').onclick = () => modal.classList.add('hidden');
+        input.oninput = (e) => searchIcons(e.target.value);
+        async function searchIcons(q) { if(!q) return; const res = await fetch(`https://api.iconify.design/search?query=${q}&limit=24`); const data = await res.json(); results.innerHTML = ''; if(data.icons) { data.icons.forEach(icon => { const btn = document.createElement('button'); btn.className = 'p-2 hover:bg-indigo-50 rounded flex flex-col items-center gap-1'; btn.innerHTML = `<iconify-icon icon="${icon}" width="24"></iconify-icon><span class="text-[9px] text-gray-400 truncate w-full text-center">${icon.split(':')[1]}</span>`; btn.onclick = () => { if(activeModel) activeModel.addAttributes({ icon: icon }); modal.classList.add('hidden'); }; results.appendChild(btn); }); } }
+    })();
+
     function editorApp() {
         return {
-            device: 'desktop', tab: 'blocks', mobileMenuOpen: false, showSettings: false, showIconPicker: false, iconSearch: '', loading: false, loadingIcons: false, notifications: [],
-            page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, variants:[], shipping: {}, settings: {} } },
-            groupedWidgets: {}, widgetScripts: {}, iconList: [],
+            device: 'desktop', tab: 'blocks', mobileMenuOpen: false, showSettings: false, loading: false, notifications: [],
+            page: { id: 0, slug: '', title: '', config: { price: 0, settings: {} } },
+            groupedWidgets: {}, widgetScripts: {},
 
             async init() {
-                // 1. Load Widgets DULU agar data siap
                 await this.loadWidgets();
-                // 2. Inisialisasi GrapesJS
                 this.initGrapes();
-                
                 const slug = new URLSearchParams(window.location.search).get('slug');
                 if (slug) await this.loadPageData(slug);
-                this.iconList = ['ph:star-fill','ph:heart-fill','ph:check-circle-fill','logos:whatsapp-icon','logos:facebook','logos:instagram-icon'];
             },
 
             notify(title, type = 'success') { const id = Date.now(); this.notifications.push({ id, title, type, show: true }); setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); },
-
-            async searchIcons() {
-                if(!this.iconSearch) return;
-                this.loadingIcons = true;
-                try {
-                    const res = await fetch(`https://api.iconify.design/search?query=${encodeURIComponent(this.iconSearch)}&limit=60`);
-                    if(res.ok) { const data = await res.json(); this.iconList = data.icons || []; }
-                } catch(e) { console.error(e); this.notify('Gagal mencari icon', 'error'); }
-                this.loadingIcons = false;
-            },
 
             async loadWidgets() {
                 try {
                     const res = await fetch('/api/widgets');
                     const widgets = await res.json();
-                    this.groupedWidgets = {}; this.widgetScripts = {};
                     widgets.forEach(w => {
                         if(w.script) this.widgetScripts[w.id] = w.script;
                         const cat = w.category || 'General';
                         if(!this.groupedWidgets[cat]) this.groupedWidgets[cat] = [];
                         this.groupedWidgets[cat].push(w);
                     });
-                } catch(e) { console.error(e); }
+                } catch(e) {}
             },
 
             initGrapes() {
                 window.editor = grapesjs.init({
-                    container: '#gjs', height: '100%', width: 'auto', storageManager: false, panels: { defaults: [] }, 
+                    container: '#gjs', height: '100%', storageManager: false, panels: { defaults: [] },
                     allowScripts: 1, 
-                    deviceManager: { 
-                        devices: [
-                            { name: 'desktop', width: '' }, 
-                            { name: 'tablet', width: '768px' }, 
-                            { name: 'mobile', width: '375px' }
-                        ] 
-                    },
+                    deviceManager: { devices: [{name:'desktop',width:''},{name:'tablet',width:'768px'},{name:'mobile',width:'375px'}] },
                     assetManager: { embedAsBase64: 0, openAssetsOnDrop: 0 },
                     canvas: {
                         scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
                         styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
-                        content: `<style>body{padding:20px;} details{min-height:50px;}</style>`
+                        content: `<style>body{padding:20px;} .hidden{display:none!important;}</style>`
                     },
-                    plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg', 'grapesjs-component-countdown', 'grapesjs-tabs'],
+                    plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg', 'grapesjs-component-countdown', 'grapesjs-tabs', 'grapesjs-custom-code'],
                     selectorManager: { appendTo: '#selectors-container' },
                     traitManager: { appendTo: '#traits-container' },
                     styleManager: { appendTo: '#styles-container', sectors: [{ name: 'Typography', open: 1, buildProps: ['font-size','font-weight','color','text-align'] },{ name: 'Layout', buildProps: ['padding','margin','display','width','height'] },{ name: 'Decor', buildProps: ['background-color','border-radius','box-shadow'] }] },
-                    layerManager: { appendTo: '#layers-container' }
                 });
 
-                // --- 1. TRAIT: UPLOAD IMAGE (BASE64) ---
+                // --- 1. TRAIT UPLOAD IMAGE (BASE64) ---
                 window.editor.TraitManager.addType('file-upload', {
                     createInput({ trait }) {
                         const div = document.createElement('div');
                         const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*'; input.style.display = 'none';
-                        const btn = document.createElement('button'); btn.className = 'trait-btn'; btn.innerHTML = '<i class="ph ph-upload-simple"></i> UPLOAD GAMBAR';
-                        
+                        const btn = document.createElement('button'); btn.className = 'trait-btn-upload'; btn.innerHTML = '<i class="ph ph-upload-simple"></i> UPLOAD GAMBAR';
                         btn.onclick = () => input.click();
-                        input.onchange = (e) => {
-                            const file = e.target.files[0]; if(!file) return;
-                            const reader = new FileReader();
-                            reader.readAsDataURL(file);
+                        input.onchange = () => {
+                            const file = input.files[0]; if(!file) return;
+                            const reader = new FileReader(); reader.readAsDataURL(file);
                             reader.onloadend = async () => {
                                 btn.innerHTML = 'UPLOADING...'; btn.disabled = true;
                                 const formData = new FormData(); formData.append('file', reader.result);
@@ -288,9 +295,9 @@
                                     const res = await fetch('/api/admin/upload-image', { method: 'POST', body: formData });
                                     const json = await res.json();
                                     const url = json.data ? json.data[0].src : (json.url || json.secure_url);
-                                    if(url) { trait.target.addAttributes({ src: url }); }
+                                    if(url) trait.target.addAttributes({ src: url });
                                 } catch(err) { alert('Upload Gagal'); }
-                                finally { btn.innerHTML = 'UPLOAD GAMBAR'; btn.disabled = false; }
+                                finally { btn.innerHTML = '<i class="ph ph-upload-simple"></i> UPLOAD GAMBAR'; btn.disabled = false; }
                             };
                         };
                         div.appendChild(btn); div.appendChild(input); return div;
@@ -301,54 +308,80 @@
                     model: { defaults: { traits: [{ type: 'text', name: 'src', label: 'URL' }, { type: 'file-upload', name: 'up', label: ' ' }, { type: 'text', name: 'alt' }] } }
                 });
 
-                // --- 2. TRAIT: ICON PICKER ---
-                window.editor.TraitManager.addType('icon-btn', {
-                    createInput() {
-                        const btn = document.createElement('button'); btn.className = 'trait-btn'; btn.innerHTML = 'Cari Icon';
-                        btn.onclick = () => window.editorApp.showIconPicker = true;
+                // --- 2. TRAIT ICON PICKER ---
+                window.editor.TraitManager.addType('icon-picker-btn', {
+                    createInput({ trait }) {
+                        const btn = document.createElement('button'); btn.className = 'trait-btn-upload'; btn.innerHTML = 'CARI ICON';
+                        btn.onclick = () => window.openIconifyPicker(trait.target);
                         return btn;
                     }
                 });
+
                 window.editor.DomComponents.addType('iconify-icon', {
                     isComponent: el => el.tagName === 'ICONIFY-ICON',
-                    model: { defaults: { traits: [{ type: 'icon-btn', name: 'p', label: ' ' }, { type: 'text', name: 'icon' }, { type: 'color', name: 'color', changeProp: 1 }] }, init() { this.on('change:color', () => this.addStyle({color: this.get('color')})) } }
+                    model: { 
+                        defaults: { 
+                            traits: [{ type: 'icon-picker-btn', name: 'p', label: ' ' }, { type: 'text', name: 'icon', label: 'Kode' }, { type: 'color', name: 'color', changeProp: 1 }, { type: 'number', name: 'width', label: 'Lebar' }],
+                            attributes: { icon: 'ph:star-fill', width: '32' }
+                        },
+                        init() { this.on('change:color', () => this.addStyle({color: this.get('color')})) }
+                    }
                 });
 
-                // --- 3. FIX COUNTDOWN & SCRIPT WIDGETS ---
+                // --- 3. COUNTDOWN SMART (FIX EDITABLE) ---
+                window.editor.DomComponents.addType('countdown-smart', {
+                    model: {
+                        defaults: {
+                            attributes: { 'data-widget-type': 'countdown-smart', 'expire': '2025-12-31 23:59', 'msg': 'Promo Selesai' },
+                            traits: [
+                                { type: 'text', name: 'expire', label: 'Waktu (YYYY-MM-DD HH:mm)' },
+                                { type: 'text', name: 'msg', label: 'Pesan Berakhir' }
+                            ],
+                            script: function() {
+                                const el = this;
+                                const timer = () => {
+                                    const expire = el.getAttribute('expire') || '2025-12-31 23:59';
+                                    const diff = new Date(expire).getTime() - new Date().getTime();
+                                    const msgEl = el.querySelector('.js-expired-msg');
+                                    const wrap = el.querySelector('.js-wrap');
+                                    
+                                    if (diff <= 0) {
+                                        if(msgEl) { msgEl.innerText = el.getAttribute('msg') || 'Selesai'; msgEl.classList.remove('hidden'); }
+                                        if(wrap) wrap.classList.add('hidden');
+                                        return;
+                                    }
+
+                                    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                                    const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                                    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                                    const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+                                    const updateText = (cls, val) => { const node = el.querySelector('.'+cls); if(node) node.innerText = val.toString().padStart(2,'0'); };
+                                    updateText('js-d', d); updateText('js-h', h); updateText('js-m', m); updateText('js-s', s);
+                                    if(msgEl) msgEl.classList.add('hidden'); if(wrap) wrap.classList.remove('hidden');
+                                };
+                                setInterval(timer, 1000); timer();
+                            }
+                        }
+                    }
+                });
+
+                // Load other widgets
                 if(this.widgetScripts) {
                     Object.keys(this.widgetScripts).forEach(id => {
-                        window.editor.DomComponents.addType(id, {
-                            model: {
-                                defaults: {
-                                    attributes: { 'data-widget-type': id },
-                                    script: this.widgetScripts[id]
-                                }
-                            }
-                        });
+                        if(id !== 'countdown-smart' && id !== 'iconify-icon') {
+                            window.editor.DomComponents.addType(id, {
+                                model: { defaults: { attributes: { 'data-widget-type': id }, script: this.widgetScripts[id] } }
+                            });
+                        }
                     });
                 }
             },
 
-            addBlockToCanvas(w) {
-                // Pastikan widget terdeteksi tipenya agar script dieksekusi
-                const component = window.editor.addComponents({
-                    type: w.id, // Paksa type ke ID widget database
-                    content: w.content
-                })[0];
-                if(window.innerWidth < 768) this.mobileMenuOpen = false;
+            addBlockToCanvas(w) { 
+                window.editor.addComponents({ type: w.id, content: w.content }); 
+                if(window.innerWidth < 768) this.mobileMenuOpen = false; 
             },
-
-            handleDragStart(event, w) { event.dataTransfer.setData('text', w.content); },
-
-            applyIcon(icon) {
-                const selected = window.editor.getSelected();
-                if(selected) {
-                    if(selected.is('iconify-icon')) selected.addAttributes({ icon: icon });
-                    else selected.append(`<iconify-icon icon="${icon}" width="32"></iconify-icon>`);
-                }
-                this.showIconPicker = false;
-            },
-            closeIconPicker() { this.showIconPicker = false; },
 
             async loadPageData(slug) {
                 try {
@@ -356,11 +389,11 @@
                     const data = await res.json();
                     this.page.id = data.id; this.page.slug = data.slug; this.page.title = data.title;
                     if(data.product_config_json) this.page.config = JSON.parse(data.product_config_json);
-                    if(window.editor) {
-                        window.editor.setComponents(data.html_content || '');
-                        window.editor.setStyle(data.css_content || '');
+                    if(window.editor) { 
+                        window.editor.setComponents(data.html_content || ''); 
+                        window.editor.setStyle(data.css_content || ''); 
                     }
-                } catch(e) { console.error(e); }
+                } catch(e) {}
             },
 
             async savePage() {
@@ -368,13 +401,14 @@
                 try {
                     const html = window.editor.getHtml(); const css = window.editor.getCss();
                     const payload = { id: this.page.id, slug: this.page.slug, title: this.page.title, html: html, css: css, product_config: this.page.config };
-                    await fetch('/api/admin/pages', { method: 'POST', body: JSON.stringify(payload), headers: {'Content-Type': 'application/json'} });
-                    this.notify('Berhasil Disimpan!');
+                    const res = await fetch('/api/admin/pages', { method: 'POST', body: JSON.stringify(payload), headers: {'Content-Type': 'application/json'} });
+                    if(res.ok) this.notify('Berhasil Disimpan!');
                 } catch (e) { this.notify('Gagal Simpan', 'error'); }
                 this.loading = false;
             },
 
-            setDevice(d) { this.device = d; if(window.editor) window.editor.setDevice(d); }
+            setDevice(d) { this.device = d; if(window.editor) window.editor.setDevice(d); },
+            cmd(c) { window.editor.runCommand(c); }
         };
     }
     </script>
