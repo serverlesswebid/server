@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - Database Driven</title>
+    <title>LandingBuilder Pro - Enterprise Edition</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -19,36 +19,54 @@
     <script src="https://unpkg.com/grapesjs-style-bg@2.0.1"></script>
 
     <style>
+        /* BASE RESET */
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: #fff; }
         [x-cloak] { display: none !important; }
 
-        /* HEADER & LAYOUT */
-        header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        /* LAYOUT STRUKTUR */
+        header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; }
+        
+        /* SIDEBAR & CANVAS */
+        .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; box-shadow: -2px 0 10px rgba(0,0,0,0.02); }
         #gjs { flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; position: relative; }
-        .sidebar-panel { width: 300px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; }
         
-        /* GRAPESJS OVERRIDES */
-        .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; }
+        /* GRAPESJS UI OVERRIDES (Agar terlihat modern) */
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
-        .gjs-three-bg { background-color: #f3f4f6 !important; }
+        .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; } /* Hide Default Panels */
+        .gjs-three-bg { background-color: #f8fafc !important; }
         
-        /* BLOCK CARDS UI */
-        .block-card { cursor: pointer; background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; transition: all 0.2s; user-select: none; }
-        .block-card:hover { border-color: #6366f1; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15); transform: translateY(-2px); }
-        .block-icon { color: #4f46e5; font-size: 24px; }
-        .block-label { font-size: 11px; font-weight: 600; text-transform: uppercase; color: #4b5563; text-align: center; letter-spacing: 0.5px; }
+        /* INPUT STYLING (GrapesJS Fields) */
+        .gjs-field { background-color: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px; color: #374151; }
+        .gjs-field input, .gjs-field select { color: #374151; font-size: 13px; }
+        .gjs-field-color-picker { border-radius: 4px; border: 1px solid #ddd; overflow: hidden; cursor: pointer; }
         
+        /* SIDEBAR ACCORDION (KATEGORI WIDGET) */
+        details.category-group > summary { list-style: none; cursor: pointer; background: #f9fafb; padding: 10px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #4b5563; border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; }
+        details.category-group > summary:hover { background: #f3f4f6; color: #111; }
+        details.category-group > summary::-webkit-details-marker { display: none; }
+        details.category-group > summary::after { content: '+'; font-size: 14px; font-weight: bold; }
+        details.category-group[open] > summary::after { content: '-'; }
+        details.category-group[open] > summary { border-bottom: 1px solid #e5e7eb; background: #fff; color: #4f46e5; }
+        
+        /* WIDGET GRID */
+        .widget-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px; background: #fff; }
+        .block-card { cursor: grab; background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: all 0.2s; user-select: none; }
+        .block-card:hover { border-color: #6366f1; box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.1); transform: translateY(-1px); }
+        .block-card:active { cursor: grabbing; }
+        .block-icon { color: #4f46e5; font-size: 20px; }
+        .block-label { font-size: 10px; font-weight: 600; text-align: center; color: #374151; line-height: 1.2; }
+
         /* SCROLLBAR */
         .custom-scroll::-webkit-scrollbar { width: 5px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
-        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
-
-        /* UI HELPER */
-        .input-field { width: 100%; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; outline: none; transition: border-color 0.2s; }
-        .input-field:focus { border-color: #6366f1; ring: 2px solid #e0e7ff; }
-        .label-field { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #6b7280; margin-bottom: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* ICON PICKER MODAL GRID */
+        .icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); gap: 8px; max-height: 300px; overflow-y: auto; padding: 4px; }
+        .icon-item { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 24px; cursor: pointer; color: #64748b; transition: all 0.2s; }
+        .icon-item:hover { background-color: #e0e7ff; color: #4f46e5; border-color: #6366f1; }
     </style>
 </head>
 <body x-data="editorApp()">
@@ -59,22 +77,22 @@
                 <i class="ph ph-arrow-left text-xl"></i>
             </a>
             <div class="flex flex-col min-w-0">
-                <input x-model="page.title" class="bg-transparent font-bold text-sm text-gray-800 outline-none w-full truncate placeholder-gray-300" placeholder="Nama Halaman Tanpa Judul">
-                <span class="text-[10px] text-gray-400 truncate" x-text="page.slug ? 'slug: /'+page.slug : 'Draft Mode'"></span>
+                <input x-model="page.title" class="bg-transparent font-bold text-sm text-gray-800 outline-none w-full truncate placeholder-gray-300 transition focus:text-indigo-600" placeholder="Halaman Tanpa Judul">
+                <span class="text-[10px] text-gray-400 truncate font-mono" x-text="page.slug ? '/'+page.slug : 'Draft Mode'"></span>
             </div>
         </div>
 
-        <div class="hidden md:flex bg-gray-100 rounded-lg p-1 border shadow-sm">
-            <button @click="setDevice('desktop')" :class="device=='desktop'?'bg-white shadow text-indigo-600':'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded transition"><i class="ph ph-desktop"></i></button>
-            <button @click="setDevice('tablet')" :class="device=='tablet'?'bg-white shadow text-indigo-600':'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded transition"><i class="ph ph-device-tablet"></i></button>
-            <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-white shadow text-indigo-600':'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile"></i></button>
+        <div class="hidden md:flex bg-gray-50 rounded-lg p-1 border shadow-sm">
+            <button @click="setDevice('desktop')" :class="device=='desktop'?'bg-white shadow-sm text-indigo-600':'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded transition"><i class="ph ph-desktop"></i></button>
+            <button @click="setDevice('tablet')" :class="device=='tablet'?'bg-white shadow-sm text-indigo-600':'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded transition"><i class="ph ph-device-tablet"></i></button>
+            <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-white shadow-sm text-indigo-600':'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile"></i></button>
         </div>
 
         <div class="flex items-center gap-2 w-1/3 justify-end">
             <button @click="showSettings=true" class="flex items-center gap-2 bg-white text-gray-600 px-3 py-2 rounded-lg text-xs font-bold border hover:bg-gray-50 transition shadow-sm">
                 <i class="ph ph-gear"></i> CONFIG
             </button>
-            <button @click="savePage" :disabled="loading" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-xs font-bold shadow-lg shadow-indigo-200 transition transform active:scale-95">
+            <button @click="savePage" :disabled="loading" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-xs font-bold shadow-md shadow-indigo-200 transition transform active:scale-95">
                 <i class="ph ph-floppy-disk text-lg" x-show="!loading"></i>
                 <i class="ph ph-spinner animate-spin text-lg" x-show="loading"></i>
                 <span x-text="loading ? 'SAVING...' : 'PUBLISH'"></span>
@@ -87,22 +105,82 @@
         
         <div class="sidebar-panel">
             <div class="flex border-b border-gray-200 bg-white shrink-0">
-                <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition"><i class="ph ph-squares-four text-xl"></i></button>
-                <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition"><i class="ph ph-paint-brush text-xl"></i></button>
-                <button @click="tab='layers'" :class="tab=='layers'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition"><i class="ph ph-stack text-xl"></i></button>
+                <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition" title="Widgets"><i class="ph ph-squares-four text-xl"></i></button>
+                <button @click="tab='traits'" :class="tab=='traits'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition" title="Settings"><i class="ph ph-gear text-xl"></i></button>
+                <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition" title="Colors & Styles"><i class="ph ph-paint-brush text-xl"></i></button>
+                <button @click="tab='layers'" :class="tab=='layers'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition" title="Layers"><i class="ph ph-stack text-xl"></i></button>
             </div>
             
-            <div class="flex-1 bg-white relative w-full overflow-y-auto custom-scroll p-1">
-                <div x-show="tab=='blocks'" class="h-full pb-20 p-3">
-                    <div class="mb-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Components</div>
-                    <div id="blocks-custom-renderer" class="grid grid-cols-2 gap-2"></div>
+            <div class="flex-1 bg-white relative w-full overflow-y-auto custom-scroll">
+                <div x-show="tab=='blocks'" class="h-full pb-20">
+                    <template x-for="(widgets, category) in groupedWidgets" :key="category">
+                        <details class="category-group" open>
+                            <summary x-text="category || 'Uncategorized'"></summary>
+                            <div class="widget-grid">
+                                <template x-for="w in widgets" :key="w.id">
+                                    <div class="block-card" 
+                                         @click="addBlockToCanvas(w)"
+                                         draggable="true"
+                                         @dragstart="handleDragStart($event, w)">
+                                        <div class="block-icon">
+                                            <i class="ph" :class="getIconForCategory(category)"></i>
+                                        </div>
+                                        <div class="block-label" x-text="w.label"></div>
+                                    </div>
+                                </template>
+                            </div>
+                        </details>
+                    </template>
+                    <div x-show="Object.keys(groupedWidgets).length === 0" class="p-4 text-center text-gray-400 text-xs">
+                        Memuat widgets...
+                    </div>
                 </div>
+
+                <div x-show="tab=='traits'" class="h-full pb-20">
+                    <div id="traits-container" class="p-3"></div>
+                    <div class="px-4 py-2 text-[10px] text-gray-400 text-center">
+                        Tip: Gunakan tab ini untuk mengatur Link, ID, atau memilih Icon.
+                    </div>
+                </div>
+
                 <div x-show="tab=='styles'" class="h-full pb-20">
                     <div id="selectors-container" class="p-3 border-b bg-gray-50"></div>
-                    <div id="styles-container"></div>
+                    <div id="styles-container" class="p-1"></div>
                 </div>
+
                 <div x-show="tab=='layers'" class="h-full pb-20">
                     <div id="layers-container" class="p-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div x-show="showIconPicker" x-cloak class="fixed inset-0 z-[9999] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4" x-transition.opacity>
+        <div class="w-full max-w-lg bg-white rounded-xl shadow-2xl flex flex-col max-h-[80vh]" @click.outside="closeIconPicker()">
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
+                <h3 class="font-bold text-gray-800">Pilih Icon</h3>
+                <button @click="closeIconPicker()" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button>
+            </div>
+            
+            <div class="p-4 space-y-4 overflow-hidden flex flex-col">
+                <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Manual Input (Iconify String)</label>
+                    <div class="flex gap-2">
+                        <input x-model="iconSearch" @keyup.enter="applyIcon(iconSearch)" class="flex-1 p-2 border rounded text-sm font-mono" placeholder="ph:rocket-launch-duotone">
+                        <button @click="applyIcon(iconSearch)" class="px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded">TERAPKAN</button>
+                    </div>
+                    <p class="text-[10px] text-gray-400 mt-1">Gunakan format <code>collection:name</code>. Contoh: <code>ph:user</code>, <code>mdi:home</code>.</p>
+                </div>
+
+                <div class="flex-1 overflow-hidden flex flex-col">
+                    <label class="text-xs font-bold text-gray-500 uppercase mb-2 block">Quick Select (Phosphor)</label>
+                    <div class="icon-grid custom-scroll">
+                        <template x-for="icon in popularIcons" :key="icon">
+                            <div class="icon-item" :title="icon" @click="applyIcon(icon)">
+                                <iconify-icon :icon="icon"></iconify-icon>
+                            </div>
+                        </template>
+                    </div>
                 </div>
             </div>
         </div>
@@ -117,78 +195,40 @@
             <div class="p-5 border-b flex justify-between items-center bg-gray-50">
                 <div>
                     <h3 class="font-bold text-gray-800 text-lg">Page Configuration</h3>
-                    <p class="text-xs text-gray-500">Atur detail halaman dan SEO disini.</p>
+                    <p class="text-xs text-gray-500">Global settings & SEO.</p>
                 </div>
                 <button @click="showSettings=false" class="text-gray-400 hover:text-red-500 transition"><i class="ph ph-x text-2xl"></i></button>
             </div>
 
             <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scroll">
                 <div class="space-y-4">
-                    <div class="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-wider border-b pb-1 mb-2">
-                        <i class="ph ph-identification-card text-lg"></i> Identitas Halaman
-                    </div>
-                    <div>
-                        <label class="label-field">Judul Halaman (Internal)</label>
-                        <input x-model="page.title" class="input-field" placeholder="Contoh: Landing Page Promo Lebaran">
-                    </div>
-                    <div>
-                        <label class="label-field">URL Slug</label>
-                        <div class="flex items-center border border-gray-300 rounded-md overflow-hidden bg-gray-50">
-                            <span class="pl-3 pr-2 text-gray-500 text-xs font-mono">/</span>
-                            <input x-model="page.slug" class="w-full py-2 px-1 bg-white text-sm outline-none font-mono text-indigo-600" placeholder="promo-lebaran">
-                        </div>
-                        <p class="text-[10px] text-gray-400 mt-1">Hanya huruf kecil, angka, dan strip (-).</p>
+                    <label class="block text-xs font-bold uppercase text-gray-500">Page Identity</label>
+                    <input x-model="page.title" class="w-full p-2 border rounded text-sm" placeholder="Page Title">
+                    <div class="flex items-center border rounded overflow-hidden">
+                        <span class="px-3 bg-gray-50 text-xs text-gray-500 border-r">/</span>
+                        <input x-model="page.slug" class="w-full p-2 text-sm outline-none" placeholder="slug-url">
                     </div>
                 </div>
-
                 <div class="space-y-4">
-                    <div class="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-wider border-b pb-1 mb-2">
-                        <i class="ph ph-shopping-cart text-lg"></i> Konfigurasi Produk
-                    </div>
-                    <div>
-                        <label class="label-field">Harga Produk (IDR)</label>
-                        <input x-model="page.config.price" type="number" class="input-field" placeholder="0">
-                        <p class="text-[10px] text-gray-400 mt-1">Kosongkan jika hanya landing page biasa.</p>
-                    </div>
-                    <div>
-                        <label class="label-field">Tipe Produk</label>
-                        <select x-model="page.product_type" class="input-field bg-white">
-                            <option value="physical">Produk Fisik (Butuh Ongkir)</option>
-                            <option value="digital">Produk Digital (Tanpa Ongkir)</option>
-                        </select>
-                    </div>
+                    <label class="block text-xs font-bold uppercase text-gray-500">Product</label>
+                    <input x-model="page.config.price" type="number" class="w-full p-2 border rounded text-sm" placeholder="Price (IDR)">
                 </div>
-
                 <div class="space-y-4">
-                    <div class="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-wider border-b pb-1 mb-2">
-                        <i class="ph ph-globe text-lg"></i> SEO & Tracking
-                    </div>
-                    <div>
-                        <label class="label-field">SEO Meta Title</label>
-                        <input x-model="page.config.settings.seo_title" class="input-field" placeholder="Judul yang muncul di Google">
-                    </div>
-                    <div>
-                        <label class="label-field">SEO Description</label>
-                        <textarea x-model="page.config.settings.seo_description" class="input-field h-20 resize-none" placeholder="Deskripsi singkat untuk hasil pencarian..."></textarea>
-                    </div>
-                    <div>
-                        <label class="label-field">Facebook Pixel ID</label>
-                        <input x-model="page.config.settings.fb_pixel" class="input-field" placeholder="1234567890">
-                    </div>
+                    <label class="block text-xs font-bold uppercase text-gray-500">SEO</label>
+                    <textarea x-model="page.config.settings.seo_description" class="w-full p-2 border rounded text-sm h-20" placeholder="Meta Description"></textarea>
                 </div>
             </div>
-
-            <div class="p-5 border-t bg-gray-50 text-right flex justify-between items-center">
-                <span class="text-xs text-gray-400 italic">Terakhir disimpan: <span x-text="lastSaved || 'Belum pernah'"></span></span>
-                <button @click="savePage(); showSettings=false" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded shadow-lg transition">SIMPAN PERUBAHAN</button>
+            
+            <div class="p-4 border-t bg-gray-50 text-right">
+                <button @click="savePage(); showSettings=false" class="px-6 py-2 bg-indigo-600 text-white font-bold rounded shadow">SIMPAN</button>
             </div>
         </div>
     </div>
 
     <div class="fixed bottom-5 left-5 z-[100000] flex flex-col gap-2 pointer-events-none">
         <template x-for="n in notifications" :key="n.id">
-            <div x-show="n.show" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-l-4 bg-white" :class="n.type === 'error' ? 'border-red-500' : 'border-green-500'">
-                <i class="ph text-2xl" :class="n.type === 'error' ? 'ph-warning-circle text-red-500' : 'ph-check-circle text-green-500'"></i>
+            <div x-show="n.show" x-transition class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-l-4 bg-white" :class="n.type==='error'?'border-red-500':'border-green-500'">
+                <i class="ph text-xl" :class="n.type==='error'?'ph-warning-circle text-red-500':'ph-check-circle text-green-500'"></i>
                 <div class="text-xs font-bold text-gray-800" x-text="n.title"></div>
             </div>
         </template>
@@ -201,68 +241,82 @@
             device: 'desktop', 
             tab: 'blocks', 
             showSettings: false, 
+            showIconPicker: false, // State untuk Modal Icon
+            iconSearch: '',
             loading: false, 
-            lastSaved: null,
             notifications: [],
             
-            // DATA MODEL
-            page: { 
-                id: 0, 
-                slug: '', 
-                title: '', 
-                product_type: 'physical',
-                config: { price: 0, settings: {} } 
-            },
-            
-            // SCRIPT STORAGE
+            // DATA
+            page: { id: 0, slug: '', title: '', config: { price: 0, settings: {} } },
+            groupedWidgets: {}, // Data Terstruktur untuk Accordion
             widgetScripts: {}, 
-            availableWidgets: [],
+            
+            // Popular Icons for Quick Select
+            popularIcons: [
+                'ph:star-fill','ph:heart-fill','ph:check-circle-fill','ph:warning-circle-fill',
+                'ph:shopping-cart-fill','ph:rocket-launch-fill','ph:user-fill','ph:house-fill',
+                'ph:envelope-fill','ph:phone-fill','ph:instagram-logo-fill','ph:whatsapp-logo-fill',
+                'ph:facebook-logo-fill','ph:tiktok-logo-fill','ph:youtube-logo-fill',
+                'ph:arrow-right-bold','ph:arrow-down-bold','ph:caret-down-bold'
+            ],
 
-            // --- INIT ---
             async init() {
-                // 1. Load Widget & Script dari Database
-                await this.loadWidgetsAndScripts();
+                // 1. Load Data
+                await this.loadWidgets();
                 
-                // 2. Init Editor GrapesJS
+                // 2. Setup GrapesJS
                 this.initGrapes();
 
-                // 3. Load Konten Halaman (Jika ada slug di URL)
+                // 3. Load Content
                 const slug = new URLSearchParams(window.location.search).get('slug');
                 if (slug) await this.loadPageData(slug);
+                
+                // 4. Setup Icon Picker Listener (Bridge Alpine <-> GrapesJS)
+                window.addEventListener('open-icon-modal', () => {
+                    this.showIconPicker = true;
+                    this.iconSearch = '';
+                });
             },
 
-            // --- HELPER: NOTIFIKASI ---
             notify(title, type = 'success') { 
                 const id = Date.now(); 
                 this.notifications.push({ id, title, type, show: true }); 
-                setTimeout(() => { 
-                    this.notifications = this.notifications.filter(n => n.id !== id); 
-                }, 3000); 
+                setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); 
             },
 
-            // --- 1. LOAD WIDGETS ---
-            async loadWidgetsAndScripts() {
+            // --- 1. DATA LOADING & GROUPING ---
+            async loadWidgets() {
                 try {
                     const res = await fetch('/api/widgets');
-                    if(!res.ok) throw new Error("Gagal ambil widget");
                     const widgets = await res.json();
                     
+                    this.groupedWidgets = {};
                     this.widgetScripts = {};
+
                     widgets.forEach(w => {
-                        // Filter: Jangan simpan script Iconify (karena global)
-                        // Jangan simpan script Accordion (karena kita punya logic khusus editor vs live)
+                        // Simpan Script (kecuali iconify & accordion)
                         if(w.script && w.id !== 'iconify-icon' && w.id !== 'faq-accordion') {
                             this.widgetScripts[w.id] = w.script;
                         }
+
+                        // Grouping berdasarkan kategori
+                        const cat = w.category || 'General';
+                        if(!this.groupedWidgets[cat]) this.groupedWidgets[cat] = [];
+                        this.groupedWidgets[cat].push(w);
                     });
-                    this.availableWidgets = widgets;
-                } catch(e) { 
-                    console.error("Widget Error", e); 
-                    this.notify("Gagal memuat widget library", "error");
-                }
+                } catch(e) { console.error(e); this.notify('Gagal load widget', 'error'); }
             },
 
-            // --- 2. SETUP GRAPESJS ---
+            getIconForCategory(cat) {
+                if(cat.includes('Header')) return 'ph-browsers';
+                if(cat.includes('Feature')) return 'ph-star';
+                if(cat.includes('Content')) return 'ph-article';
+                if(cat.includes('Commerce')) return 'ph-shopping-cart';
+                if(cat.includes('System')) return 'ph-gear';
+                return 'ph-cube';
+            },
+
+            // --- 2. GRAPESJS SETUP ---
             initGrapes() {
                 window.editor = grapesjs.init({
                     container: '#gjs', 
@@ -270,217 +324,157 @@
                     width: 'auto', 
                     storageManager: false, 
                     panels: { defaults: [] }, 
-                    allowScripts: 0, // SAFE MODE: Script DB tidak jalan di Canvas Editor
+                    allowScripts: 0,
                     
-                    // Canvas Configuration (Library Global)
                     canvas: {
-                        scripts: [
-                            'https://cdn.tailwindcss.com', 
-                            'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'
-                        ],
-                        styles: [
-                            'https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'
-                        ],
-                        content: `<style>
-                            body { font-family: 'Inter', sans-serif; padding-top: 20px; padding-bottom: 20px; }
-                            section { position: relative; } /* Agar highlight block pas */
-                            /* Agar accordion terlihat terbuka di editor walau tanpa atribut open (fallback) */
-                            details { min-height: 50px; }
-                        </style>`
+                        scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
+                        styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
+                        content: `<style>body{padding:20px;} details{min-height:50px;}</style>`
                     },
-                    
+
                     plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg'],
                     selectorManager: { appendTo: '#selectors-container' },
+                    traitManager: { appendTo: '#traits-container' }, // Panel Settings
                     styleManager: { 
                         appendTo: '#styles-container',
                         sectors: [
-                            { name: 'Typography', open: 1, buildProps: ['font-family', 'font-size', 'font-weight', 'line-height', 'color', 'text-align'] }, 
-                            { name: 'Layout', open: 0, buildProps: ['width', 'height', 'padding', 'margin', 'display', 'position'] },
-                            { name: 'Background', open: 0, buildProps: ['background-color', 'background-image'] },
-                            { name: 'Effects', open: 0, buildProps: ['border', 'border-radius', 'box-shadow', 'opacity'] }
-                        ] 
+                            { name: 'Typography', open: 1, buildProps: ['font-family', 'font-size', 'font-weight', 'line-height', 'color', 'text-align'] },
+                            { name: 'Dimensions', open: 0, buildProps: ['width', 'height', 'padding', 'margin', 'display'] },
+                            { name: 'Decoration', open: 0, buildProps: ['background-color', 'border', 'border-radius', 'box-shadow', 'opacity'] }, // Color picker masuk sini
+                        ]
                     },
                     layerManager: { appendTo: '#layers-container' }
                 });
 
-                // Render Sidebar Blocks
-                const renderer = document.getElementById('blocks-custom-renderer');
-                renderer.innerHTML = '';
-                
-                if(this.availableWidgets) {
-                    this.availableWidgets.forEach(w => {
-                        // Register Component Type
-                        window.editor.DomComponents.addType(w.id, {
-                            model: { 
-                                defaults: { 
-                                    attributes: { 'data-widget-type': w.id } 
-                                } 
-                            }
-                        });
+                // REGISTER COMMANDS
+                // Command: Open Icon Picker
+                window.editor.Commands.add('open-icon-picker', {
+                    run(editor, sender) {
+                        window.dispatchEvent(new CustomEvent('open-icon-modal'));
+                    }
+                });
 
-                        // Buat Tombol Block
-                        const btn = document.createElement('div'); btn.className = 'block-card';
-                        btn.innerHTML = `<div class="block-icon"><i class="ph ph-squares-four"></i></div><div class="block-label">${w.label}</div>`; 
-                        
-                        btn.onclick = () => {
-                            const component = window.editor.addComponents(w.content)[0];
-                            
-                            // LOGIC EDITOR: Force Open Accordion saat Drop Baru
-                            if(w.id === 'faq-accordion') {
-                                // Cari elemen 'details' di dalam accordion yg baru didrop
-                                const details = component.find('details'); 
-                                if(details.length) {
-                                    details.forEach(d => d.addAttributes({ open: 'true' }));
-                                } else if(component.is('details')) {
-                                    component.addAttributes({ open: 'true' });
-                                }
-                            }
-                        };
-                        renderer.appendChild(btn);
+                // REGISTER COMPONENTS (LOGIC ONLY, RENDERING VIA ALPINE)
+                if(this.groupedWidgets) {
+                    Object.values(this.groupedWidgets).flat().forEach(w => {
+                        window.editor.DomComponents.addType(w.id, {
+                            model: { defaults: { attributes: { 'data-widget-type': w.id } } }
+                        });
                     });
+                }
+                
+                // Event: Auto-switch to Traits when component selected
+                window.editor.on('component:selected', () => { 
+                    // this.tab = 'traits'; // Optional: Auto switch tab
+                });
+            },
+
+            // --- 3. EDITOR INTERACTION ---
+            addBlockToCanvas(w) {
+                const component = window.editor.addComponents(w.content)[0];
+                if(w.id === 'faq-accordion') { // Force open accordion
+                    const details = component.find('details');
+                    if(details.length) details.forEach(d => d.addAttributes({ open: 'true' }));
+                    else if(component.is('details')) component.addAttributes({ open: 'true' });
                 }
             },
 
-            // --- 3. LOAD PAGE DATA ---
+            handleDragStart(event, w) {
+                // GrapesJS Drag API Support (Basic)
+                event.dataTransfer.setData('text', w.content);
+            },
+
+            // --- 4. ICON PICKER LOGIC ---
+            applyIcon(iconString) {
+                const selected = window.editor.getSelected();
+                if (selected) {
+                    // Update attribute 'icon' pada component yang dipilih
+                    // Ini sesuai dengan trait iconify-icon di database
+                    selected.addAttributes({ icon: iconString });
+                    // Trigger render ulang jika perlu
+                    this.notify('Icon diperbarui: ' + iconString);
+                } else {
+                    this.notify('Pilih komponen icon dulu!', 'error');
+                }
+                this.closeIconPicker();
+            },
+
+            closeIconPicker() {
+                this.showIconPicker = false;
+                // Stop command di GrapesJS jika perlu
+                window.editor.stopCommand('open-icon-picker');
+            },
+
+            // --- 5. DATA LOADING & SAVING ---
             async loadPageData(slug) {
                 this.loading = true;
                 try {
                     const res = await fetch(`/api/admin/pages/${slug}`);
-                    if(!res.ok) throw new Error("Halaman tidak ditemukan");
-                    
                     const data = await res.json();
                     
-                    // Fill State
                     this.page.id = data.id; 
                     this.page.slug = data.slug; 
                     this.page.title = data.title || '';
-                    this.page.product_type = data.product_type || 'physical';
-                    
-                    if (data.product_config_json) {
-                        this.page.config = typeof data.product_config_json === 'string' 
-                            ? JSON.parse(data.product_config_json) 
-                            : data.product_config_json;
-                    }
+                    if (data.product_config_json) this.page.config = typeof data.product_config_json === 'string' ? JSON.parse(data.product_config_json) : data.product_config_json;
 
                     if (window.editor) {
-                        // A. Bersihkan Script Injection Lama agar Canvas bersih
                         let safeHtml = data.html_content || "";
                         safeHtml = safeHtml.replace(/<script id="dynamic-widget-script">[\s\S]*?<\/script>/gm, "");
-                        
-                        // B. Load Konten ke Canvas
                         window.editor.setComponents(safeHtml);
                         window.editor.setStyle(data.css_content || '');
-
-                        // C. LOGIC EDITOR: Force Open Accordion saat Load Page
-                        // Agar user bisa melihat isi accordion untuk diedit
-                        const wrapper = window.editor.getWrapper();
-                        const details = wrapper.find('details');
-                        details.forEach(block => {
-                            block.addAttributes({ open: 'true' });
-                        });
+                        
+                        // Force Open Accordions
+                        window.editor.getWrapper().find('details').forEach(d => d.addAttributes({ open: 'true' }));
                     }
-                } catch (e) { 
-                    console.error(e); 
-                    this.notify(e.message, "error");
-                }
+                } catch (e) { console.error(e); }
                 this.loading = false;
             },
 
-            // --- 4. SAVE PAGE (PUBLISH) ---
             async savePage() {
-                if(!this.page.slug) return this.notify("Slug URL wajib diisi!", "error");
-                
                 this.loading = true;
                 try {
                     const html = window.editor.getHtml();
                     const css = window.editor.getCss();
                     
-                    // --- INTELLIGENT SCRIPT INJECTION ---
-                    // Script ini hanya akan berjalan di halaman LIVE, bukan di editor.
-                    
                     let generatedJS = `
                     <script id="dynamic-widget-script">
                     document.addEventListener("DOMContentLoaded", function() {
-                        
-                        // [A] HELPER: Widget Runner (Scope Isolation)
-                        // Menjalankan script widget dengan 'this' yang mengarah ke elemen widget
                         const runWidget = (id, fn) => {
                             document.querySelectorAll('[data-widget-type="' + id + '"]').forEach(el => {
-                                try { fn.call(el); } catch(e) { console.error('Widget Error:', id, e); }
+                                try { fn.call(el); } catch(e) { console.error(id, e); }
                             });
                         };
-
-                        // [B] LOGIC LIVE: Accordion (Force Close & Toggle)
-                        // Memastikan accordion tertutup saat pertama load (rapi) & interaktif
-                        const detailsElements = document.querySelectorAll('details');
-                        detailsElements.forEach(el => {
-                            // 1. Force Close saat load
-                            el.removeAttribute('open'); 
-                            
-                            // 2. Click Listener untuk Auto-Close accordion lain
-                            el.querySelector('summary').addEventListener('click', function(e) {
-                                // Jangan preventDefault agar native toggle tetap jalan
-                                // Tapi kita tutup yang lain jika ini akan dibuka
-                                if (!el.hasAttribute('open')) { // Akan dibuka
-                                    detailsElements.forEach(other => {
-                                        if (other !== el) other.removeAttribute('open');
-                                    });
-                                }
+                        
+                        // Accordion Logic (Closed by Default)
+                        const details = document.querySelectorAll('details');
+                        details.forEach(el => {
+                            el.removeAttribute('open');
+                            el.querySelector('summary').addEventListener('click', () => {
+                                if(!el.hasAttribute('open')) details.forEach(o => { if(o!==el) o.removeAttribute('open'); });
                             });
                         });
-
-                        // [C] LOGIC LIVE: Inject Script Lain dari Database
-                        // Loop widget apa saja yang dipakai di halaman ini
                     `;
 
-                    // Cek widget mana yang dipakai di HTML saat ini
                     Object.keys(this.widgetScripts).forEach(widgetId => {
                         if (html.includes(`data-widget-type="${widgetId}"`)) {
-                            // Inject script widget yang sesuai
-                            generatedJS += `
-                            runWidget('${widgetId}', function() {
-                                ${this.widgetScripts[widgetId]}
-                            });
-                            `;
+                            generatedJS += `runWidget('${widgetId}', function() { ${this.widgetScripts[widgetId]} });`;
                         }
                     });
 
                     generatedJS += `});<\/script>`;
 
-                    // Payload ke Server
                     const payload = {
-                        id: this.page.id, 
-                        slug: this.page.slug, 
-                        title: this.page.title,
-                        product_type: this.page.product_type,
-                        html: html + generatedJS, // HTML Bersih + Script Live
-                        css: css, 
-                        product_config: this.page.config
+                        id: this.page.id, slug: this.page.slug, title: this.page.title,
+                        html: html + generatedJS, css: css, product_config: this.page.config
                     };
                     
-                    const res = await fetch('/api/admin/pages', { 
-                        method: 'POST', 
-                        body: JSON.stringify(payload), 
-                        headers: {'Content-Type': 'application/json'} 
-                    });
-                    
-                    if(!res.ok) throw new Error("Gagal menyimpan data");
-                    
-                    const resData = await res.json();
-                    this.notify('Halaman Berhasil Dipublikasikan!');
-                    
-                    // Update timestamp
-                    const now = new Date();
-                    this.lastSaved = now.toLocaleTimeString();
-
-                } catch (e) { 
-                    console.error(e);
-                    this.notify('Gagal Menyimpan: ' + e.message, 'error'); 
-                }
+                    const res = await fetch('/api/admin/pages', { method: 'POST', body: JSON.stringify(payload), headers: {'Content-Type': 'application/json'} });
+                    if(res.ok) this.notify('Berhasil Disimpan!');
+                } catch (e) { this.notify('Gagal Simpan', 'error'); }
                 this.loading = false;
             },
 
-            setDevice(d) { this.device = d; if (window.editor) window.editor.setDevice(d); },
+            setDevice(d) { this.device = d; if (window.editor) window.editor.setDevice(d); }
         };
     }
     </script>
