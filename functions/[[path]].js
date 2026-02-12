@@ -667,34 +667,219 @@ app.post('/api/public/checkout', async (c) => {
 });
 
 // ===============================================
-// 7. PUBLIC PAGE RENDERING
+// FUNGSI RENDER HALAMAN (UPDATE FIX COUNTDOWN)
 // ===============================================
+async function renderPage(c, page) {
+    const config = JSON.parse(page.product_config_json || '{}');
+    const activePayments = config.active_payments || [];
+    
+    // 1. DATA SAVER
+    const serverData = {
+        page_id: page.id,
+        title: page.title,
+        config: config,
+        active_payments: activePayments
+    };
 
-// HOMEPAGE
-app.get('/', async (c) => {
-    try {
-        const setting = await c.env.DB.prepare("SELECT value FROM settings WHERE key='homepage_slug'").first();
-        if (!setting || !setting.value) {
-            return c.html(`<div style="font-family: sans-serif; text-align: center; padding: 50px;"><h1>Welcome</h1><p>Homepage belum diatur.</p><a href="/login" style="color: blue;">Login Admin</a></div>`);
+    // 2. CSS Global
+    const bridgeCSS = `
+    body { min-height: 100vh; background-color: #ffffff; overflow-x: hidden; font-family: 'Inter', sans-serif; }
+    .swal2-container { z-index: 99999 !important; }
+    
+    /* Utility Classes Helper */
+    .countdown-number { font-weight: 900; }
+    @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+    .animate-marquee { display: inline-block; white-space: nowrap; animation: marquee 20s linear infinite; }
+    [x-cloak] { display: none !important; }
+    `;
+
+    const tailwindConfig = `
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { theme: { 50:'#eef2ff', 600:'#4f46e5' } }
+                }
+            }
         }
-        const page = await c.env.DB.prepare("SELECT * FROM pages WHERE slug=?").bind(setting.value).first();
-        if (!page) return c.text(`Error: Halaman '${setting.value}' tidak ditemukan.`, 404);
-        trackVisit(c, page, 'direct-homepage');
-        return renderPage(c, page);
-    } catch (e) { return c.text(`Server Error: ${e.message}`, 500); }
-});
+    `;
 
-// SLUG PAGE
-app.get('/:slug', async (c) => {
-    try {
-        const slug = c.req.param('slug');
-        if (slug.includes('.')) return c.env.ASSETS.fetch(c.req.raw);
-        const page = await c.env.DB.prepare("SELECT * FROM pages WHERE slug=?").bind(slug).first();
-        if(!page) return c.text('404 Not Found', 404);
-        trackVisit(c, page, c.req.header('Referer'));
-        return renderPage(c, page);
-    } catch(e) { return c.env.ASSETS.fetch(c.req.raw); }
-});
+    // 3. SYSTEM LOGIC (SYSTEM + COUNTDOWN ENGINE)
+    // SAYA MENAMBAHKAN ENGINE COUNTDOWN LANGSUNG DI SINI AGAR LIVE PASTI JALAN
+    const systemScripts = `
+    <script>
+        // --- A. COUNTDOWN ENGINE (LIVE) ---
+        function initLiveCountdowns() {
+            // Cari elemen dengan class 'js-countdown' ATAU yang punya atribut 'data-expire'
+            const timers = document.querySelectorAll('.js-countdown, [data-expire]');
+            
+            timers.forEach(el => {
+                // Cegah double run
+                if(el.__isRunning) return;
+                el.__isRunning = true;
+
+                const expireStr = el.getAttribute('data-expire');
+                const msgStr = el.getAttribute('data-msg') || "WAKTU HABIS";
+                
+                // Support Selector Lama (.js-display) & Selector Baru (.js-countdown-display)
+                const display = el.querySelector(".js-display") || el.querySelector(".js-countdown-display"); 
+                const expiredBox = el.querySelector(".js-expired-msg");
+                const expiredText = el.querySelector(".js-expired-text");
+
+                if (!expireStr) return;
+
+                const update = () => {
+                    const now = new Date().getTime();
+                    const target = new Date(expireStr).getTime();
+                    const distance = target - now;
+
+                    // Helper Set Text (Support class DB: .js-d, .js-h, dll)
+                    const setVal = (selector, val) => {
+                        const strVal = val < 10 ? "0" + val : val;
+                        // Cari di dalam elemen ini saja
+                        el.querySelectorAll(selector).forEach(n => n.innerText = strVal);
+                    };
+
+                    if (distance < 0) {
+                        if (display) display.style.display = 'none';
+                        if (expiredBox) {
+                            expiredBox.classList.remove('hidden');
+                            expiredBox.style.display = 'block';
+                            if (expiredText) expiredText.innerText = msgStr;
+                            else expiredBox.innerText = msgStr;
+                        }
+                        if (el.__interval) clearInterval(el.__interval);
+                        return;
+                    }
+
+                    const d = Math.floor(distance / (1000 * 60 * 60 * 24));
+                    const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const s = Math.floor((distance % (1000 * 60)) / 1000);
+
+                    // Update DOM (Support Multi Selector: Class Lama & Class DB)
+                    setVal('.days, .js-d', d);
+                    setVal('.hours, .js-h', h);
+                    setVal('.minutes, .js-m', m);
+                    setVal('.seconds, .js-s', s);
+                };
+
+                update(); // Jalankan frame pertama
+                el.__interval = setInterval(update, 1000); // Simpan interval ID di elemen
+            });
+        }
+
+        // --- B. SYSTEM LOGIC ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. JALANKAN COUNTDOWN SEGERA
+            initLiveCountdowns();
+
+            const DATA = window.BS_DATA || {};
+            const config = DATA.config || {};
+            const activePayments = DATA.active_payments || [];
+
+            // 2. Notifikasi System
+            const params = new URLSearchParams(window.location.search);
+            if(params.get('status') === 'sent') {
+                Swal.fire({ icon: 'success', title: 'Terkirim!', text: 'Kami akan segera merespon.', confirmButtonColor: '#2563eb' });
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+
+            // 3. Checkout Logic
+            const container = document.body;
+            if (container.innerHTML.includes('[ CHECKOUT ]')) {
+                const paymentHTML = activePayments.length > 0 ? activePayments.map(slug => 
+                    '<label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition border-gray-200 mb-2">' +
+                    '<input type="radio" name="pay_method" value="' + slug + '" class="mr-3 w-4 h-4 text-blue-600">' +
+                    '<span class="text-sm font-bold text-gray-700 uppercase">' + slug.split('-').join(' ') + '</span>' +
+                    '</label>'
+                ).join('') : '<p class="text-red-500 text-xs">Belum ada metode pembayaran.</p>';
+
+                const checkoutHTML = \`
+                    <div class="max-w-md mx-auto my-8 p-6 bg-white rounded-2xl shadow-xl border border-gray-100 font-sans">
+                        <h2 class="text-xl font-black text-gray-800 mb-6 text-center">Formulir Pemesanan</h2>
+                        <div class="flex justify-between items-center p-4 bg-blue-50 rounded-xl border border-blue-100 mb-6">
+                            <span class="font-bold text-blue-900">\${DATA.title}</span>
+                            <span class="font-black text-blue-700">Rp \${new Intl.NumberFormat('id-ID').format(config.price || 0)}</span>
+                        </div>
+                        <div class="space-y-4 mb-6">
+                            <input type="text" id="c_name" placeholder="Nama Lengkap" class="w-full p-3 border rounded-lg">
+                            <input type="tel" id="c_phone" placeholder="No. WhatsApp" class="w-full p-3 border rounded-lg">
+                        </div>
+                        <div class="mb-6">
+                            <label class="text-xs font-bold text-gray-400 uppercase block mb-2">Pembayaran</label>
+                            <div class="grid gap-2">\${paymentHTML}</div>
+                        </div>
+                        <button id="btn-submit-order" class="w-full py-4 bg-blue-600 text-white font-black rounded-xl shadow-lg hover:bg-blue-700 transition">
+                            BAYAR SEKARANG
+                        </button>
+                    </div>
+                \`;
+                
+                container.innerHTML = container.innerHTML.replace('[ CHECKOUT ]', checkoutHTML);
+
+                document.getElementById('btn-submit-order')?.addEventListener('click', async () => {
+                    const payMethod = document.querySelector('input[name="pay_method"]:checked')?.value;
+                    const name = document.getElementById('c_name').value;
+                    const phone = document.getElementById('c_phone').value;
+
+                    if(!name || !phone) return Swal.fire('Data Kurang', 'Lengkapi nama & WA', 'warning');
+                    if(!payMethod) return Swal.fire('Pilih Pembayaran', 'Metode pembayaran belum dipilih', 'warning');
+
+                    const btn = document.getElementById('btn-submit-order');
+                    btn.disabled = true; btn.innerText = 'Memproses...';
+
+                    try {
+                        const res = await fetch('/api/public/checkout', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ page_id: DATA.page_id, slug_payment: payMethod, quantity: 1, customer: { name, phone } })
+                        });
+                        const d = await res.json();
+                        if(d.payment_url) window.location.href = d.payment_url;
+                        else Swal.fire('Gagal', d.error || 'Terjadi kesalahan sistem', 'error');
+                    } catch(e) { Swal.fire('Error', 'Koneksi bermasalah', 'error'); }
+                    
+                    btn.disabled = false; btn.innerText = 'BAYAR SEKARANG';
+                });
+            }
+        });
+    </script>
+    `;
+
+    return c.html(`
+    <!DOCTYPE html>
+    <html lang='id'>
+    <head>
+        <meta charset='UTF-8'>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <title>${page.title}</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>${tailwindConfig}</script>
+        <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+        <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+        <script src="https://unpkg.com/@phosphor-icons/web"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+        <style>
+            ${bridgeCSS}
+            ${page.css_content || ''}
+        </style>
+    </head>
+    <body>
+        ${page.html_content || ''}
+        
+        <script>
+            window.BS_DATA = ${JSON.stringify(serverData)};
+        </script>
+        
+        ${systemScripts}
+    </body>
+    </html>
+    `);
+}
 
 // ===============================================
 // FUNGSI RENDER HALAMAN (MURNI DATABASE DRIVEN)
