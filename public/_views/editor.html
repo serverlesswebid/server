@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder - Pro Mobile (Restored & Fixed)</title>
+    <title>LandingBuilder - Pro Mobile (Restored)</title>
     
     <script>
         (function() {
@@ -22,6 +22,7 @@
     
     <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.2/dist/css/grapes.min.css">
     <script src="https://unpkg.com/grapesjs@0.21.2/dist/grapes.min.js"></script>
+    
     <script src="https://unpkg.com/grapesjs-blocks-basic@1.0.1"></script>
     <script src="https://unpkg.com/grapesjs-plugin-forms@2.0.5"></script> 
     <script src="https://unpkg.com/grapesjs-navbar@1.0.1"></script>
@@ -33,18 +34,17 @@
     <script src="https://unpkg.com/grapesjs-component-countdown@1.0.1"></script>
 
     <style>
-        /* --- CORE LAYOUT (RESTORED) --- */
+        /* --- CORE LAYOUT --- */
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: #fff; }
         [x-cloak] { display: none !important; }
 
         header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
         
-        /* WORKSPACE & SIDEBAR */
         .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; }
         #gjs { position: relative !important; flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; }
         .sidebar-panel { position: relative; width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; }
 
-        /* MOBILE BOTTOM BAR & RESPONSIVE (RESTORED) */
+        /* --- MOBILE LAYOUT FIXES (BOTTOM BAR) --- */
         @media (max-width: 768px) {
             .workspace { bottom: 60px; } /* Space for bottom bar */
             .sidebar-panel { position: fixed; right: 0; top: 60px; bottom: 60px; width: 100% !important; z-index: 9999 !important; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); border-left: 1px solid #eee; }
@@ -53,29 +53,27 @@
             .mobile-overlay.show { display: block; }
         }
 
-        /* GRAPESJS UI OVERRIDES */
+        /* --- GRAPESJS UI --- */
         .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; }
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
         .gjs-block { width: 100% !important; min-height: 80px !important; padding: 10px !important; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; transition: 0.2s; }
-        .gjs-block:hover { border-color: #6366f1; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-        .gjs-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px; }
-
+        .gjs-block:active { transform: scale(0.95); }
+        
         /* --- Z-INDEX FIXES --- */
         .sp-container { z-index: 9999999 !important; background: white; border: 1px solid #cbd5e1; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2); border-radius: 8px; }
         .gjs-field-color-picker { border: 1px solid #cbd5e1; margin-right: 5px; cursor: pointer; border-radius: 4px; min-width: 30px; padding: 2px; }
         .alpine-modal { z-index: 99999; }
 
-        /* CUSTOM UPLOAD BUTTON STYLE */
+        /* --- CUSTOM UPLOAD BUTTON --- */
         .trait-upload-btn {
-            width: 100%; background: #4f46e5; color: white; padding: 8px; border-radius: 6px; 
+            width: 100%; background: #4f46e5; color: white; padding: 10px; border-radius: 6px; 
             font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;
             cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; 
-            margin-top: 4px; border: 1px solid #4338ca; transition: all 0.2s;
+            margin-top: 4px; border: none; transition: all 0.2s;
         }
         .trait-upload-btn:hover { background: #4338ca; }
-        .trait-upload-btn:disabled { opacity: 0.7; cursor: wait; background: #6b7280; border-color: #4b5563; }
+        .trait-upload-btn:disabled { opacity: 0.7; cursor: wait; }
 
-        /* UI HELPERS */
         .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
@@ -92,7 +90,7 @@
     </div>
 
     <header>
-        <div class="flex items-center gap-3 overflow-hidden w-1/3">
+        <div class="flex items-center gap-3 overflow-hidden w-full max-w-[300px]">
             <a href="/admin/pages" class="text-gray-400 hover:text-indigo-600 p-1.5 rounded"><i class="ph ph-arrow-left text-xl"></i></a>
             <div class="flex-1 min-w-0">
                 <input x-model="page.title" class="bg-transparent font-bold text-sm text-gray-800 outline-none w-full truncate" placeholder="Nama Halaman">
@@ -100,7 +98,7 @@
             </div>
         </div>
 
-        <div class="hidden md:flex items-center bg-gray-100 rounded-lg p-1 border shadow-sm">
+        <div class="hidden md:flex items-center bg-gray-100 rounded-lg p-1 border shadow-sm absolute left-1/2 transform -translate-x-1/2">
             <button @click="setDevice('desktop')" :class="device=='desktop'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded"><i class="ph ph-desktop"></i></button>
             <button @click="setDevice('tablet')" :class="device=='tablet'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded"><i class="ph ph-device-tablet"></i></button>
             <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded"><i class="ph ph-device-mobile"></i></button>
@@ -121,7 +119,6 @@
 
     <div class="workspace">
         <div id="gjs"></div>
-        
         <div class="mobile-overlay md:hidden" :class="mobileMenuOpen ? 'show' : ''" @click="mobileMenuOpen = false"></div>
 
         <div class="sidebar-panel" :class="mobileMenuOpen ? 'open' : ''">
@@ -137,7 +134,7 @@
                 <div x-show="tab=='styles'" class="h-full pb-20"><div id="selectors-container" class="p-3 border-b bg-gray-50"></div><div id="styles-container" class="p-1"></div></div>
                 <div x-show="tab=='traits'" class="h-full pb-20">
                     <div id="traits-container" class="p-4"></div>
-                    <div class="p-4 text-center text-[10px] text-gray-400 bg-gray-50 border-t">Klik elemen di canvas untuk melihat pengaturan.</div>
+                    <div class="p-4 text-center text-[10px] text-gray-400 bg-gray-50 border-t">Klik elemen untuk pengaturan khusus.</div>
                 </div>
                 <div x-show="tab=='layers'" class="h-full pb-20"><div id="layers-container"></div></div>
             </div>
@@ -161,21 +158,20 @@
     <div x-show="showSettings" x-cloak class="alpine-modal fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex justify-end" @click.self="showSettings = false">
         <div class="w-full md:w-[480px] h-full bg-white shadow-2xl flex flex-col border-l">
             <div class="p-5 border-b flex justify-between items-center bg-gray-50">
-                <h2 class="font-bold text-gray-800">Page Settings</h2>
+                <h2 class="font-bold text-gray-800">Page Config</h2>
                 <button @click="showSettings = false" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button>
             </div>
             <div class="flex-1 overflow-y-auto p-6 space-y-6">
                 <div class="space-y-4">
-                    <label class="text-[10px] font-bold text-gray-400 uppercase">Judul Halaman</label>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase">Judul</label>
                     <input x-model="page.title" class="w-full px-3 py-2 border rounded text-sm">
                 </div>
                 <div class="space-y-4">
-                    <label class="text-[10px] font-bold text-gray-400 uppercase">URL Slug</label>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase">Slug</label>
                     <input x-model="page.slug" class="w-full px-3 py-2 border rounded text-sm">
                 </div>
-                <hr>
                 <div class="space-y-4">
-                    <label class="text-[10px] font-bold text-gray-400 uppercase">Harga Produk</label>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase">Harga</label>
                     <input x-model="page.config.price" type="number" class="w-full px-3 py-2 border rounded text-sm">
                 </div>
                 <div class="space-y-4">
@@ -183,22 +179,8 @@
                     <input x-model="page.config.settings.fb_pixel" class="w-full px-3 py-2 border rounded text-sm">
                 </div>
             </div>
-            <div class="p-4 border-t bg-gray-50 text-right">
+            <div class="p-4 border-t bg-gray-50 flex justify-end gap-3">
                 <button @click="savePage(); showSettings=false" class="px-6 py-2 bg-indigo-600 text-white font-bold rounded shadow">SIMPAN</button>
-            </div>
-        </div>
-    </div>
-
-    <div x-show="showIconPicker" x-cloak class="alpine-modal fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="w-full max-w-lg bg-white rounded-xl shadow-2xl flex flex-col max-h-[80vh]" @click.outside="showIconPicker=false">
-            <div class="p-4 border-b flex justify-between items-center"><h3 class="font-bold">Pilih Icon</h3><button @click="showIconPicker=false"><i class="ph ph-x"></i></button></div>
-            <div class="p-4 space-y-4">
-                <div class="flex gap-2"><input x-model="iconSearch" @keyup.enter="searchIcons()" class="flex-1 p-2 border rounded" placeholder="Search..."><button @click="searchIcons()" class="px-4 py-2 bg-indigo-600 text-white rounded">Cari</button></div>
-                <div class="icon-grid grid grid-cols-6 gap-2 max-h-60 overflow-y-auto">
-                    <template x-for="icon in iconList" :key="icon">
-                        <div @click="applyIcon(icon)" class="p-2 border rounded flex justify-center hover:bg-indigo-50 cursor-pointer"><iconify-icon :icon="icon" width="24"></iconify-icon></div>
-                    </template>
-                </div>
             </div>
         </div>
     </div>
@@ -206,15 +188,13 @@
     <script>
     function editorApp() {
         return {
-            device: 'desktop', tab: 'blocks', mobileMenuOpen: false, showSettings: false, showIconPicker: false, iconSearch: '', loading: false, loadingIcons: false, notifications: [],
+            device: 'desktop', tab: 'blocks', mobileMenuOpen: false, showSettings: false, loading: false, notifications: [],
             page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, settings: {} } },
-            iconList: [],
 
             async init() {
                 this.initGrapes();
                 const slug = new URLSearchParams(window.location.search).get('slug');
                 if (slug) await this.loadPageData(slug);
-                this.iconList = ['ph:star-fill','ph:heart-fill','ph:check-circle-fill','logos:whatsapp-icon','logos:facebook','logos:instagram-icon'];
             },
 
             async loadPageData(slug) {
@@ -242,27 +222,11 @@
             notify(title, msg, type = 'success') { const id = Date.now(); this.notifications.push({ id, title, show: true }); setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); },
             setDevice(d) { this.device = d; if(window.editor) window.editor.setDevice(d); },
             cmd(c) { window.editor.runCommand(c); },
-            
-            async searchIcons() {
-                if(!this.iconSearch) return;
-                this.loadingIcons = true;
-                try { const res = await fetch(`https://api.iconify.design/search?query=${encodeURIComponent(this.iconSearch)}&limit=30`); if(res.ok) { const data = await res.json(); this.iconList = data.icons || []; } } catch(e) {}
-                this.loadingIcons = false;
-            },
-            applyIcon(icon) {
-                const selected = window.editor.getSelected();
-                if(selected) {
-                    if(selected.is('iconify-icon')) selected.addAttributes({ icon: icon });
-                    else selected.append(`<iconify-icon icon="${icon}" width="32"></iconify-icon>`);
-                }
-                this.showIconPicker = false;
-            },
 
             initGrapes() {
                 window.editor = grapesjs.init({
                     container: '#gjs', height: '100%', fromElement: false, storageManager: false, panels: { defaults: [] },
-                    allowScripts: 1, // ENABLE SCRIPT
-                    // MATIKAN UPLOAD MODAL BAWAAN
+                    // Asset Manager: Matikan default modal agar tidak konflik di mobile
                     assetManager: { embedAsBase64: 0, openAssetsOnDrop: 0 },
                     deviceManager: { devices: [{name:'desktop',width:''},{name:'tablet',width:'768px',widthMedia:'992px'},{name:'mobile',width:'375px',widthMedia:'480px'}] },
                     canvas: {
@@ -279,14 +243,14 @@
                 });
 
                 // ============================================================
-                // 1. TRAIT TOMBOL UPLOAD (BASE64) - INI SOLUSINYA
+                // TRAIT TOMBOL UPLOAD (LOGIC BASE64 FIXED)
                 // ============================================================
                 window.editor.TraitManager.addType('file-upload', {
                     createInput({ trait }) {
                         const div = document.createElement('div'); div.className = 'w-full flex flex-col gap-2';
                         const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*'; input.style.display = 'none';
                         const btn = document.createElement('button'); btn.className = 'trait-upload-btn';
-                        btn.innerHTML = '<i class="ph ph-upload-simple text-lg"></i> Upload Gambar';
+                        btn.innerHTML = '<i class="ph ph-upload-simple text-lg"></i> UPLOAD GAMBAR';
                         
                         btn.onclick = () => input.click();
                         
@@ -294,34 +258,33 @@
                             const file = e.target.files[0];
                             if(!file) return;
                             
-                            // CONVERT BASE64 DI FRONTEND
                             const reader = new FileReader();
                             reader.readAsDataURL(file);
                             reader.onloadend = async () => {
                                 const base64String = reader.result;
                                 const formData = new FormData();
-                                formData.append('file', base64String); // Kirim Base64
+                                formData.append('file', base64String);
 
                                 try {
-                                    btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Uploading...'; btn.disabled = true;
+                                    btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> PROSES...'; btn.disabled = true;
                                     
-                                    // TEMBAK KE ROUTE YG BENAR (/upload-image)
+                                    // FETCH KE ROUTE YANG SUDAH DIBUAT
                                     const res = await fetch('/api/admin/upload-image', { method: 'POST', body: formData });
                                     const data = await res.json();
                                     
-                                    // Parse Cloudinary Response
-                                    const url = data.data ? data.data[0].src : (data.url || (Array.isArray(data) ? data[0] : null));
+                                    // Support structure return { data: [{src: '...'}] }
+                                    const url = data.data ? data.data[0].src : null;
                                     
                                     if(url) {
                                         trait.target.addAttributes({ src: url });
-                                        // window.editorApp.notify('Sukses', 'Gambar terupload');
+                                        window.editorApp.notify('Sukses', 'Gambar terupload');
                                     } else {
-                                        alert('Gagal parsing URL gambar.');
+                                        throw new Error('Gagal parsing respon server');
                                     }
                                 } catch(err) {
-                                    console.error(err); alert('Upload Error');
+                                    console.error(err); window.editorApp.notify('Gagal', 'Error upload', 'error');
                                 } finally {
-                                    btn.innerHTML = '<i class="ph ph-upload-simple text-lg"></i> Upload Gambar'; btn.disabled = false;
+                                    btn.innerHTML = '<i class="ph ph-upload-simple text-lg"></i> UPLOAD GAMBAR'; btn.disabled = false;
                                 }
                             };
                         };
@@ -330,40 +293,24 @@
                     }
                 });
 
-                // ============================================================
-                // 2. OVERRIDE IMAGE COMPONENT
-                // ============================================================
+                // OVERRIDE IMAGE AGAR MUNCUL TOMBOL UPLOAD
                 window.editor.DomComponents.addType('image', {
                     model: {
                         defaults: {
                             traits: [
                                 { type: 'text', name: 'src', label: 'URL Source' },
-                                { type: 'file-upload', name: 'upload_trig', label: ' ' }, // Panel Upload Button
+                                { type: 'file-upload', name: 'upload_trig', label: ' ' },
                                 { type: 'text', name: 'alt', label: 'Alt Text' }
                             ]
                         }
                     }
                 });
 
-                // --- Register Helper Blocks ---
-                window.editor.TraitManager.addType('icon-btn', {
-                    createInput({ trait }) {
-                        const btn = document.createElement('button'); btn.className = 'trait-upload-btn';
-                        btn.innerHTML = 'Cari Icon'; btn.onclick = () => window.editorApp.showIconPicker = true;
-                        return btn;
-                    }
-                });
-                
-                window.editor.DomComponents.addType('iconify-icon', {
-                    isComponent: el => el.tagName === 'ICONIFY-ICON',
-                    model: { defaults: { traits: [{ type: 'icon-btn', name:'picker', label:' ' }, { type:'text', name:'icon' }, { type:'color', name:'color', changeProp:1 }] }, init() { this.on('change:color', () => this.addStyle({color: this.get('color')})) } }
-                });
-
+                // Register Basic Blocks
                 const bm = window.editor.BlockManager;
                 bm.add('img-blk', { label: 'Image', category: 'Basic', content: { type: 'image', activeOnRender: 1 } });
                 bm.add('text-blk', { label: 'Text', category: 'Basic', content: '<div class="p-2">Teks Contoh</div>' });
                 bm.add('btn-blk', { label: 'Button', category: 'Basic', content: '<a class="btn btn-primary">Klik Saya</a>' });
-                bm.add('icon-blk', { label: 'Icon', category: 'Basic', content: { type: 'iconify-icon', attributes: { icon: 'ph:star-fill', width: '32' } } });
             }
         };
     }
