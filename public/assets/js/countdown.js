@@ -1,19 +1,18 @@
-// Global Function agar bisa dipanggil ulang oleh Editor saat drag-drop
 window.initCountdowns = function() {
     const timers = document.querySelectorAll('.js-countdown');
     
     timers.forEach(el => {
-        // Cek apakah sudah berjalan agar tidak double interval
         if(el.dataset.init === "true") return;
         
         const display = el.querySelector(".js-display");
         const expiredBox = el.querySelector(".js-expired-msg");
+        const expiredText = el.querySelector(".js-expired-text"); // Tambahan untuk support teks dinamis
         const expireStr = el.getAttribute("data-expire");
         const msgStr = el.getAttribute("data-msg") || "WAKTU HABIS";
 
         if (!expireStr) return;
 
-        el.dataset.init = "true"; // Tandai sudah di-init
+        el.dataset.init = "true";
 
         const update = () => {
             const now = new Date().getTime();
@@ -25,7 +24,9 @@ window.initCountdowns = function() {
                 if(expiredBox) {
                     expiredBox.style.display = "block";
                     expiredBox.classList.remove("hidden");
-                    expiredBox.innerHTML = msgStr;
+                    // Update teks expired jika elemennya ada
+                    if(expiredText) expiredText.innerText = msgStr;
+                    else expiredBox.innerHTML = msgStr; // Fallback
                 }
                 clearInterval(interval);
                 return;
@@ -41,16 +42,15 @@ window.initCountdowns = function() {
                 if (node) node.innerText = val < 10 ? "0" + val : val;
             };
 
-            setTxt(".days", d);
-            setTxt(".hours", h);
-            setTxt(".minutes", m);
-            setTxt(".seconds", s);
+            // PERBAIKAN UTAMA DI SINI:
+            // Support DUA jenis selector: .days (lama) DAN .js-d (baru dari database)
+            setTxt(".days", d); setTxt(".js-d", d);
+            setTxt(".hours", h); setTxt(".js-h", h);
+            setTxt(".minutes", m); setTxt(".js-m", m);
+            setTxt(".seconds", s); setTxt(".js-s", s);
         };
 
         const interval = setInterval(update, 1000);
-        update(); // Jalankan sekali di awal
+        update();
     });
 };
-
-// Jalankan otomatis saat halaman Live dimuat
-document.addEventListener("DOMContentLoaded", window.initCountdowns);
