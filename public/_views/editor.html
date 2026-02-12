@@ -220,10 +220,11 @@
                     try { 
                         window.editor.addComponents(html);
                         // TRIGGER SCRIPT DI EDITOR SECARA AMAN
-                        // Pastikan ada file /assets/js/countdown.js yang menghandle ini, 
-                        // TAPI untuk kenyamanan di Editor, kita panggil ulang init global jika ada
-                        if (window.editor.getWrapper().getEl().contentWindow.initCountdowns) {
-                            window.editor.getWrapper().getEl().contentWindow.initCountdowns();
+                        // PERBAIKAN: Gunakan editor.Canvas.getWindow() untuk akses window iframe
+                        const canvasWindow = window.editor.Canvas.getWindow();
+                        
+                        if (canvasWindow && canvasWindow.initCountdowns) {
+                            canvasWindow.initCountdowns();
                         }
                     } catch(e) { console.error('Add Error', e); }
                 }
@@ -253,8 +254,11 @@
                             details.forEach(d => d.addAttributes({ open: 'true' }));
                             
                             // JALANKAN SCRIPT EKSTERNAL DI IFRAME EDITOR
-                            if (window.editor.getWrapper().getEl().contentWindow.initCountdowns) {
-                                window.editor.getWrapper().getEl().contentWindow.initCountdowns();
+                            // PERBAIKAN: Gunakan editor.Canvas.getWindow() untuk akses window iframe
+                            const canvasWindow = window.editor.Canvas.getWindow();
+
+                            if (canvasWindow && canvasWindow.initCountdowns) {
+                                canvasWindow.initCountdowns();
                             }
                         }, 600);
                     }
