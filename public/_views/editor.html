@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - BUTTON LOGIC FIXED</title>
+    <title>LandingBuilder Pro - STABLE</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -22,60 +22,87 @@
     <script src="https://unpkg.com/grapesjs-tabs@1.0.6"></script>
 
     <style>
-        /* RESET & BASE */
+        /* --- RESET & BASE --- */
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: #fff; }
         [x-cloak] { display: none !important; }
 
-        /* HEADER */
-        header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; }
-        .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; }
+        /* --- Z-INDEX ARCHITECTURE (HITUNGAN KOMPREHENSIF) --- */
+        /* Layer 1: Workspace (0) */
+        .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; z-index: 0; }
         
-        /* SIDEBAR (Z-INDEX 150) */
-        .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 150; display: flex; flex-direction: column; flex-shrink: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 4px 0 24px rgba(0,0,0,0.1); }
-        .mobile-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 140; backdrop-filter: blur(4px); }
-
-        #gjs { flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; position: relative; }
+        /* Layer 2: Header (40) */
+        header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 40; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; }
         
-        /* --- FIX UPLOAD MODAL (MOBILE) --- */
-        .gjs-mdl-container { z-index: 3000000 !important; }
-        @media (max-width: 768px) {
-            .gjs-mdl-dialog { width: 95% !important; max-width: 95% !important; left: 2.5% !important; top: 5% !important; margin: 0 !important; height: 90% !important; border-radius: 8px; overflow: hidden; }
-            .gjs-am-assets-cont { width: 100% !important; padding: 5px !important; }
-            .gjs-am-asset { width: 46% !important; margin: 2% !important; }
-            .gjs-am-file-uploader { padding: 20px !important; background: #f0fdf4 !important; border: 2px dashed #4ade80 !important; }
-            .gjs-am-file-uploader::before { content: "Klik Disini untuk Upload Foto"; display: block; font-size: 14px; font-weight: bold; color: #166534; margin-bottom: 5px; }
+        /* Layer 3: Mobile Backdrop (45) */
+        .mobile-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 45; backdrop-filter: blur(4px); }
+        
+        /* Layer 4: Sidebar (50) - Agar menutupi Header di Mobile */
+        .sidebar-panel { 
+            width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; 
+            z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; 
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            box-shadow: 4px 0 24px rgba(0,0,0,0.1);
         }
 
-        /* --- FIX COLOR PICKER (Z-INDEX) --- */
-        .sp-container { z-index: 4000000 !important; background: white; border: 1px solid #cbd5e1; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2); border-radius: 8px; }
-        .sp-picker-container { border: none; }
-        .gjs-field-color-picker { border: 1px solid #e2e8f0; border-radius: 4px; background: white; min-width: 30px; cursor: pointer; padding: 2px; }
+        /* Layer 5: Alpine Modals (100) */
+        .alpine-modal { z-index: 100; }
 
-        /* GRAPESJS UI CLEANUP */
+        /* Layer 6: GrapesJS Asset Manager / Upload (99990) - WAJIB DIATAS SEMUANYA */
+        .gjs-mdl-container { 
+            z-index: 99990 !important; 
+        }
+        
+        /* Layer 7: Color Picker (99999) - RAJA TERATAS */
+        .sp-container { 
+            z-index: 99999 !important; 
+            background: white; border: 1px solid #cbd5e1; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2); border-radius: 8px; 
+        }
+
+        /* --- FIX UPLOAD MODAL DI MOBILE (RESPONSIVE FORCE) --- */
+        @media (max-width: 768px) {
+            .gjs-mdl-dialog {
+                width: 95% !important; max-width: 95% !important;
+                left: 2.5% !important; top: 20px !important; margin: 0 !important;
+                height: 90vh !important; border-radius: 8px; overflow: hidden;
+            }
+            .gjs-am-assets-cont { width: 100% !important; padding: 5px !important; }
+            .gjs-am-asset { width: 46% !important; margin: 2% !important; }
+            /* Memperbesar area dropzone agar mudah diklik jari */
+            .gjs-am-file-uploader { 
+                padding: 30px 10px !important; 
+                background: #f0fdf4 !important; border: 2px dashed #4ade80 !important; 
+                text-align: center;
+            }
+            .gjs-am-file-uploader form { display: block !important; } /* Pastikan form terlihat */
+        }
+
+        /* --- GRAPESJS UI TWEAKS --- */
+        #gjs { flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; position: relative; }
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
         .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; } 
+        
         .gjs-field { border: 1px solid #e5e7eb; border-radius: 4px; background: #fff; color: #333; padding: 5px; }
         .gjs-field input { color: #333; font-size: 12px; width: 100%; }
-        
-        /* ACCORDION HIGHLIGHT */
-        .gjs-hovered[data-gjs-type="details"] { outline: 2px dashed #6366f1 !important; outline-offset: 4px; }
-        
-        /* TRAIT BUTTON */
+        .gjs-field-color-picker { border: 1px solid #cbd5e1; margin-right: 5px; cursor: pointer; border-radius: 4px; min-width: 30px; padding: 2px; }
+
+        /* --- CUSTOM UI COMPONENTS --- */
         .trait-btn { width: 100%; background: #4f46e5; color: white; padding: 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; border: none; transition: background 0.2s; text-align: center; display:flex; align-items:center; justify-content:center; gap:6px; }
         .trait-btn:hover { background: #4338ca; }
         
-        /* WIDGET & ICONS */
         details.category-group > summary { list-style: none; cursor: pointer; background: #f9fafb; padding: 12px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #4b5563; border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; }
         details.category-group[open] > summary { border-bottom: 1px solid #e5e7eb; background: #fff; color: #4f46e5; border-left: 3px solid #4f46e5; }
+        
         .widget-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px; background: #fff; }
         .block-card { cursor: grab; background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: all 0.2s; user-select: none; }
         .block-card:hover { border-color: #6366f1; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        
         .icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); gap: 8px; max-height: 250px; overflow-y: auto; padding: 4px; }
         .icon-item { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 22px; cursor: pointer; color: #64748b; transition: all 0.2s; position: relative; }
         .icon-item:hover { background-color: #e0e7ff; color: #4f46e5; border-color: #6366f1; transform: scale(1.05); }
         
         .custom-scroll::-webkit-scrollbar { width: 5px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
         .input-field { width: 100%; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; outline: none; transition: border 0.2s; }
         .input-field:focus { border-color: #4f46e5; ring: 1px solid #4f46e5; }
         .label-field { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #6b7280; margin-bottom: 4px; }
@@ -85,22 +112,29 @@
 
     <header>
         <div class="flex items-center gap-3 flex-1 min-w-0">
-            <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden shrink-0 text-gray-600 bg-gray-100 hover:bg-gray-200 p-2 rounded-lg transition"><i class="ph ph-list text-2xl"></i></button>
+            <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden shrink-0 text-gray-600 bg-gray-100 hover:bg-gray-200 p-2 rounded-lg transition">
+                <i class="ph ph-list text-2xl"></i>
+            </button>
+            
             <a href="/admin/pages" class="hidden md:block text-gray-400 hover:text-indigo-600 p-1.5 hover:bg-gray-50 rounded"><i class="ph ph-arrow-left text-xl"></i></a>
+            
             <div class="flex flex-col min-w-0 flex-1">
                 <input x-model="page.title" class="bg-transparent font-bold text-sm text-gray-800 outline-none w-full truncate placeholder-gray-300 focus:text-indigo-600" placeholder="Nama Halaman...">
                 <span class="text-[10px] text-gray-400 truncate font-mono hidden sm:block" x-text="page.slug ? '/'+page.slug : 'Draft Mode'"></span>
             </div>
         </div>
+
         <div class="hidden md:flex bg-gray-100 rounded-lg p-1 border shadow-sm mx-4">
             <button @click="setDevice('desktop')" :class="device=='desktop'?'bg-white shadow-sm text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-desktop"></i></button>
             <button @click="setDevice('tablet')" :class="device=='tablet'?'bg-white shadow-sm text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-tablet"></i></button>
             <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-white shadow-sm text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile"></i></button>
         </div>
+
         <div class="flex items-center gap-2 shrink-0">
             <button @click="showSettings=true" class="flex items-center gap-2 bg-white text-gray-600 px-3 py-2 rounded-lg text-xs font-bold border hover:bg-gray-50 transition shadow-sm"><i class="ph ph-gear"></i> <span class="hidden md:inline">CONFIG</span></button>
             <button @click="savePage" :disabled="loading" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md shadow-indigo-200 transition active:scale-95">
-                <i class="ph ph-floppy-disk text-lg" x-show="!loading"></i><i class="ph ph-spinner animate-spin text-lg" x-show="loading"></i>
+                <i class="ph ph-floppy-disk text-lg" x-show="!loading"></i>
+                <i class="ph ph-spinner animate-spin text-lg" x-show="loading"></i>
                 <span x-text="loading ? '...' : 'PUBLISH'" class="hidden sm:inline"></span>
             </button>
         </div>
@@ -117,10 +151,10 @@
             </div>
 
             <div class="flex border-b border-gray-200 bg-white shrink-0">
-                <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition" title="Widgets"><i class="ph ph-squares-four text-xl"></i></button>
-                <button @click="tab='traits'" :class="tab=='traits'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition" title="Settings"><i class="ph ph-gear text-xl"></i></button>
-                <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition" title="Styles"><i class="ph ph-paint-brush text-xl"></i></button>
-                <button @click="tab='layers'" :class="tab=='layers'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition" title="Layers"><i class="ph ph-stack text-xl"></i></button>
+                <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-squares-four text-xl"></i></button>
+                <button @click="tab='traits'" :class="tab=='traits'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-gear text-xl"></i></button>
+                <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-paint-brush text-xl"></i></button>
+                <button @click="tab='layers'" :class="tab=='layers'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-stack text-xl"></i></button>
             </div>
             
             <div class="flex-1 bg-white relative w-full overflow-y-auto custom-scroll">
@@ -142,7 +176,9 @@
                 <div x-show="tab=='traits'" class="h-full pb-20">
                     <div id="traits-container" class="p-3"></div>
                     <div class="p-4 text-center">
-                        <p class="text-[10px] text-gray-400 bg-blue-50 text-blue-700 p-2 rounded border border-blue-100"><i class="ph ph-info"></i> Klik elemen di canvas (Tombol, Link, Icon) untuk edit propertinya.</p>
+                        <p class="text-[10px] text-gray-400 bg-blue-50 text-blue-700 p-2 rounded border border-blue-100">
+                            <i class="ph ph-info"></i> Pilih elemen untuk edit properti khusus (Link, Icon, ID).
+                        </p>
                     </div>
                 </div>
                 <div x-show="tab=='styles'" class="h-full pb-20"><div id="selectors-container" class="p-3 border-b bg-gray-50"></div><div id="styles-container" class="p-1"></div></div>
@@ -151,7 +187,7 @@
         </div>
     </div>
 
-    <div x-show="showIconPicker" x-cloak class="fixed inset-0 z-[9999] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4" x-transition.opacity>
+    <div x-show="showIconPicker" x-cloak class="alpine-modal fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4" x-transition.opacity>
         <div class="w-full max-w-lg bg-white rounded-xl shadow-2xl flex flex-col max-h-[80vh] border border-gray-100" @click.outside="closeIconPicker()">
             <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-xl"><h3 class="font-bold text-gray-800">Cari Icon (Iconify)</h3><button @click="closeIconPicker()" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button></div>
             <div class="p-4 space-y-4 overflow-hidden flex flex-col h-full">
@@ -173,7 +209,7 @@
         </div>
     </div>
 
-    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[400] bg-slate-900/40 backdrop-blur-sm flex justify-end" x-transition.opacity>
+    <div x-show="showSettings" x-cloak class="alpine-modal fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex justify-end" x-transition.opacity>
         <div class="w-full md:w-[420px] h-full bg-white shadow-2xl flex flex-col border-l border-gray-200 transform transition-transform duration-300" x-transition:enter="translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="translate-x-0" x-transition:leave-end="translate-x-full" @click.outside="showSettings=false">
             <div class="p-5 border-b flex justify-between items-center bg-gray-50">
                 <div><h3 class="font-bold text-gray-800 text-lg">Konfigurasi Halaman</h3><p class="text-xs text-gray-500">Pengaturan Bisnis, SEO & Data</p></div>
@@ -260,7 +296,19 @@
                 window.editor = grapesjs.init({
                     container: '#gjs', height: '100%', width: 'auto', storageManager: false, panels: { defaults: [] }, 
                     allowScripts: 1, 
+                    
+                    // --- FIX DEVICE MANAGER (PREVIEW MOBILE BERFUNGSI) ---
+                    deviceManager: {
+                        devices: [
+                            { name: 'desktop', width: '' }, 
+                            { name: 'tablet', width: '768px', widthMedia: '992px' },
+                            { name: 'mobile', width: '375px', widthMedia: '480px' }
+                        ]
+                    },
+
+                    // --- UPLOAD CONFIG ---
                     assetManager: { upload: '/api/admin/upload', uploadName: 'files', embedAsBase64: 0, autoAdd: 1, openAssetsOnDrop: 0 },
+                    
                     canvas: {
                         scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
                         styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
@@ -273,21 +321,7 @@
                     layerManager: { appendTo: '#layers-container' }
                 });
 
-                // --- 1. LINK / BUTTON COMPONENT (FIX LOGIC BUTTON) ---
-                window.editor.DomComponents.addType('link', {
-                    model: {
-                        defaults: {
-                            traits: [
-                                { type: 'text', name: 'href', label: 'URL / Link' },
-                                { type: 'select', name: 'target', label: 'Target', options: [{ value: '', name: 'Self' }, { value: '_blank', name: 'New Tab' }] },
-                                { type: 'text', name: 'id', label: 'ID (Anchor)' },
-                                { type: 'text', name: 'title', label: 'Title / Tooltip' }
-                            ]
-                        }
-                    }
-                });
-
-                // --- 2. TRAIT BUTTON ICON ---
+                // --- 1. TRAIT BUTTON ICON ---
                 window.editor.TraitManager.addType('icon-picker-btn', {
                     createInput({ trait }) {
                         const btn = document.createElement('button');
@@ -295,6 +329,19 @@
                         btn.innerHTML = '<span>CARI ICON</span> <i class="ph ph-magnifying-glass" style="font-size:14px;"></i>';
                         btn.onclick = () => { if(window.editorApp) window.editorApp.showIconPicker = true; };
                         return btn;
+                    }
+                });
+
+                // --- 2. LINK / BUTTON ---
+                window.editor.DomComponents.addType('link', {
+                    model: {
+                        defaults: {
+                            traits: [
+                                { type: 'text', name: 'href', label: 'URL / Link' },
+                                { type: 'select', name: 'target', label: 'Target', options: [{ value: '', name: 'Self' }, { value: '_blank', name: 'New Tab' }] },
+                                { type: 'text', name: 'id', label: 'ID' }
+                            ]
+                        }
                     }
                 });
 
@@ -318,7 +365,7 @@
                     }
                 });
 
-                // --- 4. ACCORDION COMPONENT ---
+                // --- 4. ACCORDION (FIX COPY PASTE) ---
                 window.editor.DomComponents.addType('details', {
                     model: {
                         defaults: {
@@ -327,11 +374,12 @@
                         }
                     }
                 });
+                // Fix: Summary boleh diedit textnya, tapi ga boleh di-drag keluar
                 window.editor.DomComponents.addType('summary', {
                     model: { defaults: { draggable: false, droppable: false, editable: true } } 
                 });
 
-                // --- 5. TOOLBAR SHORTCUT ---
+                // TOOLBAR SHORTCUT ICON
                 window.editor.on('component:selected', (model) => {
                     const toolbar = model.get('toolbar');
                     if (!toolbar.some(t => t.command === 'open-icon-picker')) {
@@ -344,6 +392,8 @@
 
                 if(this.groupedWidgets) {
                     Object.values(this.groupedWidgets).flat().forEach(w => {
+                        // FIX: HANYA DAFTARKAN COMPONENT TYPE JIKA WIDGET ITU PUNYA SCRIPT KHUSUS (CountDown dll)
+                        // Widget teks biasa jangan didaftarkan agar sifat defaultnya (editable) tetap jalan
                         if(w.script) {
                              window.editor.DomComponents.addType(w.id, {
                                 model: {
