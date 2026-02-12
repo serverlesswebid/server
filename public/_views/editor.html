@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - System Fixed</title>
+    <title>LandingBuilder Pro - FINAL PRODUCTION</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -12,85 +12,85 @@
     
     <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.2/dist/css/grapes.min.css">
     <script src="https://unpkg.com/grapesjs@0.21.2/dist/grapes.min.js"></script>
+    
     <script src="https://unpkg.com/grapesjs-blocks-basic@1.0.1"></script>
     <script src="https://unpkg.com/grapesjs-plugin-forms@2.0.5"></script> 
     <script src="https://unpkg.com/grapesjs-navbar@1.0.1"></script>
     <script src="https://unpkg.com/grapesjs-blocks-flexbox@0.1.1"></script>
     <script src="https://unpkg.com/grapesjs-style-bg@2.0.1"></script>
+    <script src="https://unpkg.com/grapesjs-component-countdown@1.0.1"></script>
+    <script src="https://unpkg.com/grapesjs-tabs@1.0.6"></script>
 
     <style>
-        /* RESET & LAYOUT */
+        /* RESET */
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: #fff; }
         [x-cloak] { display: none !important; }
 
-        /* HEADER */
-        header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        /* LAYOUT */
+        header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
         .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; }
         
         /* SIDEBAR */
-        .sidebar-panel { 
-            width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; 
-            z-index: 90; display: flex; flex-direction: column; flex-shrink: 0; 
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: -2px 0 10px rgba(0,0,0,0.05);
-        }
-        
+        .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 90; display: flex; flex-direction: column; flex-shrink: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         #gjs { flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; position: relative; }
         
-        /* GRAPESJS OVERRIDES - FIXED COLOR PICKER */
+        /* GRAPESJS UI FIXES */
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
         .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; } 
-        .gjs-three-bg { background-color: #f8fafc !important; }
         
-        /* PENTING: Jangan override .gjs-field terlalu agresif agar color picker bawaan muncul */
-        .gjs-field { border-radius: 4px; border: 1px solid #e5e7eb; }
-        .gjs-field input { font-size: 12px; color: #333; }
-        /* Style khusus untuk color picker input GrapesJS */
-        .gjs-field-color-picker { margin-right: 5px; cursor: pointer; border: 1px solid #ddd; border-radius: 3px; }
+        /* INPUT FIELDS & COLOR PICKER FIX */
+        .gjs-field { border: 1px solid #e5e7eb; border-radius: 4px; background: #fff; color: #333; }
+        .gjs-field input { color: #333; font-size: 12px; }
+        .gjs-field-color-picker { border: 1px solid #ddd; margin-right: 5px; cursor: pointer; border-radius: 3px; overflow: hidden; }
 
-        /* UI HELPERS */
-        .input-field { width: 100%; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; outline: none; transition: border-color 0.2s; }
-        .input-field:focus { border-color: #6366f1; ring: 2px solid #e0e7ff; }
-        .label-field { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #6b7280; margin-bottom: 4px; }
+        /* TRAIT BUTTON (TOMBOL SETTING ICON) */
+        .trait-btn { width: 100%; background: #4f46e5; color: white; padding: 8px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; border: none; transition: background 0.2s; text-align: center; }
+        .trait-btn:hover { background: #4338ca; }
         
-        /* ACCORDION & GRID */
+        /* ACCORDION CATEGORY */
         details.category-group > summary { list-style: none; cursor: pointer; background: #f9fafb; padding: 10px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #4b5563; border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; }
         details.category-group[open] > summary { border-bottom: 1px solid #e5e7eb; background: #fff; color: #4f46e5; }
+        
+        /* GRID & ICONS */
         .widget-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px; background: #fff; }
         .block-card { cursor: grab; background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: all 0.2s; user-select: none; }
         .block-card:hover { border-color: #6366f1; transform: translateY(-1px); }
-        .custom-scroll::-webkit-scrollbar { width: 5px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
         .icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); gap: 6px; max-height: 250px; overflow-y: auto; padding: 4px; }
         .icon-item { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 20px; cursor: pointer; color: #64748b; }
         .icon-item:hover { background-color: #e0e7ff; color: #4f46e5; border-color: #6366f1; }
+        
+        .custom-scroll::-webkit-scrollbar { width: 5px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        .input-field { width: 100%; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; outline: none; }
+        .label-field { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #6b7280; margin-bottom: 4px; }
     </style>
 </head>
-<body x-data="editorApp()">
+<body x-data="editorApp()" x-init="window.editorApp = $data">
 
     <header>
         <div class="flex items-center gap-3 w-1/3 min-w-0">
-            <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden text-gray-600 hover:text-indigo-600 p-1">
-                <i class="ph ph-list text-2xl"></i>
-            </button>
-            <a href="/admin/pages" class="hidden md:block text-gray-400 hover:text-indigo-600 transition p-1.5 rounded hover:bg-gray-50"><i class="ph ph-arrow-left text-xl"></i></a>
+            <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden text-gray-600 p-1"><i class="ph ph-list text-2xl"></i></button>
+            <a href="/admin/pages" class="hidden md:block text-gray-400 hover:text-indigo-600 p-1.5"><i class="ph ph-arrow-left text-xl"></i></a>
             <div class="flex flex-col min-w-0 flex-1">
-                <input x-model="page.title" class="bg-transparent font-bold text-sm text-gray-800 outline-none w-full truncate placeholder-gray-300 focus:text-indigo-600" placeholder="Judul Halaman...">
+                <input x-model="page.title" class="bg-transparent font-bold text-sm text-gray-800 outline-none w-full truncate placeholder-gray-300" placeholder="Judul Halaman...">
                 <span class="text-[10px] text-gray-400 truncate font-mono" x-text="page.slug ? '/'+page.slug : 'Draft Mode'"></span>
             </div>
         </div>
 
         <div class="hidden md:flex bg-gray-50 rounded-lg p-1 border shadow-sm">
-            <button @click="setDevice('desktop')" :class="device=='desktop'?'bg-white shadow-sm text-indigo-600':'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded transition"><i class="ph ph-desktop"></i></button>
-            <button @click="setDevice('tablet')" :class="device=='tablet'?'bg-white shadow-sm text-indigo-600':'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded transition"><i class="ph ph-device-tablet"></i></button>
-            <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-white shadow-sm text-indigo-600':'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile"></i></button>
+            <button @click="setDevice('desktop')" :class="device=='desktop'?'bg-white shadow-sm text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-desktop"></i></button>
+            <button @click="setDevice('tablet')" :class="device=='tablet'?'bg-white shadow-sm text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-tablet"></i></button>
+            <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-white shadow-sm text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile"></i></button>
         </div>
 
         <div class="flex items-center gap-2 w-1/3 justify-end">
             <button @click="showSettings=true" class="flex items-center gap-2 bg-white text-gray-600 px-3 py-2 rounded-lg text-xs font-bold border hover:bg-gray-50 transition shadow-sm"><i class="ph ph-gear"></i> <span class="hidden md:inline">CONFIG</span></button>
             <button @click="savePage" :disabled="loading" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md shadow-indigo-200 transition active:scale-95">
-                <i class="ph ph-floppy-disk text-lg" x-show="!loading"></i><i class="ph ph-spinner animate-spin text-lg" x-show="loading"></i>
-                <span x-text="loading ? 'SAVING...' : (window.innerWidth > 768 ? 'PUBLISH' : 'SAVE')"></span>
+                <i class="ph ph-floppy-disk text-lg" x-show="!loading"></i>
+                <i class="ph ph-spinner animate-spin text-lg" x-show="loading"></i>
+                <span x-text="loading ? 'SAVING...' : 'PUBLISH'"></span>
             </button>
         </div>
     </header>
@@ -102,15 +102,15 @@
 
         <div class="sidebar-panel fixed inset-y-0 left-0 md:static transform duration-300 ease-in-out" :class="mobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0 md:shadow-none'">
             <div class="md:hidden flex items-center justify-between p-3 border-b bg-gray-50">
-                <span class="font-bold text-gray-700 text-xs uppercase">Tools</span>
-                <button @click="mobileMenuOpen = false" class="text-gray-500 hover:text-red-600"><i class="ph ph-x text-xl"></i></button>
+                <span class="font-bold text-gray-700 text-xs uppercase">Editor</span>
+                <button @click="mobileMenuOpen = false" class="text-gray-500"><i class="ph ph-x text-xl"></i></button>
             </div>
 
             <div class="flex border-b border-gray-200 bg-white shrink-0">
-                <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition"><i class="ph ph-squares-four text-xl"></i></button>
-                <button @click="tab='traits'" :class="tab=='traits'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition"><i class="ph ph-gear text-xl"></i></button>
-                <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition"><i class="ph ph-paint-brush text-xl"></i></button>
-                <button @click="tab='layers'" :class="tab=='layers'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition"><i class="ph ph-stack text-xl"></i></button>
+                <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3"><i class="ph ph-squares-four text-xl"></i></button>
+                <button @click="tab='traits'" :class="tab=='traits'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3"><i class="ph ph-gear text-xl"></i></button>
+                <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3"><i class="ph ph-paint-brush text-xl"></i></button>
+                <button @click="tab='layers'" :class="tab=='layers'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3"><i class="ph ph-stack text-xl"></i></button>
             </div>
             
             <div class="flex-1 bg-white relative w-full overflow-y-auto custom-scroll">
@@ -129,39 +129,12 @@
                         </details>
                     </template>
                 </div>
-                <div x-show="tab=='traits'" class="h-full pb-20"><div id="traits-container" class="p-3"></div></div>
+                <div x-show="tab=='traits'" class="h-full pb-20">
+                    <div id="traits-container" class="p-3"></div>
+                    <div class="p-3 text-center text-[10px] text-gray-400">Klik elemen di canvas untuk melihat pengaturan.</div>
+                </div>
                 <div x-show="tab=='styles'" class="h-full pb-20"><div id="selectors-container" class="p-3 border-b bg-gray-50"></div><div id="styles-container" class="p-1"></div></div>
                 <div x-show="tab=='layers'" class="h-full pb-20"><div id="layers-container" class="p-2"></div></div>
-            </div>
-        </div>
-    </div>
-
-    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[400] bg-slate-900/40 backdrop-blur-sm flex justify-end" x-transition.opacity>
-        <div class="w-full md:w-[420px] h-full bg-white shadow-2xl flex flex-col border-l border-gray-200 transform transition-transform duration-300" x-transition:enter="translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="translate-x-0" x-transition:leave-end="translate-x-full" @click.outside="showSettings=false">
-            <div class="p-5 border-b flex justify-between items-center bg-gray-50">
-                <div><h3 class="font-bold text-gray-800 text-lg">Page Configuration</h3><p class="text-xs text-gray-500">Pengaturan lengkap halaman.</p></div>
-                <button @click="showSettings=false" class="text-gray-400 hover:text-red-500 transition"><i class="ph ph-x text-2xl"></i></button>
-            </div>
-            <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scroll">
-                <div class="space-y-4">
-                    <div class="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-wider border-b pb-1 mb-2"><i class="ph ph-identification-card text-lg"></i> Identitas</div>
-                    <div><label class="label-field">Judul Halaman</label><input x-model="page.title" class="input-field"></div>
-                    <div><label class="label-field">Slug</label><div class="flex items-center border border-gray-300 rounded-md overflow-hidden bg-gray-50"><span class="pl-3 pr-2 text-gray-500 text-xs font-mono">/</span><input x-model="page.slug" class="w-full py-2 px-1 bg-white text-sm outline-none font-mono text-indigo-600"></div></div>
-                </div>
-                <div class="space-y-4">
-                    <div class="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-wider border-b pb-1 mb-2"><i class="ph ph-shopping-cart text-lg"></i> Produk</div>
-                    <div><label class="label-field">Harga (IDR)</label><input x-model="page.config.price" type="number" class="input-field"></div>
-                    <div><label class="label-field">Tipe</label><select x-model="page.product_type" class="input-field bg-white"><option value="physical">Fisik (Ongkir)</option><option value="digital">Digital</option></select></div>
-                </div>
-                <div class="space-y-4">
-                    <div class="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-wider border-b pb-1 mb-2"><i class="ph ph-globe text-lg"></i> SEO & Data</div>
-                    <div><label class="label-field">SEO Title</label><input x-model="page.config.settings.seo_title" class="input-field"></div>
-                    <div><label class="label-field">SEO Desc</label><textarea x-model="page.config.settings.seo_description" class="input-field h-20 resize-none"></textarea></div>
-                    <div><label class="label-field">Pixel ID</label><input x-model="page.config.settings.fb_pixel" class="input-field"></div>
-                </div>
-            </div>
-            <div class="p-5 border-t bg-gray-50 text-right">
-                <button @click="savePage(); showSettings=false" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded shadow-lg transition">SIMPAN</button>
             </div>
         </div>
     </div>
@@ -176,6 +149,34 @@
         </div>
     </div>
 
+    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[400] bg-slate-900/40 backdrop-blur-sm flex justify-end" x-transition.opacity>
+        <div class="w-full md:w-[420px] h-full bg-white shadow-2xl flex flex-col border-l border-gray-200 transform transition-transform duration-300" x-transition:enter="translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="translate-x-0" x-transition:leave-end="translate-x-full" @click.outside="showSettings=false">
+            <div class="p-5 border-b flex justify-between items-center bg-gray-50">
+                <div><h3 class="font-bold text-gray-800 text-lg">Konfigurasi</h3><p class="text-xs text-gray-500">Pengaturan Bisnis & SEO</p></div>
+                <button @click="showSettings=false" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-2xl"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scroll">
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-wider border-b pb-1 mb-2">Identitas</div>
+                    <div><label class="label-field">Judul Halaman</label><input x-model="page.title" class="input-field"></div>
+                    <div><label class="label-field">Slug URL</label><input x-model="page.slug" class="input-field"></div>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-wider border-b pb-1 mb-2">Produk</div>
+                    <div><label class="label-field">Harga (IDR)</label><input x-model="page.config.price" type="number" class="input-field"></div>
+                    <div><label class="label-field">Tipe Produk</label><select x-model="page.product_type" class="input-field bg-white"><option value="physical">Fisik (Ongkir)</option><option value="digital">Digital</option></select></div>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-wider border-b pb-1 mb-2">SEO & Tracking</div>
+                    <div><label class="label-field">Meta Title</label><input x-model="page.config.settings.seo_title" class="input-field"></div>
+                    <div><label class="label-field">Meta Desc</label><textarea x-model="page.config.settings.seo_description" class="input-field h-20 resize-none"></textarea></div>
+                    <div><label class="label-field">Pixel ID</label><input x-model="page.config.settings.fb_pixel" class="input-field"></div>
+                </div>
+            </div>
+            <div class="p-5 border-t bg-gray-50 text-right"><button @click="savePage(); showSettings=false" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded shadow-lg">SIMPAN</button></div>
+        </div>
+    </div>
+
     <div class="fixed bottom-5 left-5 z-[100000] flex flex-col gap-2 pointer-events-none">
         <template x-for="n in notifications" :key="n.id">
             <div x-show="n.show" x-transition class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-l-4 bg-white" :class="n.type==='error'?'border-red-500':'border-green-500'"><i class="ph text-xl" :class="n.type==='error'?'ph-warning-circle text-red-500':'ph-check-circle text-green-500'"></i><div class="text-xs font-bold text-gray-800" x-text="n.title"></div></div>
@@ -186,16 +187,15 @@
     function editorApp() {
         return {
             device: 'desktop', tab: 'blocks', mobileMenuOpen: false, showSettings: false, showIconPicker: false, iconSearch: '', loading: false, notifications: [],
-            page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, settings: {} } },
+            page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, variants:[], shipping: {}, settings: {} } }, // Config dikembalikan lengkap
             groupedWidgets: {}, widgetScripts: {}, 
-            popularIcons: ['ph:star-fill','ph:heart-fill','ph:check-circle-fill','ph:warning-circle-fill','ph:shopping-cart-fill','ph:rocket-launch-fill','ph:user-fill','ph:house-fill','ph:envelope-fill','ph:phone-fill','ph:instagram-logo-fill','ph:whatsapp-logo-fill','ph:facebook-logo-fill','ph:tiktok-logo-fill','ph:youtube-logo-fill'],
+            popularIcons: ['ph:star-fill','ph:heart-fill','ph:check-circle-fill','ph:warning-circle-fill','ph:shopping-cart-fill','ph:rocket-launch-fill','ph:user-fill','ph:house-fill','ph:envelope-fill','ph:phone-fill','ph:instagram-logo-fill','ph:whatsapp-logo-fill'],
 
             async init() {
                 await this.loadWidgets();
                 this.initGrapes();
                 const slug = new URLSearchParams(window.location.search).get('slug');
                 if (slug) await this.loadPageData(slug);
-                window.addEventListener('open-icon-modal', () => { this.showIconPicker = true; this.iconSearch = ''; });
             },
 
             notify(title, type = 'success') { const id = Date.now(); this.notifications.push({ id, title, type, show: true }); setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); },
@@ -209,12 +209,6 @@
                         if(w.script && w.id !== 'iconify-icon' && w.id !== 'faq-accordion') this.widgetScripts[w.id] = w.script;
                         const cat = w.category || 'General';
                         if(!this.groupedWidgets[cat]) this.groupedWidgets[cat] = [];
-                        
-                        // FIX ICON BRIDGE: Jika widget adalah icon, pastikan kontennya pakai <iconify-icon> bukan <i> atau <div>
-                        // Ini agar atribut 'icon' terbaca otomatis
-                        if(w.id === 'iconify-icon' || w.content.includes('iconify-icon')) {
-                            // Biarkan apa adanya, sudah benar
-                        }
                         this.groupedWidgets[cat].push(w);
                     });
                 } catch(e) { this.notify('Gagal load widget', 'error'); }
@@ -236,24 +230,52 @@
                         styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
                         content: `<style>body{padding:20px;} details{min-height:50px;}</style>`
                     },
-                    plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg'],
+                    plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg', 'grapesjs-component-countdown', 'grapesjs-tabs'],
                     selectorManager: { appendTo: '#selectors-container' },
                     traitManager: { appendTo: '#traits-container' },
-                    // FIX COLOR PALETTE: Sector 'Decor' harus memuat background-color dengan benar
-                    styleManager: { 
-                        appendTo: '#styles-container', 
-                        sectors: [
-                            { name: 'Typography', open: 1, buildProps: ['font-size','font-weight','color','text-align','line-height'] },
-                            { name: 'Layout', open: 0, buildProps: ['width','height','padding','margin','display'] },
-                            { name: 'Decor', open: 0, buildProps: ['background-color','border-radius','box-shadow','opacity'] }
-                        ] 
-                    },
+                    styleManager: { appendTo: '#styles-container', sectors: [{ name: 'Typography', open: 1, buildProps: ['font-size','font-weight','color','text-align'] },{ name: 'Layout', buildProps: ['padding','margin','display','width','height'] },{ name: 'Decor', buildProps: ['background-color','border-radius','box-shadow'] }] },
                     layerManager: { appendTo: '#layers-container' }
                 });
 
-                window.editor.Commands.add('open-icon-picker', { run(editor) { window.dispatchEvent(new CustomEvent('open-icon-modal')); } });
+                // --- 1. DEFINE CUSTOM TRAIT (TOMBOL DI SETTING) ---
+                window.editor.TraitManager.addType('icon-picker-btn', {
+                    createInput({ trait }) {
+                        const btn = document.createElement('button');
+                        btn.className = 'trait-btn';
+                        btn.innerHTML = 'PILIH ICON <i class="ph ph-magnifying-glass"></i>';
+                        btn.onclick = () => {
+                            // DIRECT ACCESS KE ALPINE (GLOBAL SCOPE)
+                            if(window.editorApp) window.editorApp.showIconPicker = true;
+                        };
+                        return btn;
+                    }
+                });
 
-                // Register Komponen
+                // --- 2. DEFINE ICON COMPONENT ---
+                window.editor.DomComponents.addType('iconify-icon', {
+                    model: {
+                        defaults: {
+                            tagName: 'iconify-icon',
+                            droppable: false,
+                            attributes: { icon: 'ph:star-fill', width: '32', height: '32' },
+                            traits: [
+                                { type: 'icon-picker-btn', name: 'picker', label: ' ' }, // Tombol Picker
+                                { type: 'text', name: 'icon', label: 'Icon Code' }, // Input Manual
+                                { type: 'number', name: 'width', label: 'Width' },
+                                { type: 'color', name: 'style-color', label: 'Color', changeProp: 1 } // Trait warna
+                            ]
+                        },
+                        init() {
+                            this.on('change:style-color', this.handleColorChange);
+                        },
+                        handleColorChange() {
+                            const color = this.get('style-color');
+                            this.addStyle({ color: color });
+                        }
+                    }
+                });
+
+                // Register Komponen Lain
                 if(this.groupedWidgets) {
                     Object.values(this.groupedWidgets).flat().forEach(w => {
                         window.editor.DomComponents.addType(w.id, { model: { defaults: { attributes: { 'data-widget-type': w.id } } } });
@@ -273,35 +295,30 @@
 
             handleDragStart(event, w) { event.dataTransfer.setData('text', w.content); },
 
-            // FIX LOGIC ICON PICKER
+            // LOGIC APPLY ICON (DARI MODAL)
             applyIcon(iconString) {
                 const selected = window.editor.getSelected();
                 if (selected) {
-                    // 1. Cek apakah ini komponen <iconify-icon>?
+                    // Logic Cerdas: Cek apakah targetnya iconify-icon, atau punya anak iconify-icon
                     if (selected.is('iconify-icon') || selected.get('tagName') === 'iconify-icon') {
                         selected.addAttributes({ icon: iconString });
-                        this.notify('Icon diperbarui!');
-                    } 
-                    // 2. Jika bukan, tapi user maksa ingin ganti icon (misal di button)
-                    else {
-                        // Opsi A: Ganti kontennya jadi icon (Destruktif tapi efektif)
-                        // Opsi B: Cari anak elemen yang iconify-icon
-                        const childIcon = selected.find('iconify-icon');
-                        if (childIcon.length > 0) {
-                            childIcon[0].addAttributes({ icon: iconString });
-                            this.notify('Icon di dalam elemen diperbarui!');
+                    } else {
+                        const child = selected.find('iconify-icon');
+                        if (child.length > 0) {
+                            child[0].addAttributes({ icon: iconString });
                         } else {
-                            // Opsi C: Insert icon baru
-                             selected.append(`<iconify-icon icon="${iconString}"></iconify-icon>`);
-                             this.notify('Icon ditambahkan ke elemen!');
+                            // Fallback: Timpa HTML jika bukan icon
+                            this.notify('Bukan komponen Icon. Mencoba insert...', 'warning');
+                            selected.append(`<iconify-icon icon="${iconString}" width="32"></iconify-icon>`);
                         }
                     }
+                    this.notify('Icon Berhasil Diubah!');
                 } else {
-                    this.notify('Pilih komponen dulu!', 'error');
+                    this.notify('Pilih komponen icon dulu di canvas!', 'error');
                 }
                 this.closeIconPicker();
             },
-            closeIconPicker() { this.showIconPicker = false; window.editor.stopCommand('open-icon-picker'); },
+            closeIconPicker() { this.showIconPicker = false; },
 
             async loadPageData(slug) {
                 this.loading = true;
@@ -310,8 +327,18 @@
                     const data = await res.json();
                     this.page.id = data.id; this.page.slug = data.slug; this.page.title = data.title || '';
                     this.page.product_type = data.product_type || 'physical';
-                    if (data.product_config_json) this.page.config = typeof data.product_config_json === 'string' ? JSON.parse(data.product_config_json) : data.product_config_json;
-                    if(!this.page.config.settings) this.page.config.settings = {};
+                    
+                    // RESTORE CONFIG LENGKAP (Shipping, Variants, dll)
+                    if (data.product_config_json) {
+                        const c = typeof data.product_config_json === 'string' ? JSON.parse(data.product_config_json) : data.product_config_json;
+                        this.page.config = {
+                            price: c.price || 0,
+                            variants: c.variants || [],
+                            shipping: c.shipping || { weight: 1000, cod: false },
+                            settings: c.settings || {},
+                            active_payments: c.active_payments || []
+                        };
+                    }
 
                     if (window.editor) {
                         let safeHtml = data.html_content || "";
