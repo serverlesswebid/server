@@ -216,30 +216,30 @@
                 const w = appBuilderCache[id];
                 if (w) {
                     let html = w.content;
-                    // --- DISPATCHER: Inject manual script handling ---
                     try { 
                         window.editor.addComponents(html);
-                        // TRIGGER SCRIPT DI EDITOR SECARA AMAN
-                        // PERBAIKAN: Gunakan editor.Canvas.getWindow() untuk akses window iframe
-                        const canvasWindow = window.editor.Canvas.getWindow();
                         
+                        // TRIGGER SCRIPT DI EDITOR
+                        // Menggunakan API yang Benar: Canvas.getWindow()
+                        const canvasWindow = window.editor.Canvas.getWindow();
                         if (canvasWindow && canvasWindow.initCountdowns) {
                             canvasWindow.initCountdowns();
                         }
                     } catch(e) { console.error('Add Error', e); }
                 }
             },
-
             async loadPageData(slug) {
                 this.loading = true;
                 try {
                     const res = await fetch(`/api/admin/pages/${slug}`);
                     const data = await res.json();
                     this.page.id = data.id; this.page.slug = data.slug; this.page.title = data.title || '';
+                    
                     if (data.product_config_json) { 
                         const conf = typeof data.product_config_json === 'string' ? JSON.parse(data.product_config_json) : data.product_config_json;
                         this.page.config = { ...this.page.config, ...conf }; 
                     }
+                    
                     if (window.editor) {
                         let safeHtml = data.html_content || '';
                         // CLEANUP: Hapus script usang dari database
@@ -248,36 +248,66 @@
                         window.editor.setComponents(safeHtml);
                         window.editor.setStyle(data.css_content || '');
                         
-                        // AUTO OPEN ACCORDION (Logika Khusus Editor)
+                        // AUTO OPEN ACCORDION
                         setTimeout(() => {
-                            const details = window.editor.getWrapper().find('details');
-                            details.forEach(d => d.addAttributes({ open: 'true' }));
+                            const wrapper = window.editor.getWrapper();
+                            wrapper.find('details').forEach(d => d.addAttributes({ open: 'true' }));
                             
-                            // JALANKAN SCRIPT EKSTERNAL DI IFRAME EDITOR
-                            // PERBAIKAN: Gunakan editor.Canvas.getWindow() untuk akses window iframe
-                            const canvasWindow = window.editor.Canvas.getWindow();
+                            // --- DETEKSI KHUSUS COUNTDOWN ---
+                            // Sesuai instruksi: Cek apakah mengandung kata countdown
+                            const rawHtml = window.editor.getHtml();
+                            if (rawHtml.includes('countdown') || rawHtml.includes('js-countdown')) {
+                                
+                                // 1. Bersihkan atribut data-init yang mungkin terbawa dari database
+                                // Agar script tidak menganggap ini sudah berjalan
+                                const timers = wrapper.find('.js-countdown');
+                                timers.forEach(timer => {
+                                    // Hapus atribut data-init dari Model GrapesJS
+                                    const attr = timer.getAttributes();
+                                    delete attr['data-init'];
+                                    timer.setAttributes(attr);
+                                    
+                                    // Hapus atribut dari DOM Element di Canvas (Hard Clean)
+                                    if(timer.getEl()) {
+                                        timer.getEl().removeAttribute('data-init');
+                                    }
+                                });
 
-                            if (canvasWindow && canvasWindow.initCountdowns) {
-                                canvasWindow.initCountdowns();
+                                // 2. Jalankan Script via Window Canvas
+                                const canvasWindow = window.editor.Canvas.getWindow();
+                                if (canvasWindow && canvasWindow.initCountdowns) {
+                                    canvasWindow.initCountdowns();
+                                }
                             }
                         }, 600);
                     }
                 } catch (e) { this.notify('Error', e.message, 'error'); }
                 this.loading = false;
             },
-
             async savePage() {
                 this.loading = true;
                 try {
+                    const wrapper = window.editor.getWrapper();
+
                     // TUTUP ACCORDION SEBELUM SAVE
-                    window.editor.getWrapper().find('details').forEach(d => d.addAttributes({ open: null }));
+                    wrapper.find('details').forEach(d => d.addAttributes({ open: null }));
+                    
+                    // --- CLEANUP COUNTDOWN SEBELUM SAVE ---
+                    // Ini wajib dilakukan agar di Frontend script mau berjalan ulang
+                    wrapper.find('.js-countdown').forEach(timer => {
+                        // Kita hapus atribut data-init agar bersih saat masuk database
+                        const attr = timer.getAttributes();
+                        delete attr['data-init'];
+                        timer.setAttributes(attr);
+                        
+                        // Pastikan DOM element juga bersih sebelum getHtml() dieksekusi
+                        if(timer.getEl()) timer.getEl().removeAttribute('data-init');
+                    });
                     
                     const html = window.editor.getHtml();
                     const css = window.editor.getCss();
                     
                     // --- LIVE SCRIPT INJECTION ---
-                    // Kita menyuntikkan script eksternal countdown.js agar berjalan di Live
-                    // Script ini akan otomatis mencari .js-countdown dan menjalankannya
                     const finalHtml = `${html}<script src="/assets/js/countdown.js"><\/script>`;
 
                     const payload = {
