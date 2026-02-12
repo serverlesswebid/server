@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - External Script Edition</title>
+    <title>LandingBuilder Pro - Embedded Core</title>
     
     <script>
         (function() {
@@ -64,16 +64,10 @@
         
         .sp-container { z-index: 1000000 !important; position: fixed !important; }
         .gjs-field-color-picker { width: 100%; height: 24px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
-        /* Pastikan Color Picker selalu paling atas */
-        .sp-container { 
-            z-index: 2147483647 !important; /* Nilai Max Z-Index 32-bit integer */
-            position: fixed !important; 
-        }
-        /* Style tambahan untuk Layer Manager agar terlihat rapi */
+        .sp-container { z-index: 2147483647 !important; position: fixed !important; }
         .gjs-layer-item { padding: 8px 10px; border-bottom: 1px solid #f3f4f6; }
         .gjs-layer-item.gjs-selected { background: #e0e7ff !important; color: #4338ca; }
         .gjs-layer-name { font-size: 11px; font-weight: 600; }
-        /* Style untuk Custom Trait Button (Icon Picker) */
         .icon-picker-btn {
             width: 100%; padding: 8px; background: #4f46e5; color: white;
             border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;
@@ -197,68 +191,6 @@
     <script>
     let appBuilderCache = {};
 
-    // ==========================================
-    // 1. LOGIKA UTAMA (UNIVERSAL & ISOLATED)
-    // ==========================================
-    // Fungsi ini dipakai di Editor (via Model) DAN di Live (via Injection)
-    const universalCountdownScript = function() {
-        const el = this; 
-        
-        // Hentikan interval lama jika ada
-        if (el.__countdownInterval) clearInterval(el.__countdownInterval);
-
-        const expireStr = el.getAttribute('data-expire');
-        const msgStr = el.getAttribute('data-msg') || "WAKTU HABIS";
-        
-        // Selector Fleksibel: Support class lama (.days) dan class DB (.js-d)
-        // Gunakan querySelectorAll untuk menangani multiple elemen display jika ada
-        const setVal = (selector, val) => {
-            const strVal = val < 10 ? "0" + val : val;
-            el.querySelectorAll(selector).forEach(n => n.innerText = strVal);
-        };
-
-        // Jika tidak ada tanggal target, batalkan.
-        if (!expireStr) return;
-
-        const update = () => {
-            const now = new Date().getTime();
-            const target = new Date(expireStr).getTime();
-            const distance = target - now;
-
-            const display = el.querySelector(".js-display") || el.querySelector(".js-countdown-display"); 
-            const expiredBox = el.querySelector(".js-expired-msg");
-            const expiredText = el.querySelector(".js-expired-text");
-
-            if (distance < 0) {
-                if (display) display.style.display = 'none';
-                if (expiredBox) {
-                    expiredBox.classList.remove('hidden');
-                    expiredBox.style.display = 'block';
-                    if (expiredText) expiredText.innerText = msgStr;
-                    else expiredBox.innerText = msgStr;
-                }
-                clearInterval(el.__countdownInterval);
-                return;
-            }
-
-            // Kalkulasi
-            const d = Math.floor(distance / (1000 * 60 * 60 * 24));
-            const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const s = Math.floor((distance % (1000 * 60)) / 1000);
-
-            // Update DOM (Support Multi Selector)
-            setVal('.days, .js-d', d);
-            setVal('.hours, .js-h', h);
-            setVal('.minutes, .js-m', m);
-            setVal('.seconds, .js-s', s);
-        };
-
-        update(); // Jalankan frame pertama
-        el.__countdownInterval = setInterval(update, 1000);
-    };
-
-    // --- Iconify Helper ---
     (function(){
         let activeModel = null; const modal = document.getElementById('iconify-picker-modal'); const input = document.getElementById('iconify-picker-search'); const results = document.getElementById('iconify-picker-results');
         window.openIconifyPicker = function(model) { activeModel = model; modal.classList.remove('hidden'); input.value = ''; input.focus(); searchIcons('star'); };
@@ -293,7 +225,30 @@
             addWidgetToCanvas(id) {
                 const w = appBuilderCache[id];
                 if (w) {
-                    try { window.editor.addComponents(w.content); } catch(e) { console.error('Add Error', e); }
+                    let html = w.content;
+                    // DISPATCHER MODE: Insert ID unik, lalu jalankan script manual
+                    const div = document.createElement('div'); div.innerHTML = html;
+                    const root = div.firstElementChild;
+                    if(root) { 
+                        // Kunci untuk Live Hydration: CLASS dan ATRIBUT DATA
+                        root.classList.add('js-widget-root');
+                        root.setAttribute('data-widget-type', w.id);
+                        html = div.innerHTML; 
+                    }
+                    try { 
+                        const added = window.editor.addComponents(html);
+                        // EDITOR MANUAL DISPATCHER
+                        if(w.script && w.script.trim()) {
+                            setTimeout(() => {
+                                // Cari elemen yang baru ditambahkan (paling akhir)
+                                const allWidgets = window.editor.getWrapper().find(`[data-widget-type="${w.id}"]`);
+                                const el = allWidgets[allWidgets.length - 1];
+                                if(el) {
+                                    try { (new Function(w.script)).call(el.getEl()); } catch(e) { console.warn('Editor Exec Error', e); }
+                                }
+                            }, 150);
+                        }
+                    } catch(e) { console.error('Add Error', e); }
                 }
             },
 
@@ -303,24 +258,34 @@
                     const res = await fetch(`/api/admin/pages/${slug}`);
                     const data = await res.json();
                     this.page.id = data.id; this.page.slug = data.slug; this.page.title = data.title || '';
-                    
                     if (data.product_config_json) { 
                         const conf = typeof data.product_config_json === 'string' ? JSON.parse(data.product_config_json) : data.product_config_json;
                         this.page.config = { ...this.page.config, ...conf }; 
                     }
-                    
                     if (window.editor) {
                         let safeHtml = data.html_content || '';
-                        // Bersihkan script yang di-inject saat save agar tidak dobel di editor
+                        // CLEANUP: Hapus script lama
                         safeHtml = safeHtml.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gm, ""); 
                         
                         window.editor.setComponents(safeHtml);
                         window.editor.setStyle(data.css_content || '');
                         
+                        // EDITOR HYDRATION (Jalankan ulang semua script widget di editor)
                         setTimeout(() => {
                             const wrapper = window.editor.getWrapper();
+                            
+                            // 1. Hydrate Widgets (Counter, dll)
+                            wrapper.find('[data-widget-type]').forEach(comp => {
+                                const wid = comp.getAttributes()['data-widget-type'];
+                                const wData = appBuilderCache[wid];
+                                if(wData && wData.script) {
+                                    try { (new Function(wData.script)).call(comp.getEl()); } catch(e) {}
+                                }
+                            });
+
+                            // 2. Auto Open Accordion
                             wrapper.find('details').forEach(d => d.addAttributes({ open: 'true' }));
-                        }, 600);
+                        }, 800);
                     }
                 } catch (e) { this.notify('Error', e.message, 'error'); }
                 this.loading = false;
@@ -329,43 +294,57 @@
             async savePage() {
                 this.loading = true;
                 try {
-                    const wrapper = window.editor.getWrapper();
-                    wrapper.find('details').forEach(d => d.addAttributes({ open: null }));
-                    
-                    // Cleanup atribut internal GrapesJS sebelum save ke DB
-                    // Kita cari berdasarkan 'data-expire' karena itu penanda paling valid
-                    const countdowns = wrapper.getEl().querySelectorAll('[data-expire]');
-                    countdowns.forEach(el => {
-                        // Kita tidak bisa akses GrapesJS model di sini, jadi pakai DOM langsung
-                        el.removeAttribute('data-gjs-type');
-                        el.removeAttribute('data-gjs-highlightable');
-                        el.removeAttribute('data-gjs-selected');
-                        // Pastikan class js-countdown ada untuk safety selector
-                        el.classList.add('js-countdown');
-                    });
+                    // Tutup Accordion
+                    window.editor.getWrapper().find('details').forEach(d => d.addAttributes({ open: null }));
                     
                     const html = window.editor.getHtml();
                     const css = window.editor.getCss();
                     
-                    // --- LIVE SCRIPT INJECTION (FIXED SELECTOR) ---
-                    // Script ini akan tertanam di HTML database dan jalan di Frontend
-                    const liveScript = `
-                        <script>
-                        document.addEventListener("DOMContentLoaded", function() {
-                            // Cari elemen yang punya atribut 'data-expire' ATAU class 'js-countdown'
-                            const runners = document.querySelectorAll('[data-expire], .js-countdown');
-                            // Injeksi logika
-                            const logic = ${universalCountdownScript.toString()};
-                            runners.forEach(el => logic.call(el));
+                    // --- LIVE SCRIPT INJECTION (EMBEDDED LOGIC) ---
+                    // Ini adalah "Script Anti-Bego" yang menjamin countdown jalan di Live
+                    // Script ini akan disuntikkan langsung ke dalam HTML halaman.
+                    const safeJs = `
+                    <script>
+                    document.addEventListener("DOMContentLoaded", function() {
+                        // 1. INITIALIZE COUNTDOWN (Global Logic)
+                        document.querySelectorAll('.js-countdown').forEach(function(el) {
+                            if(el.dataset.init === "true") return;
+                            el.dataset.init = "true";
+                            var display = el.querySelector(".js-display");
+                            var expiredBox = el.querySelector(".js-expired-msg");
+                            var expireStr = el.getAttribute("data-expire");
+                            var msgStr = el.getAttribute("data-msg") || "WAKTU HABIS";
+                            if (!expireStr) return;
+                            var update = function() {
+                                var now = new Date().getTime();
+                                var distance = new Date(expireStr).getTime() - now;
+                                if (distance < 0) {
+                                    if(display) display.style.display = "none";
+                                    if(expiredBox) { expiredBox.style.display = "block"; expiredBox.classList.remove("hidden"); expiredBox.innerHTML = msgStr; }
+                                    clearInterval(interval);
+                                    return;
+                                }
+                                var d = Math.floor(distance / (1000 * 60 * 60 * 24));
+                                var h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                                var m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                                var s = Math.floor((distance % (1000 * 60)) / 1000);
+                                var setTxt = function(sel, val) {
+                                    var node = el.querySelector(sel);
+                                    if (node) node.innerText = val < 10 ? "0" + val : val;
+                                };
+                                setTxt(".days", d); setTxt(".hours", h); setTxt(".minutes", m); setTxt(".seconds", s);
+                            };
+                            var interval = setInterval(update, 1000);
+                            update();
                         });
-                        <\/script>
-                    `;
-                    
-                    const finalHtml = `${html}${liveScript}`;
+
+                        // 2. INITIALIZE CAROUSEL / SLIDER (Jika ada)
+                    });
+                    <\/script>`;
 
                     const payload = {
                         id: this.page.id, slug: this.page.slug, title: this.page.title,
-                        html: finalHtml, 
+                        html: html + safeJs, // Inject Script Langsung ke HTML
                         css: css, product_config: this.page.config
                     };
                     const res = await fetch('/api/admin/pages', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
@@ -384,13 +363,7 @@
                 `; 
 
                 window.editor = grapesjs.init({
-                    container: '#gjs',
-                    height: '100%',
-                    width: 'auto',
-                    storageManager: false,
-                    allowScripts: 1, 
-                    layerManager: { appendTo: '#layers-container' },
-                    panels: { defaults: [] },
+                    container: '#gjs', height: '100%', width: 'auto', storageManager: false, panels: { defaults: [] }, allowScripts: 1, 
                     assetManager: {
                         uploadText: 'Upload Gambar',
                         uploadFile: async (e) => {
@@ -406,83 +379,26 @@
                         }
                     },
                     canvas: {
-                        scripts: [
-                            'https://cdn.tailwindcss.com', 
-                            'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'
-                        ],
+                        scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
                         styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
-                        content: `<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"><script>const origWarn=console.warn;console.warn=function(...a){if(a[0]&&typeof a[0]==='string'&&a[0].includes('cdn.tailwindcss.com'))return;origWarn.apply(console,a);};<\/script><style>${bridgeCSS}</style>`
+                        content: `<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"><script>console.warn=function(){};<\/script><style>${bridgeCSS}</style>`
                     },
                     plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg'],
                     deviceManager: { devices: [{ id: 'desktop', width: '' }, { id: 'tablet', width: '768px' }, { id: 'mobile', width: '375px' }] },
                     styleManager: { 
                         appendTo: '#styles-container', 
                         sectors: [
-                            { name: 'General', open: 1, buildProps: ['display', 'position', 'top', 'right', 'bottom', 'left', 'z-index', 'float', 'clear', 'overflow', 'overflow-x', 'overflow-y'] },
-                            { name: 'Dimension', open: 1, buildProps: ['width', 'height', 'max-width', 'min-height', 'margin', 'padding'] },
-                            { name: 'Typography', open: 1, buildProps: ['font-family', 'font-size', 'font-weight', 'letter-spacing', 'color', 'line-height', 'text-align', 'text-decoration', 'text-shadow'] },
-                            { name: 'Decorations', open: 1, buildProps: ['border-radius', 'border', 'box-shadow'] },
-                            { name: 'Extra', open: 0, buildProps: ['opacity', 'cursor', 'transition', 'transform', 'filter'] },
-                            { name: 'Flex', open: 0, buildProps: ['flex-direction', 'flex-wrap', 'justify-content', 'align-items', 'align-content', 'order', 'flex-basis', 'flex-grow', 'flex-shrink', 'align-self'] }
+                            { name: 'Typography', open: 1, buildProps: ['font-family', 'font-size', 'font-weight', 'letter-spacing', 'line-height', 'color', 'text-align', 'text-decoration', 'font-style', 'text-transform', 'text-shadow'] }, 
+                            { name: 'Layout', open: 0, buildProps: ['width', 'height', 'padding', 'margin', 'display', 'flex-direction', 'justify-content', 'align-items', 'position', 'top', 'bottom', 'left', 'right', 'z-index'] },
+                            { name: 'Background', open: 0, buildProps: ['background-color', 'background-image', 'background-repeat', 'background-size', 'background-position'] },
+                            { name: 'Border & Effects', open: 0, buildProps: ['border', 'border-radius', 'box-shadow', 'opacity', 'cursor', 'overflow'] }
                         ] 
                     }
                 });
 
                 const domc = window.editor.DomComponents;
-                const tm = window.editor.TraitManager;
 
-                // --- Generator Model Countdown ---
-                const getCountdownModel = (typeId, labelName) => ({
-                    // Deteksi Universal untuk Editor
-                    isComponent: el => {
-                        if(el.getAttribute && el.getAttribute('data-gjs-type') === typeId) return true;
-                        if(el.classList && el.classList.contains('js-countdown') && !el.getAttribute('data-gjs-type')) return true;
-                        return false;
-                    },
-                    model: {
-                        defaults: {
-                            type: typeId, 
-                            name: labelName || 'Countdown',
-                            script: universalCountdownScript, // Logic Editor
-                            traits: [ 
-                                { type: 'datetime-local', name: 'data-expire', label: 'Waktu Berakhir' },
-                                { type: 'text', name: 'data-msg', label: 'Pesan Expired', placeholder: 'PROMO BERAKHIR' }
-                            ]
-                        },
-                        init() {
-                            this.on('change:attributes:data-expire', () => this.view.render());
-                            this.on('change:attributes:data-msg', () => this.view.render());
-                        }
-                    }
-                });
-
-                // Pre-register untuk mencegah race condition
-                domc.addType('countdown-smart', getCountdownModel('countdown-smart', 'Countdown Pro'));
-
-                tm.addType('icon-picker', {
-                    createInput({ trait }) {
-                        const btn = document.createElement('button');
-                        btn.className = 'icon-picker-btn';
-                        btn.innerHTML = '<i class="ph ph-magnifying-glass"></i> Cari Icon...';
-                        btn.onclick = () => { if(window.openIconifyPicker) window.openIconifyPicker(trait.target); };
-                        return btn;
-                    }
-                });
-
-                domc.addType('iconify-icon', {
-                    isComponent: el => el.tagName === 'ICONIFY-ICON',
-                    model: {
-                        defaults: {
-                            traits: [
-                                { type: 'text', name: 'icon', label: 'Nama Icon (Kode)' },
-                                { type: 'icon-picker', name: 'picker', label: ' ' }, 
-                                { type: 'text', name: 'width', label: 'Lebar (px)' },
-                                { type: 'color', name: 'style', label: 'Warna (isi: color:red)' } 
-                            ]
-                        }
-                    }
-                });
-
+                // --- FETCH WIDGETS ---
                 fetch('/api/widgets').then(res => res.json()).then(widgets => {
                     const renderer = document.getElementById('blocks-custom-renderer');
                     renderer.innerHTML = ''; const groups = {};
@@ -490,15 +406,11 @@
                     widgets.forEach(w => {
                         appBuilderCache[w.id] = w;
                         
-                        if (w.id.toLowerCase().includes('countdown')) {
-                            // Mendaftarkan setiap varian countdown dari database
-                            domc.addType(w.id, getCountdownModel(w.id, w.label));
-                        } 
-                        else if (w.id !== 'iconify-icon') {
-                             domc.addType(w.id, {
-                                model: { defaults: { attributes: { 'data-widget-type': w.id } } }
-                            });
-                        }
+                        // Register sebagai struktur murni (tanpa script internal GrapesJS)
+                        // Agar tidak bentrok dengan script manual kita
+                        domc.addType(w.id, {
+                            model: { defaults: { attributes: { 'data-widget-type': w.id } } }
+                        });
 
                         if (w.category !== 'System') {
                             if (!groups[w.category]) groups[w.category] = [];
@@ -536,6 +448,7 @@
                 });
 
                 window.editor.on('component:selected', (model) => {
+                    // 1. TOOLBAR LOGIC
                     model.set('toolbar', [
                         { attributes: { class: 'fa' }, command: 'tlb-move', label: '<i class="ph ph-arrows-out-cardinal text-lg"></i>' },
                         { attributes: { class: 'fa' }, command: e => e.runCommand('core:component-exit'), label: '<i class="ph ph-arrow-fat-up text-lg"></i>' },
@@ -546,18 +459,9 @@
                         { attributes: { class: 'fa' }, command: 'tlb-delete', label: '<i class="ph ph-trash text-lg text-red-400"></i>' }
                     ]);
 
-                    const classes = model.get('classes');
-                    const typeName = model.get('type') || '';
-                    const tagName = model.get('tagName') || '';
-                    const isIcon = tagName === 'ICONIFY-ICON';
-                    
-                    const isCountdown = 
-                        (Array.isArray(classes) && classes.includes('js-countdown')) || 
-                        (classes && classes.models && classes.models.some(c => c.get('name') === 'js-countdown')) ||
-                        typeName.toLowerCase().includes('countdown'); 
-
+                    // 2. TEXT EDIT LOGIC
                     const el = model.getEl();
-                    if (el && el.innerText && el.childElementCount === 0 && !isIcon && !isCountdown) {
+                    if (el && el.innerText && el.childElementCount === 0) {
                         const currentTraits = model.get('traits').filter(t => t.name !== 'content_text');
                         model.set('traits', [{ type: 'textarea', name: 'content_text', label: 'Edit Teks', changeProp: 1 }, ...currentTraits]);
                         model.set('content_text', model.get('content')); 
