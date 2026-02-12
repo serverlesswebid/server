@@ -352,7 +352,6 @@
                     width: 'auto',
                     storageManager: false,
                     allowScripts: 1,
-                    // 1. MENGAKTIFKAN LAYER MANAGER (EXPLORER TREE)
                     layerManager: {
                         appendTo: '#layers-container'
                     },
@@ -378,42 +377,19 @@
                             '/assets/js/countdown.js' 
                         ],
                         styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
-                        // Update content script untuk suppress warning tailwind lebih agresif
                         content: `<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"><script>const origWarn=console.warn;console.warn=function(...a){if(a[0]&&typeof a[0]==='string'&&a[0].includes('cdn.tailwindcss.com'))return;origWarn.apply(console,a);};<\/script><style>${bridgeCSS}</style>`
                     },
                     plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg'],
                     deviceManager: { devices: [{ id: 'desktop', width: '' }, { id: 'tablet', width: '768px' }, { id: 'mobile', width: '375px' }] },
-                    // 5. FULL STYLE MANAGER (SEMUA OPSI)
                     styleManager: { 
                         appendTo: '#styles-container', 
                         sectors: [
-                            { 
-                                name: 'General', open: 1, 
-                                buildProps: ['display', 'position', 'top', 'right', 'bottom', 'left', 'z-index', 'float', 'clear', 'overflow', 'overflow-x', 'overflow-y'] 
-                            },
-                            { 
-                                name: 'Dimension', open: 1, 
-                                buildProps: ['width', 'height', 'max-width', 'min-height', 'margin', 'padding'] 
-                            },
-                            { 
-                                name: 'Typography', open: 1, 
-                                buildProps: ['font-family', 'font-size', 'font-weight', 'letter-spacing', 'color', 'line-height', 'text-align', 'text-decoration', 'text-shadow'] 
-                            },
-                            { 
-                                name: 'Decorations', open: 1, 
-                                // PERBAIKAN DI SINI:
-                                // Hapus 'background' dan 'background-color' dari list manual.
-                                // Biarkan plugin grapesjs-style-bg yang menanganinya (otomatis muncul).
-                                buildProps: ['border-radius', 'border', 'box-shadow'] 
-                            },
-                            { 
-                                name: 'Extra', open: 0, 
-                                buildProps: ['opacity', 'cursor', 'transition', 'transform', 'filter'] 
-                            },
-                            {
-                                name: 'Flex', open: 0,
-                                buildProps: ['flex-direction', 'flex-wrap', 'justify-content', 'align-items', 'align-content', 'order', 'flex-basis', 'flex-grow', 'flex-shrink', 'align-self']
-                            }
+                            { name: 'General', open: 1, buildProps: ['display', 'position', 'top', 'right', 'bottom', 'left', 'z-index', 'float', 'clear', 'overflow', 'overflow-x', 'overflow-y'] },
+                            { name: 'Dimension', open: 1, buildProps: ['width', 'height', 'max-width', 'min-height', 'margin', 'padding'] },
+                            { name: 'Typography', open: 1, buildProps: ['font-family', 'font-size', 'font-weight', 'letter-spacing', 'color', 'line-height', 'text-align', 'text-decoration', 'text-shadow'] },
+                            { name: 'Decorations', open: 1, buildProps: ['border-radius', 'border', 'box-shadow'] },
+                            { name: 'Extra', open: 0, buildProps: ['opacity', 'cursor', 'transition', 'transform', 'filter'] },
+                            { name: 'Flex', open: 0, buildProps: ['flex-direction', 'flex-wrap', 'justify-content', 'align-items', 'align-content', 'order', 'flex-basis', 'flex-grow', 'flex-shrink', 'align-self'] }
                         ] 
                     }
                 });
@@ -421,22 +397,55 @@
                 const domc = window.editor.DomComponents;
                 const tm = window.editor.TraitManager;
 
-                // --- 3. CUSTOM TRAIT: ICON PICKER BUTTON ---
+                // --- 1. DEFINISI LOGIKA COUNTDOWN (SHARED/GLOBAL) ---
+                // Ini adalah satu-satunya sumber kebenaran untuk widget APAPUN yang mengandung kata "countdown"
+                const sharedCountdownModel = {
+                    model: {
+                        defaults: {
+                            // Traits ini akan muncul di panel Setting
+                            traits: [
+                                { type: 'datetime-local', name: 'data-expire', label: 'Waktu Berakhir' },
+                                { type: 'text', name: 'data-msg', label: 'Pesan Expired', placeholder: 'PROMO BERAKHIR' }
+                            ]
+                        },
+                        init() {
+                            // Auto-refresh script saat tanggal/pesan diubah
+                            this.on('change:attributes:data-expire', this.handleUpdate);
+                            this.on('change:attributes:data-msg', this.handleUpdate);
+                        },
+                        handleUpdate() {
+                            const win = window.editor.Canvas.getWindow();
+                            if(win && win.initCountdowns) {
+                                this.getEl().removeAttribute('data-init'); 
+                                win.initCountdowns();
+                            }
+                        }
+                    },
+                    // Logika deteksi universal (fallback jika data-gjs-type tidak cocok)
+                    isComponent: el => {
+                        return (el.getAttribute && el.getAttribute('data-gjs-type') && el.getAttribute('data-gjs-type').includes('countdown')) || 
+                               (el.classList && el.classList.contains('js-countdown'));
+                    }
+                };
+
+                // --- 2. REGISTER MANUAL (PRE-FETCH) ---
+                // Kita wajib mendaftarkan 'countdown-smart' secara eksplisit DI SINI.
+                // Mengapa? Karena saat loadPageData berjalan, fetch database belum tentu selesai.
+                // Jika tidak didaftarkan sekarang, GrapesJS akan melempar error "Type not found" saat parsing HTML awal.
+                domc.addType('countdown-smart', sharedCountdownModel);
+
+                // --- 3. CUSTOM TRAIT: ICON PICKER ---
                 tm.addType('icon-picker', {
                     createInput({ trait }) {
                         const btn = document.createElement('button');
                         btn.className = 'icon-picker-btn';
                         btn.innerHTML = '<i class="ph ph-magnifying-glass"></i> Cari Icon...';
-                        btn.onclick = () => {
-                            if(window.openIconifyPicker) window.openIconifyPicker(trait.target);
-                        };
+                        btn.onclick = () => { if(window.openIconifyPicker) window.openIconifyPicker(trait.target); };
                         return btn;
                     }
                 });
 
-                // --- DEFINISI KOMPONEN KHUSUS ---
-
-                // A. DEFINISI UNTUK ICONIFY
+                // --- 4. REGISTER ICONIFY ---
                 domc.addType('iconify-icon', {
                     isComponent: el => el.tagName === 'ICONIFY-ICON',
                     model: {
@@ -451,46 +460,7 @@
                     }
                 });
 
-                // B. DEFINISI UNTUK COUNTDOWN
-                domc.addType('countdown-widget', {
-                    isComponent: el => el.classList && el.classList.contains('js-countdown'),
-                    model: {
-                        defaults: {
-                            traits: [
-                                { 
-                                    type: 'datetime-local', 
-                                    name: 'data-expire', 
-                                    label: 'Waktu Berakhir' 
-                                },
-                                { 
-                                    type: 'text', 
-                                    name: 'data-msg', 
-                                    label: 'Pesan Waktu Habis',
-                                    placeholder: 'Contoh: Promo Berakhir!'
-                                },
-                                {
-                                    type: 'textarea',
-                                    name: 'content_text',
-                                    label: 'Edit Isi Text (Jika ada)'
-                                }
-                            ]
-                        },
-                        init() {
-                            this.on('change:attributes:data-expire', this.handleUpdate);
-                            this.on('change:attributes:data-msg', this.handleUpdate);
-                        },
-                        handleUpdate() {
-                            const win = window.editor.Canvas.getWindow();
-                            if(win && win.initCountdowns) {
-                                this.getEl().removeAttribute('data-init'); 
-                                win.initCountdowns();
-                            }
-                        }
-                    }
-                });
-
-
-                // --- FETCH WIDGETS ---
+                // --- 5. FETCH WIDGETS DARI DATABASE ---
                 fetch('/api/widgets').then(res => res.json()).then(widgets => {
                     const renderer = document.getElementById('blocks-custom-renderer');
                     renderer.innerHTML = ''; const groups = {};
@@ -498,6 +468,23 @@
                     widgets.forEach(w => {
                         appBuilderCache[w.id] = w;
                         
+                        // --- LOGIKA UTAMA SESUAI PERMINTAAN ANDA ---
+                        // Cek apakah ID widget mengandung kata "countdown" (case insensitive)
+                        // Jika YA: Gunakan sharedCountdownModel agar perlakuannya SAMA PERSIS
+                        // Jika TIDAK: Gunakan logika standar
+                        
+                        if (w.id.toLowerCase().includes('countdown')) {
+                            // Overwrite/Register tipe ini dengan logika Shared Countdown
+                            // Ini menangani 'countdown-unique', 'countdown-super', dll secara otomatis
+                            domc.addType(w.id, sharedCountdownModel);
+                        } 
+                        else if (w.id !== 'iconify-icon') {
+                            // Widget biasa (selain iconify yang sudah di-hardcode)
+                             domc.addType(w.id, {
+                                model: { defaults: { attributes: { 'data-widget-type': w.id } } }
+                            });
+                        }
+
                         if (w.category !== 'System') {
                             if (!groups[w.category]) groups[w.category] = [];
                             groups[w.category].push(w);
@@ -522,7 +509,6 @@
                 window.editor.on('rte:enable', () => document.querySelectorAll('.gjs-toolbar').forEach(t => t.classList.add('ghost-mode')));
                 window.editor.on('rte:disable', () => document.querySelectorAll('.gjs-toolbar').forEach(t => t.classList.remove('ghost-mode')));
 
-                // TRAIT TEXTAREA GENERIC
                 window.editor.Traits.addType('textarea', {
                     createInput({ trait }) {
                         const el = document.createElement('textarea');
@@ -546,9 +532,15 @@
                     ]);
 
                     const isIcon = model.get('tagName') === 'ICONIFY-ICON';
-                    // Perbaikan deteksi class lebih aman
+                    
+                    // --- LOGIKA DETEKSI UNTUK TOOLBAR TEXT ---
+                    // Menggunakan logika yang sama: Cek class, cek type name, cek ID component
                     const classes = model.get('classes');
-                    const isCountdown = (Array.isArray(classes) && classes.includes('js-countdown')) || (classes && classes.models && classes.models.some(c => c.get('name') === 'js-countdown'));
+                    const typeName = model.get('type') || '';
+                    
+                    const isCountdown = (Array.isArray(classes) && classes.includes('js-countdown')) || 
+                                      (classes && classes.models && classes.models.some(c => c.get('name') === 'js-countdown')) ||
+                                      typeName.toLowerCase().includes('countdown'); // Cek jika tipe component mengandung kata countdown
                     
                     const el = model.getEl();
                     if (el && el.innerText && el.childElementCount === 0 && !isIcon && !isCountdown) {
