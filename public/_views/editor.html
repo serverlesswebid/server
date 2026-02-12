@@ -75,14 +75,31 @@
         .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; width: 0 !important; }
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
 
-        /* BLOCKS */
+        /* BLOCKS & UI */
         .gjs-blocks-c { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 4px !important; padding: 6px !important; }
         .gjs-block { width: 100% !important; min-height: 45px !important; padding: 4px !important; background: #fff; border: 1px solid #e5e7eb; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; transition: 0.2s; }
         .gjs-block-label { font-size: 7px !important; font-weight: 800; text-transform: uppercase; color: #4b5563; text-align: center; }
         .gjs-block i, .gjs-block iconify-icon { font-size: 14px !important; color: #6366f1; }
-
         .custom-scroll { overflow-y: auto; height: 100%; -webkit-overflow-scrolling: touch; }
         .gjs-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px; }
+
+        /* CUSTOM TRAIT BUTTON */
+        .trait-upload-btn {
+            width: 100%;
+            padding: 8px 12px;
+            background-color: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: background 0.2s;
+        }
+        .trait-upload-btn:hover { background-color: #4338ca; }
+        .trait-upload-btn:disabled { background-color: #9ca3af; cursor: not-allowed; }
 
         /* TOOLBAR */
         .gjs-toolbar { background-color: #1f2937 !important; border-radius: 6px !important; border: 1px solid #ffffff33 !important; box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important; display: flex !important; flex-direction: column !important; gap: 5px !important; padding: 6px 0 !important; position: absolute !important; top: 10px !important; left: auto !important; right: 10px !important; width: 36px !important; height: auto !important; z-index: 99999 !important; transform: none !important; }
@@ -272,7 +289,32 @@
 
                 window.editor = grapesjs.init({
                     container: '#gjs', height: '100%', width: 'auto', storageManager: false, panels: { defaults: [] }, allowScripts: 1, 
-                    assetManager: { uploadText: 'Upload Gambar', uploadFile: async (e) => { /* logic */ } },
+                    
+                    // Asset Manager (Opsional, tetap dipertahankan untuk bulk upload)
+                    assetManager: { 
+                        uploadText: 'Drop gambar di sini',
+                        autoAdd: 1,
+                        uploadFile: async (e) => {
+                            const files = e.dataTransfer ? e.dataTransfer.files : e.target.files;
+                            for (let i = 0; i < files.length; i++) {
+                                const file = files[i];
+                                // Konversi ke Base64 juga untuk konsistensi, atau pakai FormData langsung
+                                const reader = new FileReader();
+                                reader.readAsDataURL(file);
+                                reader.onloadend = async () => {
+                                    const fd = new FormData();
+                                    fd.append('file', reader.result);
+                                    fd.append('filename', file.name);
+                                    try {
+                                        const res = await fetch('/api/admin/upload-image', { method: 'POST', body: fd });
+                                        const json = await res.json();
+                                        if(json.data) window.editor.AssetManager.add(json.data);
+                                    } catch(err) { console.error(err); }
+                                };
+                            }
+                        }
+                    },
+
                     canvas: {
                         scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
                         styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
@@ -291,6 +333,87 @@
                 const bm = window.editor.BlockManager;
                 const cmds = window.editor.Commands;
 
+                // --- [ START ] CUSTOM IMAGE UPLOAD TRAIT ---
+                
+                // 1. Definisikan Trait 'file-upload'
+                window.editor.TraitManager.addType('file-upload', {
+                    createInput({ trait }) {
+                        const div = document.createElement('div');
+                        div.style.width = '100%';
+
+                        const input = document.createElement('input'); 
+                        input.type = 'file'; 
+                        input.accept = 'image/*'; 
+                        input.style.display = 'none';
+                        
+                        const btn = document.createElement('button'); 
+                        btn.className = 'trait-upload-btn'; 
+                        btn.innerHTML = '<iconify-icon icon="ph:upload-simple-bold" style="vertical-align:middle;margin-right:4px;"></iconify-icon> UPLOAD GAMBAR';
+                        
+                        btn.onclick = () => input.click();
+                        
+                        input.onchange = () => {
+                            const file = input.files[0]; 
+                            if(!file) return;
+                            
+                            // Konversi ke Base64 (DataURL) untuk Cloudinary via Backend
+                            const reader = new FileReader(); 
+                            reader.readAsDataURL(file);
+                            
+                            reader.onloadend = async () => {
+                                const originalText = btn.innerHTML;
+                                btn.innerHTML = 'UPLOADING...'; 
+                                btn.disabled = true;
+                                
+                                const formData = new FormData(); 
+                                // Backend mengharapkan 'file' berisi string base64 atau blob
+                                formData.append('file', reader.result); 
+                                formData.append('filename', file.name);
+
+                                try {
+                                    const res = await fetch('/api/admin/upload-image', { method: 'POST', body: formData });
+                                    const json = await res.json();
+                                    
+                                    // Handle Response Backend: { data: [{ src: "..." }] }
+                                    const url = json.data ? json.data[0].src : (json.url || json.secure_url);
+                                    
+                                    if(url) {
+                                        trait.target.addAttributes({ src: url });
+                                        // Update tampilan di editor jika targetnya image
+                                        const imgEl = trait.target.view.el;
+                                        if(imgEl.tagName === 'IMG') imgEl.src = url;
+                                    } else {
+                                        alert('Gagal mendapatkan URL gambar');
+                                    }
+                                } catch(err) { 
+                                    alert('Upload Gagal: ' + err.message); 
+                                } finally { 
+                                    btn.innerHTML = originalText; 
+                                    btn.disabled = false; 
+                                }
+                            };
+                        };
+                        div.appendChild(btn); 
+                        div.appendChild(input); 
+                        return div;
+                    }
+                });
+
+                // 2. Override Komponen 'Image' Bawaan
+                window.editor.DomComponents.addType('image', { 
+                    model: { 
+                        defaults: { 
+                            traits: [
+                                { type: 'text', name: 'src', label: 'URL Sumber' }, 
+                                { type: 'file-upload', name: 'up', label: ' ' }, // Tombol Upload Custom
+                                { type: 'text', name: 'alt', label: 'Alt Text' }
+                            ] 
+                        } 
+                    } 
+                });
+                
+                // --- [ END ] CUSTOM IMAGE UPLOAD TRAIT ---
+
                 // 1. REGISTER COMMAND "open-icon-picker"
                 cmds.add('open-icon-picker', {
                     run(editor, sender) {
@@ -303,7 +426,7 @@
                     }
                 });
                 
-                // Asset Manager
+                // Asset Manager Helper Command
                 cmds.add('set-img-src', {
                     run(editor, sender) {
                         const component = editor.getSelected();
