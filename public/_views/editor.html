@@ -378,7 +378,8 @@
                             '/assets/js/countdown.js' 
                         ],
                         styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
-                        content: `<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"><script>console.warn=function(){};<\/script><style>${bridgeCSS}</style>`
+                        // Update content script untuk suppress warning tailwind lebih agresif
+                        content: `<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"><script>const origWarn=console.warn;console.warn=function(...a){if(a[0]&&typeof a[0]==='string'&&a[0].includes('cdn.tailwindcss.com'))return;origWarn.apply(console,a);};<\/script><style>${bridgeCSS}</style>`
                     },
                     plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg'],
                     deviceManager: { devices: [{ id: 'desktop', width: '' }, { id: 'tablet', width: '768px' }, { id: 'mobile', width: '375px' }] },
@@ -400,7 +401,10 @@
                             },
                             { 
                                 name: 'Decorations', open: 1, 
-                                buildProps: ['background-color', 'border-radius', 'border', 'box-shadow', 'background'] 
+                                // PERBAIKAN DI SINI:
+                                // Hapus 'background' dan 'background-color' dari list manual.
+                                // Biarkan plugin grapesjs-style-bg yang menanganinya (otomatis muncul).
+                                buildProps: ['border-radius', 'border', 'box-shadow'] 
                             },
                             { 
                                 name: 'Extra', open: 0, 
@@ -418,15 +422,12 @@
                 const tm = window.editor.TraitManager;
 
                 // --- 3. CUSTOM TRAIT: ICON PICKER BUTTON ---
-                // Ini membuat tipe input baru di panel Settings bernama 'icon-picker'
                 tm.addType('icon-picker', {
                     createInput({ trait }) {
                         const btn = document.createElement('button');
                         btn.className = 'icon-picker-btn';
                         btn.innerHTML = '<i class="ph ph-magnifying-glass"></i> Cari Icon...';
                         btn.onclick = () => {
-                            // Memanggil fungsi global openIconifyPicker
-                            // trait.target adalah Component yang sedang diedit
                             if(window.openIconifyPicker) window.openIconifyPicker(trait.target);
                         };
                         return btn;
@@ -435,30 +436,29 @@
 
                 // --- DEFINISI KOMPONEN KHUSUS ---
 
-                // A. DEFINISI UNTUK ICONIFY (Agar muncul tombol picker)
+                // A. DEFINISI UNTUK ICONIFY
                 domc.addType('iconify-icon', {
                     isComponent: el => el.tagName === 'ICONIFY-ICON',
                     model: {
                         defaults: {
                             traits: [
                                 { type: 'text', name: 'icon', label: 'Nama Icon (Kode)' },
-                                { type: 'icon-picker', name: 'picker', label: ' ' }, // Tombol Custom
+                                { type: 'icon-picker', name: 'picker', label: ' ' }, 
                                 { type: 'text', name: 'width', label: 'Lebar (px)' },
-                                { type: 'color', name: 'style', label: 'Warna (isi: color:red)' } // Simplifikasi style
+                                { type: 'color', name: 'style', label: 'Warna (isi: color:red)' } 
                             ]
                         }
                     }
                 });
 
-                // B. DEFINISI UNTUK COUNTDOWN (Agar muncul setting Tanggal & Pesan)
-                // Kita mendeteksi elemen dengan class 'js-countdown'
+                // B. DEFINISI UNTUK COUNTDOWN
                 domc.addType('countdown-widget', {
                     isComponent: el => el.classList && el.classList.contains('js-countdown'),
                     model: {
                         defaults: {
                             traits: [
                                 { 
-                                    type: 'datetime-local', // Input tanggal native browser
+                                    type: 'datetime-local', 
                                     name: 'data-expire', 
                                     label: 'Waktu Berakhir' 
                                 },
@@ -475,19 +475,13 @@
                                 }
                             ]
                         },
-                        // Saat trait berubah, kita trigger update tampilan jika perlu
                         init() {
                             this.on('change:attributes:data-expire', this.handleUpdate);
                             this.on('change:attributes:data-msg', this.handleUpdate);
                         },
                         handleUpdate() {
-                            // Opsional: Refresh view atau logic jika trait berubah
-                            // Karena countdown.js kita berjalan via interval, 
-                            // perubahan atribut akan terbaca saat reload/init ulang.
-                            // Untuk UX yang lebih baik, kita bisa trigger initCountdowns lagi di sini:
                             const win = window.editor.Canvas.getWindow();
                             if(win && win.initCountdowns) {
-                                // Reset dulu agar countdown.js mau jalan ulang
                                 this.getEl().removeAttribute('data-init'); 
                                 win.initCountdowns();
                             }
@@ -503,10 +497,6 @@
                     
                     widgets.forEach(w => {
                         appBuilderCache[w.id] = w;
-                        
-                        // Register Component Attributes Only
-                        // Kita tidak override type jika itu iconify atau countdown
-                        // Biarkan logika isComponent di atas yang menangani
                         
                         if (w.category !== 'System') {
                             if (!groups[w.category]) groups[w.category] = [];
@@ -533,7 +523,6 @@
                 window.editor.on('rte:disable', () => document.querySelectorAll('.gjs-toolbar').forEach(t => t.classList.remove('ghost-mode')));
 
                 // TRAIT TEXTAREA GENERIC
-                // Logika ini tetap dipertahankan untuk elemen teks biasa
                 window.editor.Traits.addType('textarea', {
                     createInput({ trait }) {
                         const el = document.createElement('textarea');
@@ -546,7 +535,6 @@
                 });
 
                 window.editor.on('component:selected', (model) => {
-                    // 1. SET TOOLBAR (Digabung disini agar efisien)
                     model.set('toolbar', [
                         { attributes: { class: 'fa' }, command: 'tlb-move', label: '<i class="ph ph-arrows-out-cardinal text-lg"></i>' },
                         { attributes: { class: 'fa' }, command: e => e.runCommand('core:component-exit'), label: '<i class="ph ph-arrow-fat-up text-lg"></i>' },
@@ -557,11 +545,9 @@
                         { attributes: { class: 'fa' }, command: 'tlb-delete', label: '<i class="ph ph-trash text-lg text-red-400"></i>' }
                     ]);
 
-                    // 2. LOGIC TEXT EDIT: Hanya tambahkan jika BUKAN Iconify dan BUKAN Countdown
                     const isIcon = model.get('tagName') === 'ICONIFY-ICON';
-                    // Perbaikan deteksi class agar lebih aman (menggunakan array/contain)
+                    // Perbaikan deteksi class lebih aman
                     const classes = model.get('classes');
-                    // Cek aman apakah classes ada isinya atau array
                     const isCountdown = (Array.isArray(classes) && classes.includes('js-countdown')) || (classes && classes.models && classes.models.some(c => c.get('name') === 'js-countdown'));
                     
                     const el = model.getEl();
