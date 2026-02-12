@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder - Pro Mobile (Restored)</title>
+    <title>LandingBuilder Pro</title>
     
     <script>
         (function() {
@@ -22,67 +22,57 @@
     
     <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.2/dist/css/grapes.min.css">
     <script src="https://unpkg.com/grapesjs@0.21.2/dist/grapes.min.js"></script>
-    
     <script src="https://unpkg.com/grapesjs-blocks-basic@1.0.1"></script>
     <script src="https://unpkg.com/grapesjs-plugin-forms@2.0.5"></script> 
     <script src="https://unpkg.com/grapesjs-navbar@1.0.1"></script>
-    <script src="https://unpkg.com/grapesjs-tabs@1.0.6"></script>
-    <script src="https://unpkg.com/grapesjs-custom-code@1.0.1"></script>
-    <script src="https://unpkg.com/grapesjs-tooltip@0.1.7"></script>
     <script src="https://unpkg.com/grapesjs-blocks-flexbox@0.1.1"></script>
     <script src="https://unpkg.com/grapesjs-style-bg@2.0.1"></script>
     <script src="https://unpkg.com/grapesjs-component-countdown@1.0.1"></script>
+    <script src="https://unpkg.com/grapesjs-tabs@1.0.6"></script>
 
     <style>
-        /* --- CORE LAYOUT --- */
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: #fff; }
         [x-cloak] { display: none !important; }
 
-        header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+        /* LAYOUT & Z-INDEX */
+        header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 40; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; }
+        .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; z-index: 0; }
+        .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 4px 0 24px rgba(0,0,0,0.1); }
+        .mobile-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 45; backdrop-filter: blur(4px); }
         
-        .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; }
-        #gjs { position: relative !important; flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; }
-        .sidebar-panel { position: relative; width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; }
-
-        /* --- MOBILE LAYOUT FIXES (BOTTOM BAR) --- */
-        @media (max-width: 768px) {
-            .workspace { bottom: 60px; } /* Space for bottom bar */
-            .sidebar-panel { position: fixed; right: 0; top: 60px; bottom: 60px; width: 100% !important; z-index: 9999 !important; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); border-left: 1px solid #eee; }
-            .sidebar-panel.open { transform: translateX(0); }
-            .mobile-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 150; top: 60px; bottom: 60px; display: none; }
-            .mobile-overlay.show { display: block; }
-        }
-
-        /* --- GRAPESJS UI --- */
-        .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; }
-        .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
-        .gjs-block { width: 100% !important; min-height: 80px !important; padding: 10px !important; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; transition: 0.2s; }
-        .gjs-block:active { transform: scale(0.95); }
-        
-        /* --- Z-INDEX FIXES --- */
+        /* FIX COLOR PICKER PALETTE (PALING ATAS) */
         .sp-container { z-index: 9999999 !important; background: white; border: 1px solid #cbd5e1; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2); border-radius: 8px; }
         .gjs-field-color-picker { border: 1px solid #cbd5e1; margin-right: 5px; cursor: pointer; border-radius: 4px; min-width: 30px; padding: 2px; }
-        .alpine-modal { z-index: 99999; }
 
-        /* --- CUSTOM UPLOAD BUTTON --- */
-        .trait-upload-btn {
-            width: 100%; background: #4f46e5; color: white; padding: 10px; border-radius: 6px; 
-            font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;
-            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; 
-            margin-top: 4px; border: none; transition: all 0.2s;
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .mobile-tools { display: flex !important; }
+            .workspace { top: 110px; } 
+            #gjs { right: 0 !important; bottom: 60px !important; }
+            .sidebar-panel { position: fixed; right: 0; top: 110px; bottom: 60px; width: 100% !important; z-index: 9999 !important; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+            .sidebar-panel.open { transform: translateX(0); }
         }
-        .trait-upload-btn:hover { background: #4338ca; }
-        .trait-upload-btn:disabled { opacity: 0.7; cursor: wait; }
+        .mobile-tools { display: none; height: 50px; width: 100%; position: fixed; top: 60px; left: 0; z-index: 90; background: #f8fafc; border-bottom: 1px solid #e2e8f0; align-items: center; justify-content: center; gap: 15px; }
 
-        .custom-scroll::-webkit-scrollbar { width: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        /* UI COMPONENTS */
+        .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
+        .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; } 
+        .trait-btn { width: 100%; background: #4f46e5; color: white; padding: 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; border: none; transition: background 0.2s; text-align: center; display:flex; align-items:center; justify-content:center; gap:6px; margin-top: 5px; }
+        .trait-btn:hover { background: #4338ca; }
+        .trait-btn:disabled { opacity: 0.7; cursor: wait; }
+
+        /* WIDGET GRID */
+        .widget-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px; background: #fff; }
+        .block-card { cursor: grab; background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: all 0.2s; user-select: none; }
+        .block-card:hover { border-color: #6366f1; transform: translateY(-2px); }
+        .block-label { font-size: 10px; font-weight: 600; text-align: center; color: #374151; }
     </style>
 </head>
-<body x-data="editorApp()">
+<body x-data="editorApp()" x-init="window.editorApp = $data">
 
-    <div class="fixed top-20 right-5 z-[99999] flex flex-col gap-2 pointer-events-none">
+    <div class="fixed bottom-20 left-5 z-[9999] flex flex-col gap-2 pointer-events-none">
         <template x-for="n in notifications" :key="n.id">
-            <div x-show="n.show" x-transition class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-l-4 bg-white" :class="n.type==='success'?'border-green-500':'border-red-500'">
+            <div x-show="n.show" x-transition class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border-l-4 bg-white" :class="n.type==='success'?'border-green-500':'border-red-500'">
                 <i class="ph text-xl" :class="n.type==='success'?'ph-check-circle text-green-500':'ph-warning-circle text-red-500'"></i>
                 <div class="text-xs font-bold text-gray-800" x-text="n.title"></div>
             </div>
@@ -90,97 +80,82 @@
     </div>
 
     <header>
-        <div class="flex items-center gap-3 overflow-hidden w-full max-w-[300px]">
-            <a href="/admin/pages" class="text-gray-400 hover:text-indigo-600 p-1.5 rounded"><i class="ph ph-arrow-left text-xl"></i></a>
-            <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-3 flex-1 min-w-0">
+            <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden shrink-0 text-gray-600 bg-gray-100 hover:bg-gray-200 p-2 rounded-lg transition"><i class="ph ph-list text-2xl"></i></button>
+            <a href="/admin/pages" class="hidden md:block text-gray-400 hover:text-indigo-600 p-1.5"><i class="ph ph-arrow-left text-xl"></i></a>
+            <div class="flex flex-col min-w-0 flex-1">
                 <input x-model="page.title" class="bg-transparent font-bold text-sm text-gray-800 outline-none w-full truncate" placeholder="Nama Halaman">
-                <span class="text-[10px] text-gray-400 truncate font-mono" x-text="page.slug ? '/'+page.slug : 'Draft'"></span>
+                <span class="text-[10px] text-gray-400 truncate font-mono" x-text="page.slug ? '/'+page.slug : 'Draft Mode'"></span>
             </div>
         </div>
-
-        <div class="hidden md:flex items-center bg-gray-100 rounded-lg p-1 border shadow-sm absolute left-1/2 transform -translate-x-1/2">
+        <div class="hidden md:flex items-center bg-gray-100 rounded-lg p-1 border shadow-sm mx-4">
             <button @click="setDevice('desktop')" :class="device=='desktop'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded"><i class="ph ph-desktop"></i></button>
             <button @click="setDevice('tablet')" :class="device=='tablet'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded"><i class="ph ph-device-tablet"></i></button>
             <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded"><i class="ph ph-device-mobile"></i></button>
         </div>
-
-        <div class="flex items-center gap-2 w-1/3 justify-end">
-            <div class="hidden md:flex items-center gap-2">
-                <button @click="showSettings=true" class="bg-white text-gray-600 px-3 py-2 rounded-lg text-xs font-bold border hover:bg-gray-50">Config</button>
-                <button @click="savePage" :disabled="loading" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-lg hover:bg-indigo-700 transition">
-                    <span x-text="loading ? 'SAVING...' : 'PUBLISH'"></span>
-                </button>
-            </div>
-            <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden p-2 text-gray-600 border rounded bg-white" :class="mobileMenuOpen ? 'text-indigo-600 border-indigo-600 bg-indigo-50' : ''">
-                <i class="ph" :class="mobileMenuOpen ? 'ph-x' : 'ph-list'" style="font-size: 20px;"></i>
+        <div class="flex items-center gap-2 shrink-0">
+            <button @click="showSettings=true" class="flex items-center gap-2 bg-white text-gray-600 px-3 py-2 rounded-lg text-xs font-bold border hover:bg-gray-50"><i class="ph ph-gear"></i> <span class="hidden md:inline">CONFIG</span></button>
+            <button @click="savePage" :disabled="loading" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md transition active:scale-95">
+                <span x-text="loading ? 'SAVING...' : 'PUBLISH'"></span>
             </button>
         </div>
     </header>
 
+    <div class="mobile-tools">
+        <button @click="setDevice('desktop')" :class="device=='desktop'?'text-indigo-600 bg-white shadow-sm':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-desktop text-lg"></i></button>
+        <button @click="setDevice('mobile')" :class="device=='mobile'?'text-indigo-600 bg-white shadow-sm':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile text-lg"></i></button>
+    </div>
+
     <div class="workspace">
         <div id="gjs"></div>
-        <div class="mobile-overlay md:hidden" :class="mobileMenuOpen ? 'show' : ''" @click="mobileMenuOpen = false"></div>
+        <div x-show="mobileMenuOpen" class="mobile-backdrop" @click="mobileMenuOpen = false" x-transition.opacity></div>
 
-        <div class="sidebar-panel" :class="mobileMenuOpen ? 'open' : ''">
+        <div class="sidebar-panel fixed inset-y-0 left-0 md:static transform duration-300 ease-in-out" :class="mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'">
+            <div class="md:hidden flex items-center justify-between p-4 border-b bg-gray-50">
+                <span class="font-bold text-gray-800 text-sm uppercase">Tools</span>
+                <button @click="mobileMenuOpen = false"><i class="ph ph-x text-lg"></i></button>
+            </div>
             <div class="flex border-b border-gray-200 bg-white shrink-0">
                 <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-squares-four text-xl"></i></button>
-                <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-paint-brush text-xl"></i></button>
                 <button @click="tab='traits'" :class="tab=='traits'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-gear text-xl"></i></button>
-                <button @click="tab='layers'" :class="tab=='layers'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-stack text-xl"></i></button>
+                <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-paint-brush text-xl"></i></button>
             </div>
             
-            <div class="flex-1 bg-white custom-scroll relative w-full overflow-y-auto">
-                <div x-show="tab=='blocks'" class="h-full pb-20"><div id="blocks-container" class="p-2"></div></div>
-                <div x-show="tab=='styles'" class="h-full pb-20"><div id="selectors-container" class="p-3 border-b bg-gray-50"></div><div id="styles-container" class="p-1"></div></div>
-                <div x-show="tab=='traits'" class="h-full pb-20">
-                    <div id="traits-container" class="p-4"></div>
-                    <div class="p-4 text-center text-[10px] text-gray-400 bg-gray-50 border-t">Klik elemen untuk pengaturan khusus.</div>
+            <div class="flex-1 bg-white relative w-full overflow-y-auto custom-scroll">
+                <div x-show="tab=='blocks'" class="h-full pb-20">
+                    <template x-for="(widgets, category) in groupedWidgets" :key="category">
+                        <details class="category-group" open>
+                            <summary x-text="category || 'General'"></summary>
+                            <div class="widget-grid">
+                                <template x-for="w in widgets" :key="w.id">
+                                    <div class="block-card" @click="addBlockToCanvas(w)">
+                                        <div class="block-icon text-indigo-600 text-xl"><i class="ph ph-cube"></i></div>
+                                        <div class="block-label" x-text="w.label"></div>
+                                    </div>
+                                </template>
+                            </div>
+                        </details>
+                    </template>
                 </div>
-                <div x-show="tab=='layers'" class="h-full pb-20"><div id="layers-container"></div></div>
+                <div x-show="tab=='traits'" class="h-full pb-20">
+                    <div id="traits-container" class="p-3"></div>
+                    <div class="p-4 text-center text-xs text-gray-400 bg-gray-50 border-t">Klik elemen untuk pengaturan.</div>
+                </div>
+                <div x-show="tab=='styles'" class="h-full pb-20"><div id="selectors-container" class="p-3 border-b bg-gray-50"></div><div id="styles-container" class="p-1"></div></div>
             </div>
         </div>
     </div>
 
-    <div class="md:hidden fixed bottom-0 left-0 w-full h-[60px] bg-white border-t border-gray-200 flex items-center justify-around z-[300] shadow-lg">
-        <button @click="cmd('core:preview')" class="flex flex-col items-center justify-center w-16 text-gray-500">
-            <i class="ph ph-eye text-2xl"></i><span class="text-[9px] font-bold">View</span>
-        </button>
-        <button @click="showSettings=true" class="flex flex-col items-center justify-center w-16 text-gray-500">
-            <i class="ph ph-gear-six text-2xl"></i><span class="text-[9px] font-bold">Config</span>
-        </button>
-        <button @click="savePage" :disabled="loading" class="flex items-center justify-center gap-2 bg-indigo-600 text-white px-6 py-2 rounded-full shadow-lg">
-            <i x-show="!loading" class="ph ph-paper-plane-right-fill text-xl"></i>
-            <span x-show="loading" class="ph ph-spinner animate-spin text-xl"></span>
-            <span class="font-bold text-xs uppercase">Publish</span>
-        </button>
-    </div>
-
-    <div x-show="showSettings" x-cloak class="alpine-modal fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex justify-end" @click.self="showSettings = false">
-        <div class="w-full md:w-[480px] h-full bg-white shadow-2xl flex flex-col border-l">
-            <div class="p-5 border-b flex justify-between items-center bg-gray-50">
-                <h2 class="font-bold text-gray-800">Page Config</h2>
-                <button @click="showSettings = false" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button>
-            </div>
-            <div class="flex-1 overflow-y-auto p-6 space-y-6">
-                <div class="space-y-4">
-                    <label class="text-[10px] font-bold text-gray-400 uppercase">Judul</label>
-                    <input x-model="page.title" class="w-full px-3 py-2 border rounded text-sm">
+    <div x-show="showIconPicker" x-cloak class="alpine-modal fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="w-full max-w-lg bg-white rounded-xl shadow-2xl flex flex-col max-h-[80vh]" @click.outside="showIconPicker=false">
+            <div class="p-4 border-b flex justify-between items-center"><h3 class="font-bold">Pilih Icon</h3><button @click="showIconPicker=false"><i class="ph ph-x"></i></button></div>
+            <div class="p-4 space-y-4">
+                <div class="flex gap-2"><input x-model="iconSearch" @keyup.enter="searchIcons()" class="flex-1 p-2 border rounded" placeholder="Search icon..."><button @click="searchIcons()" class="px-4 py-2 bg-indigo-600 text-white rounded">Cari</button></div>
+                <div class="grid grid-cols-6 gap-2 max-h-60 overflow-y-auto custom-scroll">
+                    <template x-for="icon in iconList" :key="icon">
+                        <div @click="applyIcon(icon)" class="p-2 border rounded flex justify-center hover:bg-indigo-50 cursor-pointer"><iconify-icon :icon="icon" width="24"></iconify-icon></div>
+                    </template>
                 </div>
-                <div class="space-y-4">
-                    <label class="text-[10px] font-bold text-gray-400 uppercase">Slug</label>
-                    <input x-model="page.slug" class="w-full px-3 py-2 border rounded text-sm">
-                </div>
-                <div class="space-y-4">
-                    <label class="text-[10px] font-bold text-gray-400 uppercase">Harga</label>
-                    <input x-model="page.config.price" type="number" class="w-full px-3 py-2 border rounded text-sm">
-                </div>
-                <div class="space-y-4">
-                    <label class="text-[10px] font-bold text-gray-400 uppercase">Pixel ID</label>
-                    <input x-model="page.config.settings.fb_pixel" class="w-full px-3 py-2 border rounded text-sm">
-                </div>
-            </div>
-            <div class="p-4 border-t bg-gray-50 flex justify-end gap-3">
-                <button @click="savePage(); showSettings=false" class="px-6 py-2 bg-indigo-600 text-white font-bold rounded shadow">SIMPAN</button>
             </div>
         </div>
     </div>
@@ -188,13 +163,122 @@
     <script>
     function editorApp() {
         return {
-            device: 'desktop', tab: 'blocks', mobileMenuOpen: false, showSettings: false, loading: false, notifications: [],
+            device: 'desktop', tab: 'blocks', mobileMenuOpen: false, showSettings: false, showIconPicker: false, 
+            iconSearch: '', loading: false, loadingIcons: false, notifications: [],
             page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, settings: {} } },
+            groupedWidgets: {}, widgetScripts: {}, iconList: [],
 
             async init() {
+                // 1. Load data DULU
+                await this.loadWidgets();
+                // 2. Baru init GrapesJS
                 this.initGrapes();
+                
                 const slug = new URLSearchParams(window.location.search).get('slug');
                 if (slug) await this.loadPageData(slug);
+                this.iconList = ['ph:star-fill','ph:heart-fill','ph:check-circle-fill','logos:whatsapp-icon','logos:facebook','logos:instagram-icon'];
+            },
+
+            notify(title, type = 'success') { const id = Date.now(); this.notifications.push({ id, title, type, show: true }); setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); },
+
+            async loadWidgets() {
+                try {
+                    const res = await fetch('/api/widgets');
+                    const widgets = await res.json();
+                    this.groupedWidgets = {}; this.widgetScripts = {};
+                    widgets.forEach(w => {
+                        if(w.script && w.id !== 'iconify-icon' && w.id !== 'faq-accordion') this.widgetScripts[w.id] = w.script;
+                        const cat = w.category || 'General';
+                        if(!this.groupedWidgets[cat]) this.groupedWidgets[cat] = [];
+                        this.groupedWidgets[cat].push(w);
+                    });
+                } catch(e) { this.notify('Gagal load widget', 'error'); }
+            },
+
+            initGrapes() {
+                window.editor = grapesjs.init({
+                    container: '#gjs', height: '100%', fromElement: false, storageManager: false, panels: { defaults: [] }, 
+                    allowScripts: 1, 
+                    deviceManager: { devices: [{name:'desktop',width:''},{name:'tablet',width:'768px'},{name:'mobile',width:'375px'}] },
+                    assetManager: { embedAsBase64: 0, openAssetsOnDrop: 0 },
+                    canvas: {
+                        scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
+                        styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
+                        content: `<style>body{padding:20px;} details{min-height:50px;}</style>`
+                    },
+                    plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-tabs', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg', 'grapesjs-component-countdown'],
+                    selectorManager: { appendTo: '#selectors-container' },
+                    traitManager: { appendTo: '#traits-container' },
+                    styleManager: { appendTo: '#styles-container', sectors: [{ name: 'Typography', open: 1, buildProps: ['font-size','font-weight','color','text-align'] },{ name: 'Layout', open: 0, buildProps: ['padding','margin','display','width','height'] },{ name: 'Decor', open: 0, buildProps: ['background-color','border-radius','box-shadow'] }] },
+                });
+
+                // ============================================================
+                // TRAIT TOMBOL UPLOAD (BASE64)
+                // ============================================================
+                window.editor.TraitManager.addType('file-upload', {
+                    createInput({ trait }) {
+                        const div = document.createElement('div');
+                        const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*'; input.style.display = 'none';
+                        const btn = document.createElement('button'); btn.className = 'trait-btn'; btn.innerHTML = '<i class="ph ph-upload-simple"></i> UPLOAD GAMBAR';
+                        
+                        btn.onclick = () => input.click();
+                        input.onchange = (e) => {
+                            const file = e.target.files[0]; if(!file) return;
+                            const reader = new FileReader();
+                            reader.readAsDataURL(file);
+                            reader.onloadend = async () => {
+                                const base64 = reader.result;
+                                const formData = new FormData(); formData.append('file', base64);
+                                try {
+                                    btn.innerHTML = 'UPLOADING...'; btn.disabled = true;
+                                    const res = await fetch('/api/admin/upload-image', { method: 'POST', body: formData });
+                                    const json = await res.json();
+                                    const url = json.data ? json.data[0].src : (json.url || json.secure_url);
+                                    if(url) { trait.target.addAttributes({ src: url }); }
+                                } catch(err) { alert('Upload Gagal'); }
+                                finally { btn.innerHTML = 'UPLOAD GAMBAR'; btn.disabled = false; }
+                            };
+                        };
+                        div.appendChild(btn); div.appendChild(input); return div;
+                    }
+                });
+
+                window.editor.DomComponents.addType('image', {
+                    model: { defaults: { traits: [{ type: 'text', name: 'src', label: 'URL' }, { type: 'file-upload', name: 'up', label: ' ' }, { type: 'text', name: 'alt' }] } }
+                });
+
+                // ICON PICKER TRAIT
+                window.editor.TraitManager.addType('icon-btn', {
+                    createInput() {
+                        const btn = document.createElement('button'); btn.className = 'trait-btn'; btn.innerHTML = 'Cari Icon';
+                        btn.onclick = () => window.editorApp.showIconPicker = true;
+                        return btn;
+                    }
+                });
+                window.editor.DomComponents.addType('iconify-icon', {
+                    isComponent: el => el.tagName === 'ICONIFY-ICON',
+                    model: { defaults: { traits: [{ type: 'icon-btn', name: 'p', label: ' ' }, { type: 'text', name: 'icon' }, { type: 'color', name: 'color', changeProp: 1 }] }, init() { this.on('change:color', () => this.addStyle({color: this.get('color')})) } }
+                });
+            },
+
+            addBlockToCanvas(w) {
+                const component = window.editor.addComponents(w.content)[0];
+                if(window.innerWidth < 768) this.mobileMenuOpen = false;
+            },
+
+            async searchIcons() {
+                if(!this.iconSearch) return;
+                this.loadingIcons = true;
+                try { const res = await fetch(`https://api.iconify.design/search?query=${encodeURIComponent(this.iconSearch)}&limit=30`); if(res.ok) { const data = await res.json(); this.iconList = data.icons || []; } } catch(e) {}
+                this.loadingIcons = false;
+            },
+            applyIcon(icon) {
+                const selected = window.editor.getSelected();
+                if(selected) {
+                    if(selected.is('iconify-icon')) selected.addAttributes({ icon: icon });
+                    else selected.append(`<iconify-icon icon="${icon}" width="32"></iconify-icon>`);
+                }
+                this.showIconPicker = false;
             },
 
             async loadPageData(slug) {
@@ -204,114 +288,24 @@
                     this.page.id = data.id; this.page.slug = data.slug; this.page.title = data.title;
                     if(data.product_config_json) this.page.config = JSON.parse(data.product_config_json);
                     if(window.editor) {
-                        window.editor.setComponents(data.html_content);
-                        window.editor.setStyle(data.css_content);
+                        window.editor.setComponents(data.html_content || '');
+                        window.editor.setStyle(data.css_content || '');
                     }
                 } catch(e) {}
             },
 
             async savePage() {
                 this.loading = true;
-                const html = window.editor.getHtml(); const css = window.editor.getCss();
-                const payload = { id: this.page.id, slug: this.page.slug, title: this.page.title, html: html, css: css, product_config: this.page.config };
-                const res = await fetch('/api/admin/pages', { method: 'POST', body: JSON.stringify(payload), headers: {'Content-Type': 'application/json'} });
-                if(res.ok) this.notify('Berhasil Disimpan!');
+                try {
+                    const html = window.editor.getHtml(); const css = window.editor.getCss();
+                    const payload = { id: this.page.id, slug: this.page.slug, title: this.page.title, html: html, css: css, product_config: this.page.config };
+                    await fetch('/api/admin/pages', { method: 'POST', body: JSON.stringify(payload), headers: {'Content-Type': 'application/json'} });
+                    this.notify('Berhasil Disimpan!');
+                } catch (e) { this.notify('Gagal Simpan', 'error'); }
                 this.loading = false;
             },
 
-            notify(title, msg, type = 'success') { const id = Date.now(); this.notifications.push({ id, title, show: true }); setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); },
-            setDevice(d) { this.device = d; if(window.editor) window.editor.setDevice(d); },
-            cmd(c) { window.editor.runCommand(c); },
-
-            initGrapes() {
-                window.editor = grapesjs.init({
-                    container: '#gjs', height: '100%', fromElement: false, storageManager: false, panels: { defaults: [] },
-                    // Asset Manager: Matikan default modal agar tidak konflik di mobile
-                    assetManager: { embedAsBase64: 0, openAssetsOnDrop: 0 },
-                    deviceManager: { devices: [{name:'desktop',width:''},{name:'tablet',width:'768px',widthMedia:'992px'},{name:'mobile',width:'375px',widthMedia:'480px'}] },
-                    canvas: {
-                        scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
-                        styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
-                        content: `<style>body{padding:20px;}</style>`
-                    },
-                    plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-tabs', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg', 'grapesjs-component-countdown'],
-                    selectorManager: { appendTo: '#selectors-container' },
-                    traitManager: { appendTo: '#traits-container' },
-                    styleManager: { appendTo: '#styles-container', sectors: [{name:'Typography', buildProps:['font-size','font-weight','color','text-align']},{name:'Decor', buildProps:['background-color','border-radius','padding','margin']}] },
-                    blockManager: { appendTo: '#blocks-container' },
-                    layerManager: { appendTo: '#layers-container' }
-                });
-
-                // ============================================================
-                // TRAIT TOMBOL UPLOAD (LOGIC BASE64 FIXED)
-                // ============================================================
-                window.editor.TraitManager.addType('file-upload', {
-                    createInput({ trait }) {
-                        const div = document.createElement('div'); div.className = 'w-full flex flex-col gap-2';
-                        const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*'; input.style.display = 'none';
-                        const btn = document.createElement('button'); btn.className = 'trait-upload-btn';
-                        btn.innerHTML = '<i class="ph ph-upload-simple text-lg"></i> UPLOAD GAMBAR';
-                        
-                        btn.onclick = () => input.click();
-                        
-                        input.onchange = (e) => {
-                            const file = e.target.files[0];
-                            if(!file) return;
-                            
-                            const reader = new FileReader();
-                            reader.readAsDataURL(file);
-                            reader.onloadend = async () => {
-                                const base64String = reader.result;
-                                const formData = new FormData();
-                                formData.append('file', base64String);
-
-                                try {
-                                    btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> PROSES...'; btn.disabled = true;
-                                    
-                                    // FETCH KE ROUTE YANG SUDAH DIBUAT
-                                    const res = await fetch('/api/admin/upload-image', { method: 'POST', body: formData });
-                                    const data = await res.json();
-                                    
-                                    // Support structure return { data: [{src: '...'}] }
-                                    const url = data.data ? data.data[0].src : null;
-                                    
-                                    if(url) {
-                                        trait.target.addAttributes({ src: url });
-                                        window.editorApp.notify('Sukses', 'Gambar terupload');
-                                    } else {
-                                        throw new Error('Gagal parsing respon server');
-                                    }
-                                } catch(err) {
-                                    console.error(err); window.editorApp.notify('Gagal', 'Error upload', 'error');
-                                } finally {
-                                    btn.innerHTML = '<i class="ph ph-upload-simple text-lg"></i> UPLOAD GAMBAR'; btn.disabled = false;
-                                }
-                            };
-                        };
-                        div.appendChild(btn); div.appendChild(input);
-                        return div;
-                    }
-                });
-
-                // OVERRIDE IMAGE AGAR MUNCUL TOMBOL UPLOAD
-                window.editor.DomComponents.addType('image', {
-                    model: {
-                        defaults: {
-                            traits: [
-                                { type: 'text', name: 'src', label: 'URL Source' },
-                                { type: 'file-upload', name: 'upload_trig', label: ' ' },
-                                { type: 'text', name: 'alt', label: 'Alt Text' }
-                            ]
-                        }
-                    }
-                });
-
-                // Register Basic Blocks
-                const bm = window.editor.BlockManager;
-                bm.add('img-blk', { label: 'Image', category: 'Basic', content: { type: 'image', activeOnRender: 1 } });
-                bm.add('text-blk', { label: 'Text', category: 'Basic', content: '<div class="p-2">Teks Contoh</div>' });
-                bm.add('btn-blk', { label: 'Button', category: 'Basic', content: '<a class="btn btn-primary">Klik Saya</a>' });
-            }
+            setDevice(d) { this.device = d; if(window.editor) window.editor.setDevice(d); }
         };
     }
     </script>
