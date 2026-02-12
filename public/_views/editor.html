@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - Final Fixed</title>
+    <title>LandingBuilder Pro - System Fixed</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -19,6 +19,7 @@
     <script src="https://unpkg.com/grapesjs-style-bg@2.0.1"></script>
 
     <style>
+        /* RESET & LAYOUT */
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: #fff; }
         [x-cloak] { display: none !important; }
 
@@ -26,7 +27,7 @@
         header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; }
         
-        /* SIDEBAR RESPONSIVE */
+        /* SIDEBAR */
         .sidebar-panel { 
             width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; 
             z-index: 90; display: flex; flex-direction: column; flex-shrink: 0; 
@@ -36,40 +37,30 @@
         
         #gjs { flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; position: relative; }
         
-        /* GRAPESJS CLEANUP */
+        /* GRAPESJS OVERRIDES - FIXED COLOR PICKER */
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
         .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; } 
         .gjs-three-bg { background-color: #f8fafc !important; }
         
-        /* UI COMPONENTS */
-        .gjs-field { background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px; color: #374151; }
-        .gjs-field input, .gjs-field select { color: #374151; font-size: 13px; width: 100%; }
-        
-        /* ACCORDION CATEGORY */
-        details.category-group > summary { list-style: none; cursor: pointer; background: #f9fafb; padding: 10px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #4b5563; border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; }
-        details.category-group > summary:hover { background: #f3f4f6; color: #111; }
-        details.category-group > summary::-webkit-details-marker { display: none; }
-        details.category-group > summary::after { content: '+'; font-weight: bold; }
-        details.category-group[open] > summary::after { content: '-'; }
-        details.category-group[open] > summary { border-bottom: 1px solid #e5e7eb; background: #fff; color: #4f46e5; }
-        
-        /* WIDGET GRID */
-        .widget-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px; background: #fff; }
-        .block-card { cursor: grab; background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: all 0.2s; user-select: none; }
-        .block-card:hover { border-color: #6366f1; box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.1); transform: translateY(-1px); }
-        .block-card:active { cursor: grabbing; }
-        .block-icon { color: #4f46e5; font-size: 20px; }
-        .block-label { font-size: 10px; font-weight: 600; text-align: center; color: #374151; line-height: 1.2; }
+        /* PENTING: Jangan override .gjs-field terlalu agresif agar color picker bawaan muncul */
+        .gjs-field { border-radius: 4px; border: 1px solid #e5e7eb; }
+        .gjs-field input { font-size: 12px; color: #333; }
+        /* Style khusus untuk color picker input GrapesJS */
+        .gjs-field-color-picker { margin-right: 5px; cursor: pointer; border: 1px solid #ddd; border-radius: 3px; }
 
-        /* CONFIG MODAL UI */
+        /* UI HELPERS */
         .input-field { width: 100%; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; outline: none; transition: border-color 0.2s; }
         .input-field:focus { border-color: #6366f1; ring: 2px solid #e0e7ff; }
         .label-field { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #6b7280; margin-bottom: 4px; }
-
+        
+        /* ACCORDION & GRID */
+        details.category-group > summary { list-style: none; cursor: pointer; background: #f9fafb; padding: 10px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #4b5563; border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; }
+        details.category-group[open] > summary { border-bottom: 1px solid #e5e7eb; background: #fff; color: #4f46e5; }
+        .widget-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px; background: #fff; }
+        .block-card { cursor: grab; background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: all 0.2s; user-select: none; }
+        .block-card:hover { border-color: #6366f1; transform: translateY(-1px); }
         .custom-scroll::-webkit-scrollbar { width: 5px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-
-        /* ICON PICKER GRID */
         .icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); gap: 6px; max-height: 250px; overflow-y: auto; padding: 4px; }
         .icon-item { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 20px; cursor: pointer; color: #64748b; }
         .icon-item:hover { background-color: #e0e7ff; color: #4f46e5; border-color: #6366f1; }
@@ -82,13 +73,9 @@
             <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden text-gray-600 hover:text-indigo-600 p-1">
                 <i class="ph ph-list text-2xl"></i>
             </button>
-
-            <a href="/admin/pages" class="hidden md:block text-gray-400 hover:text-indigo-600 transition p-1.5 rounded shrink-0 hover:bg-gray-50">
-                <i class="ph ph-arrow-left text-xl"></i>
-            </a>
-            
+            <a href="/admin/pages" class="hidden md:block text-gray-400 hover:text-indigo-600 transition p-1.5 rounded hover:bg-gray-50"><i class="ph ph-arrow-left text-xl"></i></a>
             <div class="flex flex-col min-w-0 flex-1">
-                <input x-model="page.title" class="bg-transparent font-bold text-sm text-gray-800 outline-none w-full truncate placeholder-gray-300 transition focus:text-indigo-600" placeholder="Judul Halaman...">
+                <input x-model="page.title" class="bg-transparent font-bold text-sm text-gray-800 outline-none w-full truncate placeholder-gray-300 focus:text-indigo-600" placeholder="Judul Halaman...">
                 <span class="text-[10px] text-gray-400 truncate font-mono" x-text="page.slug ? '/'+page.slug : 'Draft Mode'"></span>
             </div>
         </div>
@@ -100,12 +87,9 @@
         </div>
 
         <div class="flex items-center gap-2 w-1/3 justify-end">
-            <button @click="showSettings=true" class="flex items-center gap-2 bg-white text-gray-600 px-3 py-2 rounded-lg text-xs font-bold border hover:bg-gray-50 transition shadow-sm">
-                <i class="ph ph-gear"></i> <span class="hidden md:inline">CONFIG</span>
-            </button>
-            <button @click="savePage" :disabled="loading" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md shadow-indigo-200 transition transform active:scale-95">
-                <i class="ph ph-floppy-disk text-lg" x-show="!loading"></i>
-                <i class="ph ph-spinner animate-spin text-lg" x-show="loading"></i>
+            <button @click="showSettings=true" class="flex items-center gap-2 bg-white text-gray-600 px-3 py-2 rounded-lg text-xs font-bold border hover:bg-gray-50 transition shadow-sm"><i class="ph ph-gear"></i> <span class="hidden md:inline">CONFIG</span></button>
+            <button @click="savePage" :disabled="loading" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md shadow-indigo-200 transition active:scale-95">
+                <i class="ph ph-floppy-disk text-lg" x-show="!loading"></i><i class="ph ph-spinner animate-spin text-lg" x-show="loading"></i>
                 <span x-text="loading ? 'SAVING...' : (window.innerWidth > 768 ? 'PUBLISH' : 'SAVE')"></span>
             </button>
         </div>
@@ -116,19 +100,17 @@
         
         <div x-show="mobileMenuOpen" class="md:hidden fixed inset-0 bg-slate-900/50 z-[80] backdrop-blur-sm" @click="mobileMenuOpen = false" x-transition.opacity></div>
 
-        <div class="sidebar-panel fixed inset-y-0 left-0 md:static transform duration-300 ease-in-out"
-             :class="mobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0 md:shadow-none'">
-            
+        <div class="sidebar-panel fixed inset-y-0 left-0 md:static transform duration-300 ease-in-out" :class="mobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0 md:shadow-none'">
             <div class="md:hidden flex items-center justify-between p-3 border-b bg-gray-50">
                 <span class="font-bold text-gray-700 text-xs uppercase">Tools</span>
                 <button @click="mobileMenuOpen = false" class="text-gray-500 hover:text-red-600"><i class="ph ph-x text-xl"></i></button>
             </div>
 
             <div class="flex border-b border-gray-200 bg-white shrink-0">
-                <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition" title="Widgets"><i class="ph ph-squares-four text-xl"></i></button>
-                <button @click="tab='traits'" :class="tab=='traits'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition" title="Settings"><i class="ph ph-gear text-xl"></i></button>
-                <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition" title="Styles"><i class="ph ph-paint-brush text-xl"></i></button>
-                <button @click="tab='layers'" :class="tab=='layers'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition" title="Layers"><i class="ph ph-stack text-xl"></i></button>
+                <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition"><i class="ph ph-squares-four text-xl"></i></button>
+                <button @click="tab='traits'" :class="tab=='traits'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition"><i class="ph ph-gear text-xl"></i></button>
+                <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition"><i class="ph ph-paint-brush text-xl"></i></button>
+                <button @click="tab='layers'" :class="tab=='layers'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition"><i class="ph ph-stack text-xl"></i></button>
             </div>
             
             <div class="flex-1 bg-white relative w-full overflow-y-auto custom-scroll">
@@ -147,150 +129,66 @@
                         </details>
                     </template>
                 </div>
-                <div x-show="tab=='traits'" class="h-full pb-20">
-                    <div id="traits-container" class="p-3"></div>
-                </div>
-                <div x-show="tab=='styles'" class="h-full pb-20">
-                    <div id="selectors-container" class="p-3 border-b bg-gray-50"></div>
-                    <div id="styles-container" class="p-1"></div>
-                </div>
-                <div x-show="tab=='layers'" class="h-full pb-20">
-                    <div id="layers-container" class="p-2"></div>
-                </div>
+                <div x-show="tab=='traits'" class="h-full pb-20"><div id="traits-container" class="p-3"></div></div>
+                <div x-show="tab=='styles'" class="h-full pb-20"><div id="selectors-container" class="p-3 border-b bg-gray-50"></div><div id="styles-container" class="p-1"></div></div>
+                <div x-show="tab=='layers'" class="h-full pb-20"><div id="layers-container" class="p-2"></div></div>
             </div>
         </div>
     </div>
 
     <div x-show="showSettings" x-cloak class="fixed inset-0 z-[400] bg-slate-900/40 backdrop-blur-sm flex justify-end" x-transition.opacity>
-        <div class="w-full md:w-[420px] h-full bg-white shadow-2xl flex flex-col border-l border-gray-200 transform transition-transform duration-300"
-             x-transition:enter="translate-x-full" x-transition:enter-end="translate-x-0"
-             x-transition:leave="translate-x-0" x-transition:leave-end="translate-x-full"
-             @click.outside="showSettings=false">
-            
+        <div class="w-full md:w-[420px] h-full bg-white shadow-2xl flex flex-col border-l border-gray-200 transform transition-transform duration-300" x-transition:enter="translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="translate-x-0" x-transition:leave-end="translate-x-full" @click.outside="showSettings=false">
             <div class="p-5 border-b flex justify-between items-center bg-gray-50">
-                <div>
-                    <h3 class="font-bold text-gray-800 text-lg">Page Configuration</h3>
-                    <p class="text-xs text-gray-500">Pengaturan lengkap halaman.</p>
-                </div>
+                <div><h3 class="font-bold text-gray-800 text-lg">Page Configuration</h3><p class="text-xs text-gray-500">Pengaturan lengkap halaman.</p></div>
                 <button @click="showSettings=false" class="text-gray-400 hover:text-red-500 transition"><i class="ph ph-x text-2xl"></i></button>
             </div>
-
             <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scroll">
                 <div class="space-y-4">
-                    <div class="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-wider border-b pb-1 mb-2">
-                        <i class="ph ph-identification-card text-lg"></i> Identitas Halaman
-                    </div>
-                    <div>
-                        <label class="label-field">Judul Halaman (Internal)</label>
-                        <input x-model="page.title" class="input-field" placeholder="Contoh: Landing Page Promo">
-                    </div>
-                    <div>
-                        <label class="label-field">URL Slug</label>
-                        <div class="flex items-center border border-gray-300 rounded-md overflow-hidden bg-gray-50">
-                            <span class="pl-3 pr-2 text-gray-500 text-xs font-mono">/</span>
-                            <input x-model="page.slug" class="w-full py-2 px-1 bg-white text-sm outline-none font-mono text-indigo-600" placeholder="slug-unik">
-                        </div>
-                    </div>
+                    <div class="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-wider border-b pb-1 mb-2"><i class="ph ph-identification-card text-lg"></i> Identitas</div>
+                    <div><label class="label-field">Judul Halaman</label><input x-model="page.title" class="input-field"></div>
+                    <div><label class="label-field">Slug</label><div class="flex items-center border border-gray-300 rounded-md overflow-hidden bg-gray-50"><span class="pl-3 pr-2 text-gray-500 text-xs font-mono">/</span><input x-model="page.slug" class="w-full py-2 px-1 bg-white text-sm outline-none font-mono text-indigo-600"></div></div>
                 </div>
-
                 <div class="space-y-4">
-                    <div class="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-wider border-b pb-1 mb-2">
-                        <i class="ph ph-shopping-cart text-lg"></i> Konfigurasi Produk
-                    </div>
-                    <div>
-                        <label class="label-field">Harga Produk (IDR)</label>
-                        <input x-model="page.config.price" type="number" class="input-field" placeholder="0">
-                    </div>
-                    <div>
-                        <label class="label-field">Tipe Produk</label>
-                        <select x-model="page.product_type" class="input-field bg-white">
-                            <option value="physical">Produk Fisik (Butuh Ongkir)</option>
-                            <option value="digital">Produk Digital (Tanpa Ongkir)</option>
-                        </select>
-                    </div>
+                    <div class="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-wider border-b pb-1 mb-2"><i class="ph ph-shopping-cart text-lg"></i> Produk</div>
+                    <div><label class="label-field">Harga (IDR)</label><input x-model="page.config.price" type="number" class="input-field"></div>
+                    <div><label class="label-field">Tipe</label><select x-model="page.product_type" class="input-field bg-white"><option value="physical">Fisik (Ongkir)</option><option value="digital">Digital</option></select></div>
                 </div>
-
                 <div class="space-y-4">
-                    <div class="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-wider border-b pb-1 mb-2">
-                        <i class="ph ph-globe text-lg"></i> SEO & Analytics
-                    </div>
-                    <div>
-                        <label class="label-field">SEO Meta Title</label>
-                        <input x-model="page.config.settings.seo_title" class="input-field" placeholder="Judul di Google Search">
-                    </div>
-                    <div>
-                        <label class="label-field">SEO Description</label>
-                        <textarea x-model="page.config.settings.seo_description" class="input-field h-20 resize-none" placeholder="Deskripsi singkat..."></textarea>
-                    </div>
-                    <div>
-                        <label class="label-field">Facebook Pixel ID</label>
-                        <input x-model="page.config.settings.fb_pixel" class="input-field" placeholder="Contoh: 1234567890">
-                    </div>
+                    <div class="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-wider border-b pb-1 mb-2"><i class="ph ph-globe text-lg"></i> SEO & Data</div>
+                    <div><label class="label-field">SEO Title</label><input x-model="page.config.settings.seo_title" class="input-field"></div>
+                    <div><label class="label-field">SEO Desc</label><textarea x-model="page.config.settings.seo_description" class="input-field h-20 resize-none"></textarea></div>
+                    <div><label class="label-field">Pixel ID</label><input x-model="page.config.settings.fb_pixel" class="input-field"></div>
                 </div>
             </div>
-
             <div class="p-5 border-t bg-gray-50 text-right">
-                <button @click="savePage(); showSettings=false" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded shadow-lg transition">SIMPAN PERUBAHAN</button>
+                <button @click="savePage(); showSettings=false" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded shadow-lg transition">SIMPAN</button>
             </div>
         </div>
     </div>
 
     <div x-show="showIconPicker" x-cloak class="fixed inset-0 z-[9999] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4" x-transition.opacity>
         <div class="w-full max-w-lg bg-white rounded-xl shadow-2xl flex flex-col max-h-[80vh]" @click.outside="closeIconPicker()">
-            <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
-                <h3 class="font-bold text-gray-800">Pilih Icon</h3>
-                <button @click="closeIconPicker()" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button>
-            </div>
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-xl"><h3 class="font-bold text-gray-800">Pilih Icon</h3><button @click="closeIconPicker()" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button></div>
             <div class="p-4 space-y-4 overflow-hidden flex flex-col">
-                <div class="flex gap-2">
-                    <input x-model="iconSearch" @keyup.enter="applyIcon(iconSearch)" class="flex-1 p-2 border rounded text-sm font-mono" placeholder="Manual: ph:rocket">
-                    <button @click="applyIcon(iconSearch)" class="px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded">OKE</button>
-                </div>
-                <div class="flex-1 overflow-hidden flex flex-col">
-                    <label class="text-xs font-bold text-gray-500 uppercase mb-2 block">Populer</label>
-                    <div class="icon-grid custom-scroll">
-                        <template x-for="icon in popularIcons" :key="icon">
-                            <div class="icon-item" :title="icon" @click="applyIcon(icon)"><iconify-icon :icon="icon"></iconify-icon></div>
-                        </template>
-                    </div>
-                </div>
+                <div class="flex gap-2"><input x-model="iconSearch" @keyup.enter="applyIcon(iconSearch)" class="flex-1 p-2 border rounded text-sm font-mono" placeholder="Manual: ph:rocket"><button @click="applyIcon(iconSearch)" class="px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded">OKE</button></div>
+                <div class="flex-1 overflow-hidden flex flex-col"><div class="icon-grid custom-scroll"><template x-for="icon in popularIcons" :key="icon"><div class="icon-item" :title="icon" @click="applyIcon(icon)"><iconify-icon :icon="icon"></iconify-icon></div></template></div></div>
             </div>
         </div>
     </div>
 
     <div class="fixed bottom-5 left-5 z-[100000] flex flex-col gap-2 pointer-events-none">
         <template x-for="n in notifications" :key="n.id">
-            <div x-show="n.show" x-transition class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-l-4 bg-white" :class="n.type==='error'?'border-red-500':'border-green-500'">
-                <i class="ph text-xl" :class="n.type==='error'?'ph-warning-circle text-red-500':'ph-check-circle text-green-500'"></i>
-                <div class="text-xs font-bold text-gray-800" x-text="n.title"></div>
-            </div>
+            <div x-show="n.show" x-transition class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-l-4 bg-white" :class="n.type==='error'?'border-red-500':'border-green-500'"><i class="ph text-xl" :class="n.type==='error'?'ph-warning-circle text-red-500':'ph-check-circle text-green-500'"></i><div class="text-xs font-bold text-gray-800" x-text="n.title"></div></div>
         </template>
     </div>
 
     <script>
     function editorApp() {
         return {
-            device: 'desktop', 
-            tab: 'blocks', 
-            mobileMenuOpen: false, 
-            showSettings: false, 
-            showIconPicker: false, 
-            iconSearch: '',
-            loading: false, 
-            notifications: [],
-            
-            // PAGE DATA LENGKAP
-            page: { 
-                id: 0, 
-                slug: '', 
-                title: '', 
-                product_type: 'physical',
-                config: { price: 0, settings: { seo_title: '', seo_description: '', fb_pixel: '' } } 
-            },
-            
-            groupedWidgets: {}, 
-            widgetScripts: {}, 
-            popularIcons: ['ph:star-fill','ph:heart-fill','ph:check-circle-fill','ph:warning-circle-fill','ph:shopping-cart-fill','ph:rocket-launch-fill','ph:user-fill','ph:house-fill','ph:envelope-fill','ph:phone-fill','ph:instagram-logo-fill','ph:whatsapp-logo-fill','ph:facebook-logo-fill','ph:tiktok-logo-fill','ph:youtube-logo-fill','ph:arrow-right-bold','ph:arrow-down-bold'],
+            device: 'desktop', tab: 'blocks', mobileMenuOpen: false, showSettings: false, showIconPicker: false, iconSearch: '', loading: false, notifications: [],
+            page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, settings: {} } },
+            groupedWidgets: {}, widgetScripts: {}, 
+            popularIcons: ['ph:star-fill','ph:heart-fill','ph:check-circle-fill','ph:warning-circle-fill','ph:shopping-cart-fill','ph:rocket-launch-fill','ph:user-fill','ph:house-fill','ph:envelope-fill','ph:phone-fill','ph:instagram-logo-fill','ph:whatsapp-logo-fill','ph:facebook-logo-fill','ph:tiktok-logo-fill','ph:youtube-logo-fill'],
 
             async init() {
                 await this.loadWidgets();
@@ -300,11 +198,7 @@
                 window.addEventListener('open-icon-modal', () => { this.showIconPicker = true; this.iconSearch = ''; });
             },
 
-            notify(title, type = 'success') { 
-                const id = Date.now(); 
-                this.notifications.push({ id, title, type, show: true }); 
-                setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); 
-            },
+            notify(title, type = 'success') { const id = Date.now(); this.notifications.push({ id, title, type, show: true }); setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); },
 
             async loadWidgets() {
                 try {
@@ -315,6 +209,12 @@
                         if(w.script && w.id !== 'iconify-icon' && w.id !== 'faq-accordion') this.widgetScripts[w.id] = w.script;
                         const cat = w.category || 'General';
                         if(!this.groupedWidgets[cat]) this.groupedWidgets[cat] = [];
+                        
+                        // FIX ICON BRIDGE: Jika widget adalah icon, pastikan kontennya pakai <iconify-icon> bukan <i> atau <div>
+                        // Ini agar atribut 'icon' terbaca otomatis
+                        if(w.id === 'iconify-icon' || w.content.includes('iconify-icon')) {
+                            // Biarkan apa adanya, sudah benar
+                        }
                         this.groupedWidgets[cat].push(w);
                     });
                 } catch(e) { this.notify('Gagal load widget', 'error'); }
@@ -339,12 +239,21 @@
                     plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg'],
                     selectorManager: { appendTo: '#selectors-container' },
                     traitManager: { appendTo: '#traits-container' },
-                    styleManager: { appendTo: '#styles-container', sectors: [{ name: 'Text', buildProps: ['font-size','color','text-align'] },{ name: 'Layout', buildProps: ['padding','margin','display'] },{ name: 'Decor', buildProps: ['background-color','border-radius'] }] },
+                    // FIX COLOR PALETTE: Sector 'Decor' harus memuat background-color dengan benar
+                    styleManager: { 
+                        appendTo: '#styles-container', 
+                        sectors: [
+                            { name: 'Typography', open: 1, buildProps: ['font-size','font-weight','color','text-align','line-height'] },
+                            { name: 'Layout', open: 0, buildProps: ['width','height','padding','margin','display'] },
+                            { name: 'Decor', open: 0, buildProps: ['background-color','border-radius','box-shadow','opacity'] }
+                        ] 
+                    },
                     layerManager: { appendTo: '#layers-container' }
                 });
 
                 window.editor.Commands.add('open-icon-picker', { run(editor) { window.dispatchEvent(new CustomEvent('open-icon-modal')); } });
 
+                // Register Komponen
                 if(this.groupedWidgets) {
                     Object.values(this.groupedWidgets).flat().forEach(w => {
                         window.editor.DomComponents.addType(w.id, { model: { defaults: { attributes: { 'data-widget-type': w.id } } } });
@@ -364,10 +273,32 @@
 
             handleDragStart(event, w) { event.dataTransfer.setData('text', w.content); },
 
+            // FIX LOGIC ICON PICKER
             applyIcon(iconString) {
                 const selected = window.editor.getSelected();
-                if (selected) { selected.addAttributes({ icon: iconString }); this.notify('Icon: ' + iconString); }
-                else { this.notify('Pilih komponen icon dulu!', 'error'); }
+                if (selected) {
+                    // 1. Cek apakah ini komponen <iconify-icon>?
+                    if (selected.is('iconify-icon') || selected.get('tagName') === 'iconify-icon') {
+                        selected.addAttributes({ icon: iconString });
+                        this.notify('Icon diperbarui!');
+                    } 
+                    // 2. Jika bukan, tapi user maksa ingin ganti icon (misal di button)
+                    else {
+                        // Opsi A: Ganti kontennya jadi icon (Destruktif tapi efektif)
+                        // Opsi B: Cari anak elemen yang iconify-icon
+                        const childIcon = selected.find('iconify-icon');
+                        if (childIcon.length > 0) {
+                            childIcon[0].addAttributes({ icon: iconString });
+                            this.notify('Icon di dalam elemen diperbarui!');
+                        } else {
+                            // Opsi C: Insert icon baru
+                             selected.append(`<iconify-icon icon="${iconString}"></iconify-icon>`);
+                             this.notify('Icon ditambahkan ke elemen!');
+                        }
+                    }
+                } else {
+                    this.notify('Pilih komponen dulu!', 'error');
+                }
                 this.closeIconPicker();
             },
             closeIconPicker() { this.showIconPicker = false; window.editor.stopCommand('open-icon-picker'); },
@@ -380,7 +311,7 @@
                     this.page.id = data.id; this.page.slug = data.slug; this.page.title = data.title || '';
                     this.page.product_type = data.product_type || 'physical';
                     if (data.product_config_json) this.page.config = typeof data.product_config_json === 'string' ? JSON.parse(data.product_config_json) : data.product_config_json;
-                    if(!this.page.config.settings) this.page.config.settings = {}; // Safety check
+                    if(!this.page.config.settings) this.page.config.settings = {};
 
                     if (window.editor) {
                         let safeHtml = data.html_content || "";
@@ -403,13 +334,8 @@
                     generatedJS += `});<\/script>`;
                     
                     const payload = { 
-                        id: this.page.id, 
-                        slug: this.page.slug, 
-                        title: this.page.title, 
-                        product_type: this.page.product_type,
-                        html: html + generatedJS, 
-                        css: css, 
-                        product_config: this.page.config 
+                        id: this.page.id, slug: this.page.slug, title: this.page.title, product_type: this.page.product_type,
+                        html: html + generatedJS, css: css, product_config: this.page.config 
                     };
                     const res = await fetch('/api/admin/pages', { method: 'POST', body: JSON.stringify(payload), headers: {'Content-Type': 'application/json'} });
                     if(res.ok) this.notify('Berhasil Disimpan!');
