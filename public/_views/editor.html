@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - PANEL UPLOAD (STABLE)</title>
+    <title>LandingBuilder Pro - ROUTE FIXED</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -26,41 +26,30 @@
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: #fff; }
         [x-cloak] { display: none !important; }
 
-        /* Z-INDEX ARCHITECTURE */
+        /* Z-INDEX LAYERS */
         .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; z-index: 0; }
         header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 40; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; }
         .mobile-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 45; backdrop-filter: blur(4px); }
-        
-        .sidebar-panel { 
-            width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; 
-            z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; 
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-            box-shadow: 4px 0 24px rgba(0,0,0,0.1);
-        }
-
-        /* ALPINE MODAL & COLOR PICKER */
+        .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 4px 0 24px rgba(0,0,0,0.1); }
         .alpine-modal { z-index: 100; }
         .sp-container { z-index: 99999 !important; background: white; border: 1px solid #cbd5e1; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2); border-radius: 8px; }
 
-        /* GRAPESJS UI TWEAKS */
+        /* GRAPESJS UI */
         #gjs { flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; position: relative; }
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
         .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; } 
-        
         .gjs-field { border: 1px solid #e5e7eb; border-radius: 4px; background: #fff; color: #333; padding: 5px; }
         .gjs-field input { color: #333; font-size: 12px; width: 100%; }
         .gjs-field-color-picker { border: 1px solid #cbd5e1; margin-right: 5px; cursor: pointer; border-radius: 4px; min-width: 30px; padding: 2px; }
 
-        /* CUSTOM BUTTONS (TRAITS) */
+        /* CUSTOM UI */
         .trait-btn { width: 100%; background: #4f46e5; color: white; padding: 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; border: none; transition: background 0.2s; text-align: center; display:flex; align-items:center; justify-content:center; gap:6px; margin-top: 5px; }
         .trait-btn:hover { background: #4338ca; }
         .trait-btn.loading { background: #9ca3af; cursor: not-allowed; }
         
-        /* ACCORDION */
         details.category-group > summary { list-style: none; cursor: pointer; background: #f9fafb; padding: 12px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #4b5563; border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; }
         details.category-group[open] > summary { border-bottom: 1px solid #e5e7eb; background: #fff; color: #4f46e5; border-left: 3px solid #4f46e5; }
         
-        /* GRID & ICONS */
         .widget-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px; background: #fff; }
         .block-card { cursor: grab; background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: all 0.2s; user-select: none; }
         .block-card:hover { border-color: #6366f1; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
@@ -80,9 +69,7 @@
 
     <header>
         <div class="flex items-center gap-3 flex-1 min-w-0">
-            <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden shrink-0 text-gray-600 bg-gray-100 hover:bg-gray-200 p-2 rounded-lg transition">
-                <i class="ph ph-list text-2xl"></i>
-            </button>
+            <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden shrink-0 text-gray-600 bg-gray-100 hover:bg-gray-200 p-2 rounded-lg transition"><i class="ph ph-list text-2xl"></i></button>
             <a href="/admin/pages" class="hidden md:block text-gray-400 hover:text-indigo-600 p-1.5 hover:bg-gray-50 rounded"><i class="ph ph-arrow-left text-xl"></i></a>
             <div class="flex flex-col min-w-0 flex-1">
                 <input x-model="page.title" class="bg-transparent font-bold text-sm text-gray-800 outline-none w-full truncate placeholder-gray-300 focus:text-indigo-600" placeholder="Nama Halaman...">
@@ -97,8 +84,7 @@
         <div class="flex items-center gap-2 shrink-0">
             <button @click="showSettings=true" class="flex items-center gap-2 bg-white text-gray-600 px-3 py-2 rounded-lg text-xs font-bold border hover:bg-gray-50 transition shadow-sm"><i class="ph ph-gear"></i> <span class="hidden md:inline">CONFIG</span></button>
             <button @click="savePage" :disabled="loading" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md shadow-indigo-200 transition active:scale-95">
-                <i class="ph ph-floppy-disk text-lg" x-show="!loading"></i>
-                <i class="ph ph-spinner animate-spin text-lg" x-show="loading"></i>
+                <i class="ph ph-floppy-disk text-lg" x-show="!loading"></i><i class="ph ph-spinner animate-spin text-lg" x-show="loading"></i>
                 <span x-text="loading ? '...' : 'PUBLISH'" class="hidden sm:inline"></span>
             </button>
         </div>
@@ -281,7 +267,7 @@
                     layerManager: { appendTo: '#layers-container' }
                 });
 
-                // --- 1. TRAIT: UPLOAD IMAGE (PANEL BUTTON) ---
+                // --- 1. TRAIT: UPLOAD IMAGE (PANEL BUTTON - FIXED ROUTE) ---
                 window.editor.TraitManager.addType('file-upload', {
                     createInput({ trait }) {
                         const div = document.createElement('div'); div.className = 'w-full flex flex-col gap-2';
@@ -292,13 +278,14 @@
                         input.onchange = async (e) => {
                             const file = e.target.files[0];
                             if(!file) return;
-                            const formData = new FormData(); formData.append('files', file);
+                            const formData = new FormData(); formData.append('files', file); // GrapesJS standard key
                             
                             try {
                                 btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> UPLOADING...'; btn.classList.add('loading');
-                                const res = await fetch('/api/admin/upload', { method:'POST', body: formData });
+                                // FIXED: ROUTE SESUAI PERMINTAAN ANDA
+                                const res = await fetch('/api/admin/upload-image', { method:'POST', body: formData });
                                 const data = await res.json();
-                                // Support format return dari GrapesJS Asset Manager standard { data: [url] } atau { url: '...' }
+                                // Support format return Cloudinary langsung atau wrapped
                                 const url = data.data ? data.data[0] : (data.url || (Array.isArray(data) ? data[0] : null));
                                 
                                 if(url) {
@@ -319,7 +306,6 @@
                 });
 
                 // --- 2. IMAGE COMPONENT (OVERRIDE DEFAULT) ---
-                // Override ini memastikan image menggunakan tombol upload panel kita
                 window.editor.DomComponents.addType('image', {
                     model: {
                         defaults: {
