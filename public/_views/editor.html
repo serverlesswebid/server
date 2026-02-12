@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - Enterprise Edition</title>
+    <title>LandingBuilder Pro - Responsive Mobile</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -27,21 +27,32 @@
         header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; }
         
-        /* SIDEBAR & CANVAS */
-        .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; box-shadow: -2px 0 10px rgba(0,0,0,0.02); }
+        /* SIDEBAR (Responsive Logic handled in HTML classes) */
+        .sidebar-panel { 
+            width: 300px; 
+            height: 100%; 
+            background: white; 
+            border-left: 1px solid #e2e8f0; 
+            z-index: 90; /* Diatas GrapesJS Canvas */
+            display: flex; 
+            flex-direction: column; 
+            flex-shrink: 0; 
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
         #gjs { flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; position: relative; }
         
-        /* GRAPESJS UI OVERRIDES (Agar terlihat modern) */
+        /* GRAPESJS UI OVERRIDES */
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
-        .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; } /* Hide Default Panels */
+        .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; } 
         .gjs-three-bg { background-color: #f8fafc !important; }
         
-        /* INPUT STYLING (GrapesJS Fields) */
+        /* INPUT & UI */
         .gjs-field { background-color: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px; color: #374151; }
         .gjs-field input, .gjs-field select { color: #374151; font-size: 13px; }
         .gjs-field-color-picker { border-radius: 4px; border: 1px solid #ddd; overflow: hidden; cursor: pointer; }
         
-        /* SIDEBAR ACCORDION (KATEGORI WIDGET) */
+        /* ACCORDION CATEGORY */
         details.category-group > summary { list-style: none; cursor: pointer; background: #f9fafb; padding: 10px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #4b5563; border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; }
         details.category-group > summary:hover { background: #f3f4f6; color: #111; }
         details.category-group > summary::-webkit-details-marker { display: none; }
@@ -63,7 +74,7 @@
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
-        /* ICON PICKER MODAL GRID */
+        /* ICON PICKER */
         .icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); gap: 8px; max-height: 300px; overflow-y: auto; padding: 4px; }
         .icon-item { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 24px; cursor: pointer; color: #64748b; transition: all 0.2s; }
         .icon-item:hover { background-color: #e0e7ff; color: #4f46e5; border-color: #6366f1; }
@@ -72,11 +83,16 @@
 <body x-data="editorApp()">
 
     <header>
-        <div class="flex items-center gap-3 w-1/3">
-            <a href="/admin/pages" class="text-gray-400 hover:text-indigo-600 transition p-1.5 rounded shrink-0 hover:bg-gray-50" title="Kembali">
+        <div class="flex items-center gap-3 w-1/3 min-w-0">
+            <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden text-gray-600 hover:text-indigo-600 p-1">
+                <i class="ph ph-list text-2xl"></i>
+            </button>
+
+            <a href="/admin/pages" class="text-gray-400 hover:text-indigo-600 transition p-1.5 rounded shrink-0 hover:bg-gray-50 hidden md:block" title="Kembali">
                 <i class="ph ph-arrow-left text-xl"></i>
             </a>
-            <div class="flex flex-col min-w-0">
+            
+            <div class="flex flex-col min-w-0 flex-1">
                 <input x-model="page.title" class="bg-transparent font-bold text-sm text-gray-800 outline-none w-full truncate placeholder-gray-300 transition focus:text-indigo-600" placeholder="Halaman Tanpa Judul">
                 <span class="text-[10px] text-gray-400 truncate font-mono" x-text="page.slug ? '/'+page.slug : 'Draft Mode'"></span>
             </div>
@@ -90,12 +106,12 @@
 
         <div class="flex items-center gap-2 w-1/3 justify-end">
             <button @click="showSettings=true" class="flex items-center gap-2 bg-white text-gray-600 px-3 py-2 rounded-lg text-xs font-bold border hover:bg-gray-50 transition shadow-sm">
-                <i class="ph ph-gear"></i> CONFIG
+                <i class="ph ph-gear"></i> <span class="hidden md:inline">CONFIG</span>
             </button>
-            <button @click="savePage" :disabled="loading" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-xs font-bold shadow-md shadow-indigo-200 transition transform active:scale-95">
+            <button @click="savePage" :disabled="loading" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 md:px-5 py-2 rounded-lg text-xs font-bold shadow-md shadow-indigo-200 transition transform active:scale-95">
                 <i class="ph ph-floppy-disk text-lg" x-show="!loading"></i>
                 <i class="ph ph-spinner animate-spin text-lg" x-show="loading"></i>
-                <span x-text="loading ? 'SAVING...' : 'PUBLISH'"></span>
+                <span x-text="loading ? 'SAVING...' : (window.innerWidth > 768 ? 'PUBLISH' : 'SAVE')"></span>
             </button>
         </div>
     </header>
@@ -103,44 +119,51 @@
     <div class="workspace">
         <div id="gjs"></div>
         
-        <div class="sidebar-panel">
+        <div x-show="mobileMenuOpen" 
+             class="md:hidden fixed inset-0 bg-slate-900/50 z-[80] backdrop-blur-sm" 
+             @click="mobileMenuOpen = false"
+             x-transition.opacity>
+        </div>
+
+        <div class="sidebar-panel fixed inset-y-0 left-0 md:static transform duration-300 ease-in-out"
+             :class="mobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0 md:shadow-none'">
+            
+            <div class="md:hidden flex items-center justify-between p-3 border-b bg-gray-50">
+                <span class="font-bold text-gray-700 text-xs uppercase">Editor Tools</span>
+                <button @click="mobileMenuOpen = false" class="text-gray-500 hover:text-red-600">
+                    <i class="ph ph-x text-xl"></i>
+                </button>
+            </div>
+
             <div class="flex border-b border-gray-200 bg-white shrink-0">
-                <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition" title="Widgets"><i class="ph ph-squares-four text-xl"></i></button>
-                <button @click="tab='traits'" :class="tab=='traits'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition" title="Settings"><i class="ph ph-gear text-xl"></i></button>
-                <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition" title="Colors & Styles"><i class="ph ph-paint-brush text-xl"></i></button>
-                <button @click="tab='layers'" :class="tab=='layers'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition" title="Layers"><i class="ph ph-stack text-xl"></i></button>
+                <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition"><i class="ph ph-squares-four text-xl"></i></button>
+                <button @click="tab='traits'" :class="tab=='traits'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition"><i class="ph ph-gear text-xl"></i></button>
+                <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition"><i class="ph ph-paint-brush text-xl"></i></button>
+                <button @click="tab='layers'" :class="tab=='layers'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition"><i class="ph ph-stack text-xl"></i></button>
             </div>
             
             <div class="flex-1 bg-white relative w-full overflow-y-auto custom-scroll">
                 <div x-show="tab=='blocks'" class="h-full pb-20">
                     <template x-for="(widgets, category) in groupedWidgets" :key="category">
                         <details class="category-group" open>
-                            <summary x-text="category || 'Uncategorized'"></summary>
+                            <summary x-text="category || 'General'"></summary>
                             <div class="widget-grid">
                                 <template x-for="w in widgets" :key="w.id">
                                     <div class="block-card" 
                                          @click="addBlockToCanvas(w)"
                                          draggable="true"
                                          @dragstart="handleDragStart($event, w)">
-                                        <div class="block-icon">
-                                            <i class="ph" :class="getIconForCategory(category)"></i>
-                                        </div>
+                                        <div class="block-icon"><i class="ph" :class="getIconForCategory(category)"></i></div>
                                         <div class="block-label" x-text="w.label"></div>
                                     </div>
                                 </template>
                             </div>
                         </details>
                     </template>
-                    <div x-show="Object.keys(groupedWidgets).length === 0" class="p-4 text-center text-gray-400 text-xs">
-                        Memuat widgets...
-                    </div>
                 </div>
 
                 <div x-show="tab=='traits'" class="h-full pb-20">
                     <div id="traits-container" class="p-3"></div>
-                    <div class="px-4 py-2 text-[10px] text-gray-400 text-center">
-                        Tip: Gunakan tab ini untuk mengatur Link, ID, atau memilih Icon.
-                    </div>
                 </div>
 
                 <div x-show="tab=='styles'" class="h-full pb-20">
@@ -161,24 +184,19 @@
                 <h3 class="font-bold text-gray-800">Pilih Icon</h3>
                 <button @click="closeIconPicker()" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button>
             </div>
-            
             <div class="p-4 space-y-4 overflow-hidden flex flex-col">
                 <div>
-                    <label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Manual Input (Iconify String)</label>
+                    <label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Manual Input</label>
                     <div class="flex gap-2">
                         <input x-model="iconSearch" @keyup.enter="applyIcon(iconSearch)" class="flex-1 p-2 border rounded text-sm font-mono" placeholder="ph:rocket-launch-duotone">
                         <button @click="applyIcon(iconSearch)" class="px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded">TERAPKAN</button>
                     </div>
-                    <p class="text-[10px] text-gray-400 mt-1">Gunakan format <code>collection:name</code>. Contoh: <code>ph:user</code>, <code>mdi:home</code>.</p>
                 </div>
-
                 <div class="flex-1 overflow-hidden flex flex-col">
-                    <label class="text-xs font-bold text-gray-500 uppercase mb-2 block">Quick Select (Phosphor)</label>
+                    <label class="text-xs font-bold text-gray-500 uppercase mb-2 block">Quick Select</label>
                     <div class="icon-grid custom-scroll">
                         <template x-for="icon in popularIcons" :key="icon">
-                            <div class="icon-item" :title="icon" @click="applyIcon(icon)">
-                                <iconify-icon :icon="icon"></iconify-icon>
-                            </div>
+                            <div class="icon-item" :title="icon" @click="applyIcon(icon)"><iconify-icon :icon="icon"></iconify-icon></div>
                         </template>
                     </div>
                 </div>
@@ -191,34 +209,16 @@
              x-transition:enter="translate-x-full" x-transition:enter-end="translate-x-0"
              x-transition:leave="translate-x-0" x-transition:leave-end="translate-x-full"
              @click.outside="showSettings=false">
-            
             <div class="p-5 border-b flex justify-between items-center bg-gray-50">
-                <div>
-                    <h3 class="font-bold text-gray-800 text-lg">Page Configuration</h3>
-                    <p class="text-xs text-gray-500">Global settings & SEO.</p>
-                </div>
-                <button @click="showSettings=false" class="text-gray-400 hover:text-red-500 transition"><i class="ph ph-x text-2xl"></i></button>
+                <h3 class="font-bold text-gray-800">Page Settings</h3>
+                <button @click="showSettings=false"><i class="ph ph-x text-2xl text-gray-400"></i></button>
             </div>
-
-            <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scroll">
-                <div class="space-y-4">
-                    <label class="block text-xs font-bold uppercase text-gray-500">Page Identity</label>
-                    <input x-model="page.title" class="w-full p-2 border rounded text-sm" placeholder="Page Title">
-                    <div class="flex items-center border rounded overflow-hidden">
-                        <span class="px-3 bg-gray-50 text-xs text-gray-500 border-r">/</span>
-                        <input x-model="page.slug" class="w-full p-2 text-sm outline-none" placeholder="slug-url">
-                    </div>
-                </div>
-                <div class="space-y-4">
-                    <label class="block text-xs font-bold uppercase text-gray-500">Product</label>
-                    <input x-model="page.config.price" type="number" class="w-full p-2 border rounded text-sm" placeholder="Price (IDR)">
-                </div>
-                <div class="space-y-4">
-                    <label class="block text-xs font-bold uppercase text-gray-500">SEO</label>
-                    <textarea x-model="page.config.settings.seo_description" class="w-full p-2 border rounded text-sm h-20" placeholder="Meta Description"></textarea>
-                </div>
+            <div class="flex-1 overflow-y-auto p-6 space-y-4 custom-scroll">
+                <div><label class="label-field">Page Title</label><input x-model="page.title" class="input-field"></div>
+                <div><label class="label-field">Slug</label><input x-model="page.slug" class="input-field"></div>
+                <div><label class="label-field">Price</label><input x-model="page.config.price" type="number" class="input-field"></div>
+                <div><label class="label-field">SEO Desc</label><textarea x-model="page.config.settings.seo_description" class="input-field h-24"></textarea></div>
             </div>
-            
             <div class="p-4 border-t bg-gray-50 text-right">
                 <button @click="savePage(); showSettings=false" class="px-6 py-2 bg-indigo-600 text-white font-bold rounded shadow">SIMPAN</button>
             </div>
@@ -237,45 +237,30 @@
     <script>
     function editorApp() {
         return {
-            // STATE
+            // STATE UI
             device: 'desktop', 
             tab: 'blocks', 
+            mobileMenuOpen: false, // State untuk Mobile Menu
             showSettings: false, 
-            showIconPicker: false, // State untuk Modal Icon
+            showIconPicker: false, 
             iconSearch: '',
             loading: false, 
             notifications: [],
             
             // DATA
             page: { id: 0, slug: '', title: '', config: { price: 0, settings: {} } },
-            groupedWidgets: {}, // Data Terstruktur untuk Accordion
+            groupedWidgets: {}, 
             widgetScripts: {}, 
             
-            // Popular Icons for Quick Select
-            popularIcons: [
-                'ph:star-fill','ph:heart-fill','ph:check-circle-fill','ph:warning-circle-fill',
-                'ph:shopping-cart-fill','ph:rocket-launch-fill','ph:user-fill','ph:house-fill',
-                'ph:envelope-fill','ph:phone-fill','ph:instagram-logo-fill','ph:whatsapp-logo-fill',
-                'ph:facebook-logo-fill','ph:tiktok-logo-fill','ph:youtube-logo-fill',
-                'ph:arrow-right-bold','ph:arrow-down-bold','ph:caret-down-bold'
-            ],
+            // Popular Icons
+            popularIcons: ['ph:star-fill','ph:heart-fill','ph:check-circle-fill','ph:warning-circle-fill','ph:shopping-cart-fill','ph:rocket-launch-fill','ph:user-fill','ph:house-fill','ph:envelope-fill','ph:phone-fill','ph:instagram-logo-fill','ph:whatsapp-logo-fill','ph:facebook-logo-fill','ph:tiktok-logo-fill','ph:youtube-logo-fill','ph:arrow-right-bold','ph:arrow-down-bold'],
 
             async init() {
-                // 1. Load Data
                 await this.loadWidgets();
-                
-                // 2. Setup GrapesJS
                 this.initGrapes();
-
-                // 3. Load Content
                 const slug = new URLSearchParams(window.location.search).get('slug');
                 if (slug) await this.loadPageData(slug);
-                
-                // 4. Setup Icon Picker Listener (Bridge Alpine <-> GrapesJS)
-                window.addEventListener('open-icon-modal', () => {
-                    this.showIconPicker = true;
-                    this.iconSearch = '';
-                });
+                window.addEventListener('open-icon-modal', () => { this.showIconPicker = true; this.iconSearch = ''; });
             },
 
             notify(title, type = 'success') { 
@@ -284,27 +269,18 @@
                 setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); 
             },
 
-            // --- 1. DATA LOADING & GROUPING ---
             async loadWidgets() {
                 try {
                     const res = await fetch('/api/widgets');
                     const widgets = await res.json();
-                    
-                    this.groupedWidgets = {};
-                    this.widgetScripts = {};
-
+                    this.groupedWidgets = {}; this.widgetScripts = {};
                     widgets.forEach(w => {
-                        // Simpan Script (kecuali iconify & accordion)
-                        if(w.script && w.id !== 'iconify-icon' && w.id !== 'faq-accordion') {
-                            this.widgetScripts[w.id] = w.script;
-                        }
-
-                        // Grouping berdasarkan kategori
+                        if(w.script && w.id !== 'iconify-icon' && w.id !== 'faq-accordion') this.widgetScripts[w.id] = w.script;
                         const cat = w.category || 'General';
                         if(!this.groupedWidgets[cat]) this.groupedWidgets[cat] = [];
                         this.groupedWidgets[cat].push(w);
                     });
-                } catch(e) { console.error(e); this.notify('Gagal load widget', 'error'); }
+                } catch(e) { this.notify('Gagal load widget', 'error'); }
             },
 
             getIconForCategory(cat) {
@@ -312,118 +288,66 @@
                 if(cat.includes('Feature')) return 'ph-star';
                 if(cat.includes('Content')) return 'ph-article';
                 if(cat.includes('Commerce')) return 'ph-shopping-cart';
-                if(cat.includes('System')) return 'ph-gear';
                 return 'ph-cube';
             },
 
-            // --- 2. GRAPESJS SETUP ---
             initGrapes() {
                 window.editor = grapesjs.init({
-                    container: '#gjs', 
-                    height: '100%', 
-                    width: 'auto', 
-                    storageManager: false, 
-                    panels: { defaults: [] }, 
-                    allowScripts: 0,
-                    
+                    container: '#gjs', height: '100%', width: 'auto', storageManager: false, panels: { defaults: [] }, allowScripts: 0,
                     canvas: {
                         scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
                         styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
                         content: `<style>body{padding:20px;} details{min-height:50px;}</style>`
                     },
-
                     plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg'],
                     selectorManager: { appendTo: '#selectors-container' },
-                    traitManager: { appendTo: '#traits-container' }, // Panel Settings
-                    styleManager: { 
-                        appendTo: '#styles-container',
-                        sectors: [
-                            { name: 'Typography', open: 1, buildProps: ['font-family', 'font-size', 'font-weight', 'line-height', 'color', 'text-align'] },
-                            { name: 'Dimensions', open: 0, buildProps: ['width', 'height', 'padding', 'margin', 'display'] },
-                            { name: 'Decoration', open: 0, buildProps: ['background-color', 'border', 'border-radius', 'box-shadow', 'opacity'] }, // Color picker masuk sini
-                        ]
-                    },
+                    traitManager: { appendTo: '#traits-container' },
+                    styleManager: { appendTo: '#styles-container', sectors: [{ name: 'Text', buildProps: ['font-size','color','text-align'] },{ name: 'Layout', buildProps: ['padding','margin','display'] },{ name: 'Decor', buildProps: ['background-color','border-radius'] }] },
                     layerManager: { appendTo: '#layers-container' }
                 });
 
-                // REGISTER COMMANDS
-                // Command: Open Icon Picker
-                window.editor.Commands.add('open-icon-picker', {
-                    run(editor, sender) {
-                        window.dispatchEvent(new CustomEvent('open-icon-modal'));
-                    }
-                });
+                window.editor.Commands.add('open-icon-picker', { run(editor) { window.dispatchEvent(new CustomEvent('open-icon-modal')); } });
 
-                // REGISTER COMPONENTS (LOGIC ONLY, RENDERING VIA ALPINE)
                 if(this.groupedWidgets) {
                     Object.values(this.groupedWidgets).flat().forEach(w => {
-                        window.editor.DomComponents.addType(w.id, {
-                            model: { defaults: { attributes: { 'data-widget-type': w.id } } }
-                        });
+                        window.editor.DomComponents.addType(w.id, { model: { defaults: { attributes: { 'data-widget-type': w.id } } } });
                     });
                 }
-                
-                // Event: Auto-switch to Traits when component selected
-                window.editor.on('component:selected', () => { 
-                    // this.tab = 'traits'; // Optional: Auto switch tab
-                });
             },
 
-            // --- 3. EDITOR INTERACTION ---
             addBlockToCanvas(w) {
                 const component = window.editor.addComponents(w.content)[0];
-                if(w.id === 'faq-accordion') { // Force open accordion
+                if(w.id === 'faq-accordion') {
                     const details = component.find('details');
                     if(details.length) details.forEach(d => d.addAttributes({ open: 'true' }));
                     else if(component.is('details')) component.addAttributes({ open: 'true' });
                 }
+                // Auto close mobile menu after adding block
+                if(window.innerWidth < 768) this.mobileMenuOpen = false;
             },
 
-            handleDragStart(event, w) {
-                // GrapesJS Drag API Support (Basic)
-                event.dataTransfer.setData('text', w.content);
-            },
+            handleDragStart(event, w) { event.dataTransfer.setData('text', w.content); },
 
-            // --- 4. ICON PICKER LOGIC ---
             applyIcon(iconString) {
                 const selected = window.editor.getSelected();
-                if (selected) {
-                    // Update attribute 'icon' pada component yang dipilih
-                    // Ini sesuai dengan trait iconify-icon di database
-                    selected.addAttributes({ icon: iconString });
-                    // Trigger render ulang jika perlu
-                    this.notify('Icon diperbarui: ' + iconString);
-                } else {
-                    this.notify('Pilih komponen icon dulu!', 'error');
-                }
+                if (selected) { selected.addAttributes({ icon: iconString }); this.notify('Icon: ' + iconString); }
+                else { this.notify('Pilih komponen icon dulu!', 'error'); }
                 this.closeIconPicker();
             },
+            closeIconPicker() { this.showIconPicker = false; window.editor.stopCommand('open-icon-picker'); },
 
-            closeIconPicker() {
-                this.showIconPicker = false;
-                // Stop command di GrapesJS jika perlu
-                window.editor.stopCommand('open-icon-picker');
-            },
-
-            // --- 5. DATA LOADING & SAVING ---
             async loadPageData(slug) {
                 this.loading = true;
                 try {
                     const res = await fetch(`/api/admin/pages/${slug}`);
                     const data = await res.json();
-                    
-                    this.page.id = data.id; 
-                    this.page.slug = data.slug; 
-                    this.page.title = data.title || '';
+                    this.page.id = data.id; this.page.slug = data.slug; this.page.title = data.title || '';
                     if (data.product_config_json) this.page.config = typeof data.product_config_json === 'string' ? JSON.parse(data.product_config_json) : data.product_config_json;
-
                     if (window.editor) {
                         let safeHtml = data.html_content || "";
                         safeHtml = safeHtml.replace(/<script id="dynamic-widget-script">[\s\S]*?<\/script>/gm, "");
                         window.editor.setComponents(safeHtml);
                         window.editor.setStyle(data.css_content || '');
-                        
-                        // Force Open Accordions
                         window.editor.getWrapper().find('details').forEach(d => d.addAttributes({ open: 'true' }));
                     }
                 } catch (e) { console.error(e); }
@@ -435,39 +359,11 @@
                 try {
                     const html = window.editor.getHtml();
                     const css = window.editor.getCss();
-                    
-                    let generatedJS = `
-                    <script id="dynamic-widget-script">
-                    document.addEventListener("DOMContentLoaded", function() {
-                        const runWidget = (id, fn) => {
-                            document.querySelectorAll('[data-widget-type="' + id + '"]').forEach(el => {
-                                try { fn.call(el); } catch(e) { console.error(id, e); }
-                            });
-                        };
-                        
-                        // Accordion Logic (Closed by Default)
-                        const details = document.querySelectorAll('details');
-                        details.forEach(el => {
-                            el.removeAttribute('open');
-                            el.querySelector('summary').addEventListener('click', () => {
-                                if(!el.hasAttribute('open')) details.forEach(o => { if(o!==el) o.removeAttribute('open'); });
-                            });
-                        });
-                    `;
-
-                    Object.keys(this.widgetScripts).forEach(widgetId => {
-                        if (html.includes(`data-widget-type="${widgetId}"`)) {
-                            generatedJS += `runWidget('${widgetId}', function() { ${this.widgetScripts[widgetId]} });`;
-                        }
-                    });
-
+                    let generatedJS = `<script id="dynamic-widget-script">document.addEventListener("DOMContentLoaded",function(){const runWidget=(id,fn)=>{document.querySelectorAll('[data-widget-type="'+id+'"]').forEach(el=>{try{fn.call(el)}catch(e){console.error(id,e)}})};const details=document.querySelectorAll('details');details.forEach(el=>{el.removeAttribute('open');el.querySelector('summary').addEventListener('click',()=>{if(!el.hasAttribute('open'))details.forEach(o=>{if(o!==el)o.removeAttribute('open')})})});`;
+                    Object.keys(this.widgetScripts).forEach(id => { if (html.includes(`data-widget-type="${id}"`)) generatedJS += `runWidget('${id}',function(){${this.widgetScripts[id]}});`; });
                     generatedJS += `});<\/script>`;
-
-                    const payload = {
-                        id: this.page.id, slug: this.page.slug, title: this.page.title,
-                        html: html + generatedJS, css: css, product_config: this.page.config
-                    };
                     
+                    const payload = { id: this.page.id, slug: this.page.slug, title: this.page.title, html: html + generatedJS, css: css, product_config: this.page.config };
                     const res = await fetch('/api/admin/pages', { method: 'POST', body: JSON.stringify(payload), headers: {'Content-Type': 'application/json'} });
                     if(res.ok) this.notify('Berhasil Disimpan!');
                 } catch (e) { this.notify('Gagal Simpan', 'error'); }
