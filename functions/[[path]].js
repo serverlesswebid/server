@@ -890,4 +890,7 @@ async function runAnalyticsRekap(env) {
     }
 }
 
+app.use('/assets/*', async (c) => {
+  return c.env.ASSETS.fetch(c.req.raw);
+});
 export const onRequest = handle(app);
