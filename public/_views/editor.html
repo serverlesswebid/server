@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - ROUTE FIXED</title>
+    <title>LandingBuilder Pro - BASE64 UPLOAD</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -26,30 +26,47 @@
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: #fff; }
         [x-cloak] { display: none !important; }
 
-        /* Z-INDEX LAYERS */
-        .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; z-index: 0; }
+        /* HEADER */
         header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 40; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; }
-        .mobile-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 45; backdrop-filter: blur(4px); }
+        .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; z-index: 0; }
+        
+        /* SIDEBAR (Z-INDEX 50) */
         .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 4px 0 24px rgba(0,0,0,0.1); }
-        .alpine-modal { z-index: 100; }
-        .sp-container { z-index: 99999 !important; background: white; border: 1px solid #cbd5e1; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2); border-radius: 8px; }
+        .mobile-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 45; backdrop-filter: blur(4px); }
 
-        /* GRAPESJS UI */
         #gjs { flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; position: relative; }
+        
+        /* --- FIX COLOR PICKER PALETTE (Z-INDEX PALING ATAS) --- */
+        .sp-container { 
+            z-index: 9999999 !important; /* HARUS PALING DEPAN */
+            background: white; 
+            border: 1px solid #cbd5e1; 
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2); 
+            border-radius: 8px; 
+        }
+        .sp-picker-container { border: none; }
+        
+        /* ALPINE MODAL */
+        .alpine-modal { z-index: 100; }
+
+        /* GRAPESJS UI TWEAKS */
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
         .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; } 
+        
         .gjs-field { border: 1px solid #e5e7eb; border-radius: 4px; background: #fff; color: #333; padding: 5px; }
         .gjs-field input { color: #333; font-size: 12px; width: 100%; }
         .gjs-field-color-picker { border: 1px solid #cbd5e1; margin-right: 5px; cursor: pointer; border-radius: 4px; min-width: 30px; padding: 2px; }
 
-        /* CUSTOM UI */
+        /* TRAIT BUTTON */
         .trait-btn { width: 100%; background: #4f46e5; color: white; padding: 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; border: none; transition: background 0.2s; text-align: center; display:flex; align-items:center; justify-content:center; gap:6px; margin-top: 5px; }
         .trait-btn:hover { background: #4338ca; }
         .trait-btn.loading { background: #9ca3af; cursor: not-allowed; }
         
+        /* ACCORDION */
         details.category-group > summary { list-style: none; cursor: pointer; background: #f9fafb; padding: 12px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #4b5563; border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; }
         details.category-group[open] > summary { border-bottom: 1px solid #e5e7eb; background: #fff; color: #4f46e5; border-left: 3px solid #4f46e5; }
         
+        /* GRID & ICONS */
         .widget-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px; background: #fff; }
         .block-card { cursor: grab; background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: all 0.2s; user-select: none; }
         .block-card:hover { border-color: #6366f1; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
@@ -101,10 +118,10 @@
             </div>
 
             <div class="flex border-b border-gray-200 bg-white shrink-0">
-                <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-squares-four text-xl"></i></button>
-                <button @click="tab='traits'" :class="tab=='traits'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-gear text-xl"></i></button>
-                <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-paint-brush text-xl"></i></button>
-                <button @click="tab='layers'" :class="tab=='layers'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-stack text-xl"></i></button>
+                <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition" title="Widgets"><i class="ph ph-squares-four text-xl"></i></button>
+                <button @click="tab='traits'" :class="tab=='traits'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition" title="Settings"><i class="ph ph-gear text-xl"></i></button>
+                <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition" title="Styles"><i class="ph ph-paint-brush text-xl"></i></button>
+                <button @click="tab='layers'" :class="tab=='layers'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition" title="Layers"><i class="ph ph-stack text-xl"></i></button>
             </div>
             
             <div class="flex-1 bg-white relative w-full overflow-y-auto custom-scroll">
@@ -246,15 +263,11 @@
                 window.editor = grapesjs.init({
                     container: '#gjs', height: '100%', width: 'auto', storageManager: false, panels: { defaults: [] }, 
                     allowScripts: 1, 
+                    deviceManager: { devices: [{name:'desktop',width:''},{name:'tablet',width:'768px',widthMedia:'992px'},{name:'mobile',width:'375px',widthMedia:'480px'}] },
                     
-                    deviceManager: {
-                        devices: [
-                            { name: 'desktop', width: '' }, 
-                            { name: 'tablet', width: '768px', widthMedia: '992px' },
-                            { name: 'mobile', width: '375px', widthMedia: '480px' }
-                        ]
-                    },
-
+                    // DISABLE ASSET MANAGER MODAL (KITA PAKAI PANEL)
+                    assetManager: { embedAsBase64: 0, openAssetsOnDrop: 0 },
+                    
                     canvas: {
                         scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
                         styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
@@ -267,7 +280,7 @@
                     layerManager: { appendTo: '#layers-container' }
                 });
 
-                // --- 1. TRAIT: UPLOAD IMAGE (PANEL BUTTON - FIXED ROUTE) ---
+                // --- 1. TRAIT: UPLOAD IMAGE (BASE64 LOGIC) ---
                 window.editor.TraitManager.addType('file-upload', {
                     createInput({ trait }) {
                         const div = document.createElement('div'); div.className = 'w-full flex flex-col gap-2';
@@ -275,51 +288,57 @@
                         const btn = document.createElement('button'); btn.className = 'trait-btn'; btn.innerHTML = '<i class="ph ph-upload-simple"></i> UPLOAD GAMBAR';
                         
                         btn.onclick = () => input.click();
-                        input.onchange = async (e) => {
+                        
+                        input.onchange = (e) => {
                             const file = e.target.files[0];
                             if(!file) return;
-                            const formData = new FormData(); formData.append('files', file); // GrapesJS standard key
                             
-                            try {
-                                btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> UPLOADING...'; btn.classList.add('loading');
-                                // FIXED: ROUTE SESUAI PERMINTAAN ANDA
-                                const res = await fetch('/api/admin/upload-image', { method:'POST', body: formData });
-                                const data = await res.json();
-                                // Support format return Cloudinary langsung atau wrapped
-                                const url = data.data ? data.data[0] : (data.url || (Array.isArray(data) ? data[0] : null));
+                            // CONVERT KE BASE64 DULU
+                            const reader = new FileReader();
+                            reader.onloadend = async () => {
+                                const base64String = reader.result;
+                                const formData = new FormData();
+                                formData.append('file', base64String); // Kirim string base64
                                 
-                                if(url) {
-                                    trait.target.addAttributes({ src: url });
-                                    window.editorApp.notify('Upload Berhasil!');
-                                } else {
-                                    throw new Error('Gagal parsing URL');
+                                try {
+                                    btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> UPLOADING...'; btn.classList.add('loading');
+                                    const res = await fetch('/api/admin/upload-image', { method:'POST', body: formData });
+                                    const data = await res.json();
+                                    const url = data.data ? data.data[0] : (data.url || (Array.isArray(data) ? data[0] : null));
+                                    
+                                    if(url) {
+                                        trait.target.addAttributes({ src: url });
+                                        window.editorApp.notify('Upload Berhasil!');
+                                    } else {
+                                        throw new Error('Gagal parsing URL');
+                                    }
+                                } catch(err) {
+                                    console.error(err); window.editorApp.notify('Upload Gagal', 'error');
+                                } finally {
+                                    btn.innerHTML = '<i class="ph ph-upload-simple"></i> UPLOAD GAMBAR'; btn.classList.remove('loading');
                                 }
-                            } catch(err) {
-                                console.error(err); window.editorApp.notify('Upload Gagal', 'error');
-                            } finally {
-                                btn.innerHTML = '<i class="ph ph-upload-simple"></i> UPLOAD GAMBAR'; btn.classList.remove('loading');
-                            }
+                            };
+                            reader.readAsDataURL(file); // Trigger convert
                         };
                         div.appendChild(btn); div.appendChild(input);
                         return div;
                     }
                 });
 
-                // --- 2. IMAGE COMPONENT (OVERRIDE DEFAULT) ---
+                // --- 2. OVERRIDE IMAGE COMPONENT ---
                 window.editor.DomComponents.addType('image', {
                     model: {
                         defaults: {
                             traits: [
                                 { type: 'text', name: 'src', label: 'URL Gambar' },
-                                { type: 'file-upload', name: 'upload', label: ' ' }, // Custom Trait
-                                { type: 'text', name: 'alt', label: 'Alt Text' },
-                                { type: 'text', name: 'title', label: 'Title' }
+                                { type: 'file-upload', name: 'upload', label: ' ' }, // Panel Upload Button
+                                { type: 'text', name: 'alt', label: 'Alt Text' }
                             ]
                         }
                     }
                 });
 
-                // --- 3. TRAIT BUTTON ICON ---
+                // --- 3. TRAIT ICON PICKER ---
                 window.editor.TraitManager.addType('icon-picker-btn', {
                     createInput({ trait }) {
                         const btn = document.createElement('button');
