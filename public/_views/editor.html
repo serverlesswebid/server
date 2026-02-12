@@ -2,427 +2,485 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IronBuilder - Pro & Stable</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LandingBuilder Pro - Database Driven</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.2/dist/css/grapes.min.css">
+    <script src="https://unpkg.com/grapesjs@0.21.2/dist/grapes.min.js"></script>
+    <script src="https://unpkg.com/grapesjs-blocks-basic@1.0.1"></script>
+    <script src="https://unpkg.com/grapesjs-plugin-forms@2.0.5"></script> 
+    <script src="https://unpkg.com/grapesjs-navbar@1.0.1"></script>
+    <script src="https://unpkg.com/grapesjs-blocks-flexbox@0.1.1"></script>
+    <script src="https://unpkg.com/grapesjs-style-bg@2.0.1"></script>
 
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; overflow: hidden; height: 100vh; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: #fff; }
         [x-cloak] { display: none !important; }
-        
-        /* HEADER ASLI (RESTORED) */
-        header { height: 60px; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 50; position: fixed; top:0; left:0; right:0; }
-        
-        /* MAIN LAYOUT */
-        .main-layout { display: flex; height: calc(100vh - 60px); margin-top: 60px; }
-        
-        /* CANVAS AREA */
-        .canvas-area { flex: 1; overflow-y: auto; padding: 40px; background-color: #e5e7eb; background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 20px 20px; display: flex; justify-content: center; position: relative; }
-        
-        /* THE CANVAS */
-        #editor-canvas { 
-            background: white; min-height: 800px; width: 100%; max-width: 1200px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1); transition: width 0.3s; 
-            padding-bottom: 100px; /* Area drop bawah */
-        }
-        #editor-canvas.mobile { max-width: 375px; border: 8px solid #333; border-radius: 20px; }
-        #editor-canvas.tablet { max-width: 768px; }
 
-        /* SIDEBAR KANAN (PROPERTY & BLOCKS) */
-        .sidebar { width: 320px; background: white; border-left: 1px solid #e2e8f0; display: flex; flex-direction: column; z-index: 40; }
+        /* HEADER & LAYOUT */
+        header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; }
+        #gjs { flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; position: relative; }
+        .sidebar-panel { width: 300px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; }
         
-        /* TABS */
-        .tab-btn { flex: 1; padding: 12px; text-align: center; border-bottom: 2px solid transparent; font-size: 12px; font-weight: bold; color: #6b7280; transition: all 0.2s; }
-        .tab-btn.active { color: #4f46e5; border-bottom-color: #4f46e5; background: #eef2ff; }
-
-        /* WIDGET ITEM */
-        .widget-item { 
-            padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; 
-            display: flex; align-items: center; gap: 8px; cursor: grab; user-select: none; margin-bottom: 8px;
-        }
-        .widget-item:hover { border-color: #6366f1; transform: translateY(-2px); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        /* GRAPESJS OVERRIDES */
+        .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; }
+        .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
+        .gjs-three-bg { background-color: #f3f4f6 !important; }
         
-        /* HIGHLIGHT SELECTION */
-        .selected-element { outline: 2px solid #4f46e5 !important; outline-offset: -2px; position: relative; z-index: 10; }
-        .hover-element { outline: 1px dashed #6366f1; cursor: pointer; }
+        /* BLOCK CARDS UI */
+        .block-card { cursor: pointer; background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; transition: all 0.2s; user-select: none; }
+        .block-card:hover { border-color: #6366f1; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15); transform: translateY(-2px); }
+        .block-icon { color: #4f46e5; font-size: 24px; }
+        .block-label { font-size: 11px; font-weight: 600; text-transform: uppercase; color: #4b5563; text-align: center; letter-spacing: 0.5px; }
+        
+        /* SCROLLBAR */
+        .custom-scroll::-webkit-scrollbar { width: 5px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
 
-        /* FORM INPUTS */
-        .prop-group { margin-bottom: 12px; }
-        .prop-label { font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; margin-bottom: 4px; display: block; }
-        .prop-input { width: 100%; border: 1px solid #e5e7eb; border-radius: 4px; padding: 6px; font-size: 12px; outline: none; transition: border 0.2s; }
-        .prop-input:focus { border-color: #4f46e5; }
-        .prop-row { display: flex; gap: 8px; }
+        /* UI HELPER */
+        .input-field { width: 100%; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; outline: none; transition: border-color 0.2s; }
+        .input-field:focus { border-color: #6366f1; ring: 2px solid #e0e7ff; }
+        .label-field { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #6b7280; margin-bottom: 4px; }
     </style>
 </head>
-<body x-data="ironApp()">
+<body x-data="editorApp()">
 
     <header>
-        <div class="flex items-center gap-3 overflow-hidden w-full max-w-[250px]">
-            <a href="/admin/pages" class="text-gray-400 hover:text-indigo-600 transition p-1.5 rounded shrink-0"><i class="ph ph-arrow-left text-xl"></i></a>
-            <div class="flex-1 min-w-0">
-                <input x-model="page.title" class="bg-transparent font-bold text-xs text-gray-800 outline-none w-full truncate" placeholder="Nama Halaman">
-                <div class="flex items-center gap-1"><span class="text-[8px] font-black text-gray-300 uppercase shrink-0">Slug:</span><input x-model="page.slug" class="bg-transparent font-mono text-[9px] text-gray-400 outline-none w-full truncate"></div>
+        <div class="flex items-center gap-3 w-1/3">
+            <a href="/admin/pages" class="text-gray-400 hover:text-indigo-600 transition p-1.5 rounded shrink-0 hover:bg-gray-50" title="Kembali">
+                <i class="ph ph-arrow-left text-xl"></i>
+            </a>
+            <div class="flex flex-col min-w-0">
+                <input x-model="page.title" class="bg-transparent font-bold text-sm text-gray-800 outline-none w-full truncate placeholder-gray-300" placeholder="Nama Halaman Tanpa Judul">
+                <span class="text-[10px] text-gray-400 truncate" x-text="page.slug ? 'slug: /'+page.slug : 'Draft Mode'"></span>
             </div>
         </div>
-        
-        <div class="hidden md:flex absolute left-1/2 transform -translate-x-1/2 items-center bg-gray-100 rounded-lg p-1 border shadow-sm">
-            <button @click="device='desktop'" :class="device=='desktop'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-desktop text-lg"></i></button>
-            <button @click="device='tablet'" :class="device=='tablet'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-tablet text-lg"></i></button>
-            <button @click="device='mobile'" :class="device=='mobile'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile text-lg"></i></button>
+
+        <div class="hidden md:flex bg-gray-100 rounded-lg p-1 border shadow-sm">
+            <button @click="setDevice('desktop')" :class="device=='desktop'?'bg-white shadow text-indigo-600':'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded transition"><i class="ph ph-desktop"></i></button>
+            <button @click="setDevice('tablet')" :class="device=='tablet'?'bg-white shadow text-indigo-600':'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded transition"><i class="ph ph-device-tablet"></i></button>
+            <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-white shadow text-indigo-600':'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile"></i></button>
         </div>
 
-        <div class="flex items-center gap-2">
-            <button @click="showSettings=true" class="bg-white text-gray-600 px-3 py-2 rounded-lg text-xs font-bold border border-gray-200 hover:bg-gray-50 transition">Config</button>
-            <button @click="savePage" :disabled="saving" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-lg flex items-center gap-2">
-                <span x-text="saving ? 'SAVING...' : 'PUBLISH'"></span>
+        <div class="flex items-center gap-2 w-1/3 justify-end">
+            <button @click="showSettings=true" class="flex items-center gap-2 bg-white text-gray-600 px-3 py-2 rounded-lg text-xs font-bold border hover:bg-gray-50 transition shadow-sm">
+                <i class="ph ph-gear"></i> CONFIG
+            </button>
+            <button @click="savePage" :disabled="loading" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-xs font-bold shadow-lg shadow-indigo-200 transition transform active:scale-95">
+                <i class="ph ph-floppy-disk text-lg" x-show="!loading"></i>
+                <i class="ph ph-spinner animate-spin text-lg" x-show="loading"></i>
+                <span x-text="loading ? 'SAVING...' : 'PUBLISH'"></span>
             </button>
         </div>
     </header>
 
-    <div class="main-layout">
-        <div class="canvas-area" @click.self="deselect()">
-            <div id="editor-canvas" :class="device" @click="handleCanvasClick($event)">
-                <div id="empty-msg" class="h-full flex flex-col items-center justify-center text-gray-400 pointer-events-none p-20 border-2 border-dashed border-gray-300 rounded-xl m-10">
-                    <i class="ph ph-plus-circle text-4xl mb-2"></i>
-                    <span>Drop Widget Disini</span>
-                </div>
+    <div class="workspace">
+        <div id="gjs"></div>
+        
+        <div class="sidebar-panel">
+            <div class="flex border-b border-gray-200 bg-white shrink-0">
+                <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition"><i class="ph ph-squares-four text-xl"></i></button>
+                <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition"><i class="ph ph-paint-brush text-xl"></i></button>
+                <button @click="tab='layers'" :class="tab=='layers'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400 hover:text-gray-600'" class="flex-1 p-3 transition"><i class="ph ph-stack text-xl"></i></button>
             </div>
-        </div>
-
-        <div class="sidebar">
-            <div class="flex border-b border-gray-200 bg-white">
-                <button @click="activeTab='widgets'" :class="activeTab=='widgets'?'active':''" class="tab-btn"><i class="ph ph-squares-four text-lg"></i> BLOCKS</button>
-                <button @click="activeTab='style'" :class="activeTab=='style'?'active':''" class="tab-btn"><i class="ph ph-sliders text-lg"></i> EDIT</button>
-            </div>
-
-            <div class="flex-1 overflow-y-auto p-4 custom-scroll">
-                
-                <div x-show="activeTab === 'widgets'">
-                    <div id="widget-container">
-                        <div class="text-center py-10 text-gray-400 text-xs animate-pulse">Memuat Widget...</div>
-                    </div>
+            
+            <div class="flex-1 bg-white relative w-full overflow-y-auto custom-scroll p-1">
+                <div x-show="tab=='blocks'" class="h-full pb-20 p-3">
+                    <div class="mb-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Components</div>
+                    <div id="blocks-custom-renderer" class="grid grid-cols-2 gap-2"></div>
                 </div>
-
-                <div x-show="activeTab === 'style'">
-                    <div x-show="!selectedEl" class="text-center text-gray-400 text-xs py-10">
-                        Klik elemen di canvas untuk mengedit.
-                    </div>
-
-                    <div x-show="selectedEl">
-                        <div class="bg-indigo-50 p-2 rounded mb-4 text-xs font-bold text-indigo-700 flex justify-between items-center">
-                            <span>SELECTED: <span x-text="tagName"></span></span>
-                            <button @click="deleteElement" class="text-red-500 hover:bg-red-100 p-1 rounded"><i class="ph ph-trash"></i></button>
-                        </div>
-
-                        <div class="prop-group">
-                            <label class="prop-label">Isi Teks</label>
-                            <textarea x-model="styles.text" @input="applyText" class="prop-input h-20 resize-none"></textarea>
-                        </div>
-
-                        <div class="prop-group">
-                            <label class="prop-label">Warna Teks</label>
-                            <div class="flex gap-2">
-                                <input type="color" x-model="styles.color" @input="applyStyle('color', styles.color)" class="h-8 w-10 p-0 border-0">
-                                <input type="text" x-model="styles.color" @change="applyStyle('color', styles.color)" class="prop-input uppercase">
-                            </div>
-                        </div>
-                        
-                        <div class="prop-row prop-group">
-                            <div class="flex-1">
-                                <label class="prop-label">Size (px)</label>
-                                <input type="text" x-model="styles.fontSize" @change="applyStyle('fontSize', styles.fontSize)" class="prop-input">
-                            </div>
-                            <div class="flex-1">
-                                <label class="prop-label">Weight</label>
-                                <select x-model="styles.fontWeight" @change="applyStyle('fontWeight', styles.fontWeight)" class="prop-input">
-                                    <option value="normal">Normal</option>
-                                    <option value="bold">Bold</option>
-                                    <option value="100">Thin</option>
-                                    <option value="900">Black</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="prop-group">
-                            <label class="prop-label">Alignment</label>
-                            <div class="flex border rounded overflow-hidden">
-                                <button @click="applyStyle('textAlign', 'left')" class="flex-1 p-2 hover:bg-gray-100 border-r"><i class="ph ph-text-align-left"></i></button>
-                                <button @click="applyStyle('textAlign', 'center')" class="flex-1 p-2 hover:bg-gray-100 border-r"><i class="ph ph-text-align-center"></i></button>
-                                <button @click="applyStyle('textAlign', 'right')" class="flex-1 p-2 hover:bg-gray-100"><i class="ph ph-text-align-right"></i></button>
-                            </div>
-                        </div>
-
-                        <hr class="my-4 border-gray-100">
-
-                        <div class="prop-group">
-                            <label class="prop-label">Background</label>
-                            <div class="flex gap-2">
-                                <input type="color" x-model="styles.backgroundColor" @input="applyStyle('backgroundColor', styles.backgroundColor)" class="h-8 w-10 p-0 border-0">
-                                <input type="text" x-model="styles.backgroundColor" @change="applyStyle('backgroundColor', styles.backgroundColor)" class="prop-input uppercase">
-                            </div>
-                        </div>
-
-                        <div class="prop-group">
-                            <label class="prop-label">Padding (Atas/Bawah - Kiri/Kanan)</label>
-                            <div class="prop-row">
-                                <input type="text" x-model="styles.paddingTop" @change="applyStyle('paddingTop', styles.paddingTop)" class="prop-input" placeholder="Top">
-                                <input type="text" x-model="styles.paddingBottom" @change="applyStyle('paddingBottom', styles.paddingBottom)" class="prop-input" placeholder="Bottom">
-                            </div>
-                        </div>
-                    </div>
+                <div x-show="tab=='styles'" class="h-full pb-20">
+                    <div id="selectors-container" class="p-3 border-b bg-gray-50"></div>
+                    <div id="styles-container"></div>
+                </div>
+                <div x-show="tab=='layers'" class="h-full pb-20">
+                    <div id="layers-container" class="p-2"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex justify-end" @click.self="showSettings=false">
-        <div class="w-96 bg-white h-full shadow-2xl p-6 flex flex-col">
-            <h2 class="font-bold text-lg mb-6 flex items-center gap-2"><i class="ph ph-gear text-indigo-600"></i> Pengaturan Halaman</h2>
-            <div class="space-y-4 flex-1">
-                <div><label class="text-[10px] font-bold text-gray-400 uppercase">Harga Produk</label><input type="number" x-model="page.config.price" class="w-full mt-1 border rounded p-2 text-sm"></div>
-                <div><label class="text-[10px] font-bold text-gray-400 uppercase">SEO Title</label><input x-model="page.config.settings.seo_title" class="w-full mt-1 border rounded p-2 text-sm"></div>
-                <div><label class="text-[10px] font-bold text-gray-400 uppercase">Pixel ID</label><input x-model="page.config.settings.fb_pixel" class="w-full mt-1 border rounded p-2 text-sm"></div>
+    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[400] bg-slate-900/40 backdrop-blur-sm flex justify-end" x-transition.opacity>
+        <div class="w-full md:w-[420px] h-full bg-white shadow-2xl flex flex-col border-l border-gray-200 transform transition-transform duration-300"
+             x-transition:enter="translate-x-full" x-transition:enter-end="translate-x-0"
+             x-transition:leave="translate-x-0" x-transition:leave-end="translate-x-full"
+             @click.outside="showSettings=false">
+            
+            <div class="p-5 border-b flex justify-between items-center bg-gray-50">
+                <div>
+                    <h3 class="font-bold text-gray-800 text-lg">Page Configuration</h3>
+                    <p class="text-xs text-gray-500">Atur detail halaman dan SEO disini.</p>
+                </div>
+                <button @click="showSettings=false" class="text-gray-400 hover:text-red-500 transition"><i class="ph ph-x text-2xl"></i></button>
             </div>
-            <button @click="savePage(); showSettings=false" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold text-sm">SIMPAN CONFIG</button>
+
+            <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scroll">
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-wider border-b pb-1 mb-2">
+                        <i class="ph ph-identification-card text-lg"></i> Identitas Halaman
+                    </div>
+                    <div>
+                        <label class="label-field">Judul Halaman (Internal)</label>
+                        <input x-model="page.title" class="input-field" placeholder="Contoh: Landing Page Promo Lebaran">
+                    </div>
+                    <div>
+                        <label class="label-field">URL Slug</label>
+                        <div class="flex items-center border border-gray-300 rounded-md overflow-hidden bg-gray-50">
+                            <span class="pl-3 pr-2 text-gray-500 text-xs font-mono">/</span>
+                            <input x-model="page.slug" class="w-full py-2 px-1 bg-white text-sm outline-none font-mono text-indigo-600" placeholder="promo-lebaran">
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-1">Hanya huruf kecil, angka, dan strip (-).</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-wider border-b pb-1 mb-2">
+                        <i class="ph ph-shopping-cart text-lg"></i> Konfigurasi Produk
+                    </div>
+                    <div>
+                        <label class="label-field">Harga Produk (IDR)</label>
+                        <input x-model="page.config.price" type="number" class="input-field" placeholder="0">
+                        <p class="text-[10px] text-gray-400 mt-1">Kosongkan jika hanya landing page biasa.</p>
+                    </div>
+                    <div>
+                        <label class="label-field">Tipe Produk</label>
+                        <select x-model="page.product_type" class="input-field bg-white">
+                            <option value="physical">Produk Fisik (Butuh Ongkir)</option>
+                            <option value="digital">Produk Digital (Tanpa Ongkir)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-wider border-b pb-1 mb-2">
+                        <i class="ph ph-globe text-lg"></i> SEO & Tracking
+                    </div>
+                    <div>
+                        <label class="label-field">SEO Meta Title</label>
+                        <input x-model="page.config.settings.seo_title" class="input-field" placeholder="Judul yang muncul di Google">
+                    </div>
+                    <div>
+                        <label class="label-field">SEO Description</label>
+                        <textarea x-model="page.config.settings.seo_description" class="input-field h-20 resize-none" placeholder="Deskripsi singkat untuk hasil pencarian..."></textarea>
+                    </div>
+                    <div>
+                        <label class="label-field">Facebook Pixel ID</label>
+                        <input x-model="page.config.settings.fb_pixel" class="input-field" placeholder="1234567890">
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-5 border-t bg-gray-50 text-right flex justify-between items-center">
+                <span class="text-xs text-gray-400 italic">Terakhir disimpan: <span x-text="lastSaved || 'Belum pernah'"></span></span>
+                <button @click="savePage(); showSettings=false" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded shadow-lg transition">SIMPAN PERUBAHAN</button>
+            </div>
         </div>
     </div>
 
     <div class="fixed bottom-5 left-5 z-[100000] flex flex-col gap-2 pointer-events-none">
         <template x-for="n in notifications" :key="n.id">
-            <div x-show="n.show" x-transition class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-l-4 bg-white border-green-500">
-                <i class="ph ph-check-circle text-2xl text-green-500"></i>
+            <div x-show="n.show" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-l-4 bg-white" :class="n.type === 'error' ? 'border-red-500' : 'border-green-500'">
+                <i class="ph text-2xl" :class="n.type === 'error' ? 'ph-warning-circle text-red-500' : 'ph-check-circle text-green-500'"></i>
                 <div class="text-xs font-bold text-gray-800" x-text="n.title"></div>
             </div>
         </template>
     </div>
 
     <script>
-    function ironApp() {
+    function editorApp() {
         return {
-            device: 'desktop',
-            activeTab: 'widgets',
-            showSettings: false,
-            saving: false,
+            // STATE
+            device: 'desktop', 
+            tab: 'blocks', 
+            showSettings: false, 
+            loading: false, 
+            lastSaved: null,
             notifications: [],
             
-            // --- CORE DATA ---
-            page: { id: 0, slug: '', title: '', config: { price: 0, settings: {} } },
-            selectedEl: null, // Elemen yang sedang diedit
-            tagName: '',
-            styles: { text: '', color: '#000000', backgroundColor: '#ffffff', fontSize: '', fontWeight: '', textAlign: '', paddingTop: '', paddingBottom: '' },
+            // DATA MODEL
+            page: { 
+                id: 0, 
+                slug: '', 
+                title: '', 
+                product_type: 'physical',
+                config: { price: 0, settings: {} } 
+            },
+            
+            // SCRIPT STORAGE
+            widgetScripts: {}, 
+            availableWidgets: [],
 
+            // --- INIT ---
             async init() {
-                await this.initWidgets();
+                // 1. Load Widget & Script dari Database
+                await this.loadWidgetsAndScripts();
+                
+                // 2. Init Editor GrapesJS
+                this.initGrapes();
+
+                // 3. Load Konten Halaman (Jika ada slug di URL)
                 const slug = new URLSearchParams(window.location.search).get('slug');
-                if(slug) await this.loadPage(slug);
-                this.initSortable();
+                if (slug) await this.loadPageData(slug);
             },
 
-            notify(title) { 
-                const id = Date.now(); this.notifications.push({ id, title, show: true }); 
-                setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); 
+            // --- HELPER: NOTIFIKASI ---
+            notify(title, type = 'success') { 
+                const id = Date.now(); 
+                this.notifications.push({ id, title, type, show: true }); 
+                setTimeout(() => { 
+                    this.notifications = this.notifications.filter(n => n.id !== id); 
+                }, 3000); 
             },
 
-            // --- 1. RENDER WIDGET (VANILLA JS ANTI-ERROR) ---
-            async initWidgets() {
-                const container = document.getElementById('widget-container');
+            // --- 1. LOAD WIDGETS ---
+            async loadWidgetsAndScripts() {
                 try {
                     const res = await fetch('/api/widgets');
+                    if(!res.ok) throw new Error("Gagal ambil widget");
                     const widgets = await res.json();
-                    container.innerHTML = '';
                     
+                    this.widgetScripts = {};
                     widgets.forEach(w => {
-                        const el = document.createElement('div');
-                        el.className = 'widget-item';
-                        // Simpan HTML mentah di dataset (Aman)
-                        el.dataset.html = w.content; 
-                        el.dataset.id = w.id;
-                        el.innerHTML = `
-                            <div class="widget-icon"><i class="ph ph-cube text-lg"></i></div>
-                            <div class="flex-1 min-w-0">
-                                <div class="text-xs font-bold text-gray-700 truncate">${w.label}</div>
-                                <div class="text-[9px] text-gray-400 uppercase">${w.category}</div>
-                            </div>
-                        `;
-                        container.appendChild(el);
+                        // Filter: Jangan simpan script Iconify (karena global)
+                        // Jangan simpan script Accordion (karena kita punya logic khusus editor vs live)
+                        if(w.script && w.id !== 'iconify-icon' && w.id !== 'faq-accordion') {
+                            this.widgetScripts[w.id] = w.script;
+                        }
                     });
-                } catch(e) { container.innerHTML = 'Error loading widgets'; }
+                    this.availableWidgets = widgets;
+                } catch(e) { 
+                    console.error("Widget Error", e); 
+                    this.notify("Gagal memuat widget library", "error");
+                }
             },
 
-            // --- 2. SORTABLE ENGINE ---
-            initSortable() {
-                const sidebar = document.getElementById('widget-container');
-                const canvas = document.getElementById('editor-canvas');
-
-                new Sortable(sidebar, { group: { name: 'shared', pull: 'clone', put: false }, sort: false, animation: 150 });
-
-                new Sortable(canvas, {
-                    group: 'shared', animation: 150, ghostClass: 'sortable-ghost',
-                    onAdd: (evt) => {
-                        const item = evt.item;
-                        const rawHtml = item.dataset.html;
-                        const wrapper = document.createElement('div');
-                        wrapper.className = 'comp-wrapper relative'; // Penanda
-                        wrapper.innerHTML = rawHtml;
-                        item.replaceWith(wrapper);
-                        
-                        const empty = document.getElementById('empty-msg');
-                        if(empty) empty.remove();
-                    }
+            // --- 2. SETUP GRAPESJS ---
+            initGrapes() {
+                window.editor = grapesjs.init({
+                    container: '#gjs', 
+                    height: '100%', 
+                    width: 'auto', 
+                    storageManager: false, 
+                    panels: { defaults: [] }, 
+                    allowScripts: 0, // SAFE MODE: Script DB tidak jalan di Canvas Editor
+                    
+                    // Canvas Configuration (Library Global)
+                    canvas: {
+                        scripts: [
+                            'https://cdn.tailwindcss.com', 
+                            'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'
+                        ],
+                        styles: [
+                            'https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'
+                        ],
+                        content: `<style>
+                            body { font-family: 'Inter', sans-serif; padding-top: 20px; padding-bottom: 20px; }
+                            section { position: relative; } /* Agar highlight block pas */
+                            /* Agar accordion terlihat terbuka di editor walau tanpa atribut open (fallback) */
+                            details { min-height: 50px; }
+                        </style>`
+                    },
+                    
+                    plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg'],
+                    selectorManager: { appendTo: '#selectors-container' },
+                    styleManager: { 
+                        appendTo: '#styles-container',
+                        sectors: [
+                            { name: 'Typography', open: 1, buildProps: ['font-family', 'font-size', 'font-weight', 'line-height', 'color', 'text-align'] }, 
+                            { name: 'Layout', open: 0, buildProps: ['width', 'height', 'padding', 'margin', 'display', 'position'] },
+                            { name: 'Background', open: 0, buildProps: ['background-color', 'background-image'] },
+                            { name: 'Effects', open: 0, buildProps: ['border', 'border-radius', 'box-shadow', 'opacity'] }
+                        ] 
+                    },
+                    layerManager: { appendTo: '#layers-container' }
                 });
-            },
 
-            // --- 3. LOGIKA SELEKSI (PENGGANTI STYLE MANAGER) ---
-            handleCanvasClick(e) {
-                // Hentikan seleksi jika klik di luar elemen konten
-                if (e.target.id === 'editor-canvas') { this.deselect(); return; }
+                // Render Sidebar Blocks
+                const renderer = document.getElementById('blocks-custom-renderer');
+                renderer.innerHTML = '';
                 
-                // Cegah link berpindah halaman
-                if (e.target.tagName === 'A') e.preventDefault();
+                if(this.availableWidgets) {
+                    this.availableWidgets.forEach(w => {
+                        // Register Component Type
+                        window.editor.DomComponents.addType(w.id, {
+                            model: { 
+                                defaults: { 
+                                    attributes: { 'data-widget-type': w.id } 
+                                } 
+                            }
+                        });
 
-                // Hapus highlight lama
-                if (this.selectedEl) this.selectedEl.classList.remove('selected-element');
-
-                // Set elemen baru
-                this.selectedEl = e.target;
-                this.selectedEl.classList.add('selected-element');
-                this.activeTab = 'style'; // Pindah ke tab edit
-                
-                // Ambil Data Existing
-                this.tagName = this.selectedEl.tagName;
-                const computed = window.getComputedStyle(this.selectedEl);
-                
-                // Sync Form
-                this.styles.text = this.selectedEl.innerText;
-                this.styles.color = this.rgbToHex(computed.color);
-                this.styles.backgroundColor = this.rgbToHex(computed.backgroundColor);
-                this.styles.fontSize = computed.fontSize;
-                this.styles.fontWeight = computed.fontWeight;
-                this.styles.textAlign = computed.textAlign;
-                this.styles.paddingTop = computed.paddingTop;
-                this.styles.paddingBottom = computed.paddingBottom;
-            },
-
-            deselect() {
-                if (this.selectedEl) this.selectedEl.classList.remove('selected-element');
-                this.selectedEl = null;
-                this.activeTab = 'widgets';
-            },
-
-            deleteElement() {
-                if (this.selectedEl) {
-                    // Jika elemen ini adalah root wrapper, hapus semuanya. Jika anak, hapus anak.
-                    const wrapper = this.selectedEl.closest('.comp-wrapper');
-                    if (wrapper && wrapper.contains(this.selectedEl) && wrapper === this.selectedEl) {
-                        wrapper.remove();
-                    } else {
-                        this.selectedEl.remove();
-                    }
-                    this.deselect();
+                        // Buat Tombol Block
+                        const btn = document.createElement('div'); btn.className = 'block-card';
+                        btn.innerHTML = `<div class="block-icon"><i class="ph ph-squares-four"></i></div><div class="block-label">${w.label}</div>`; 
+                        
+                        btn.onclick = () => {
+                            const component = window.editor.addComponents(w.content)[0];
+                            
+                            // LOGIC EDITOR: Force Open Accordion saat Drop Baru
+                            if(w.id === 'faq-accordion') {
+                                // Cari elemen 'details' di dalam accordion yg baru didrop
+                                const details = component.find('details'); 
+                                if(details.length) {
+                                    details.forEach(d => d.addAttributes({ open: 'true' }));
+                                } else if(component.is('details')) {
+                                    component.addAttributes({ open: 'true' });
+                                }
+                            }
+                        };
+                        renderer.appendChild(btn);
+                    });
                 }
             },
 
-            // --- 4. STYLE APPLICATOR ---
-            applyStyle(prop, val) {
-                if (this.selectedEl) {
-                    this.selectedEl.style[prop] = val;
-                }
-            },
-            applyText() {
-                if (this.selectedEl) {
-                    this.selectedEl.innerText = this.styles.text;
-                }
-            },
-            // Helper warna
-            rgbToHex(rgb) {
-                if (!rgb || rgb === 'rgba(0, 0, 0, 0)') return '#ffffff';
-                if (rgb.startsWith('#')) return rgb;
-                const sep = rgb.indexOf(",") > -1 ? "," : " ";
-                const rgbArr = rgb.substr(4).split(")")[0].split(sep);
-                let r = (+rgbArr[0]).toString(16), g = (+rgbArr[1]).toString(16), b = (+rgbArr[2]).toString(16);
-                if (r.length == 1) r = "0" + r; if (g.length == 1) g = "0" + g; if (b.length == 1) b = "0" + b;
-                return "#" + r + g + b;
-            },
-
-            // --- 5. SAVE & LOAD ---
-            async loadPage(slug) {
+            // --- 3. LOAD PAGE DATA ---
+            async loadPageData(slug) {
+                this.loading = true;
                 try {
                     const res = await fetch(`/api/admin/pages/${slug}`);
-                    const data = await res.json();
-                    this.page.id = data.id; this.page.slug = data.slug; this.page.title = data.title;
-                    if(data.product_config_json) this.page.config = typeof data.product_config_json === 'string' ? JSON.parse(data.product_config_json) : data.product_config_json;
+                    if(!res.ok) throw new Error("Halaman tidak ditemukan");
                     
-                    const canvas = document.getElementById('editor-canvas');
-                    if(data.html_content) {
-                        // Bersihkan script lama
-                        canvas.innerHTML = data.html_content.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gm, "");
+                    const data = await res.json();
+                    
+                    // Fill State
+                    this.page.id = data.id; 
+                    this.page.slug = data.slug; 
+                    this.page.title = data.title || '';
+                    this.page.product_type = data.product_type || 'physical';
+                    
+                    if (data.product_config_json) {
+                        this.page.config = typeof data.product_config_json === 'string' 
+                            ? JSON.parse(data.product_config_json) 
+                            : data.product_config_json;
                     }
-                } catch(e) {}
+
+                    if (window.editor) {
+                        // A. Bersihkan Script Injection Lama agar Canvas bersih
+                        let safeHtml = data.html_content || "";
+                        safeHtml = safeHtml.replace(/<script id="dynamic-widget-script">[\s\S]*?<\/script>/gm, "");
+                        
+                        // B. Load Konten ke Canvas
+                        window.editor.setComponents(safeHtml);
+                        window.editor.setStyle(data.css_content || '');
+
+                        // C. LOGIC EDITOR: Force Open Accordion saat Load Page
+                        // Agar user bisa melihat isi accordion untuk diedit
+                        const wrapper = window.editor.getWrapper();
+                        const details = wrapper.find('details');
+                        details.forEach(block => {
+                            block.addAttributes({ open: 'true' });
+                        });
+                    }
+                } catch (e) { 
+                    console.error(e); 
+                    this.notify(e.message, "error");
+                }
+                this.loading = false;
             },
 
+            // --- 4. SAVE PAGE (PUBLISH) ---
             async savePage() {
-                this.saving = true;
-                const canvas = document.getElementById('editor-canvas');
-                const clone = canvas.cloneNode(true);
+                if(!this.page.slug) return this.notify("Slug URL wajib diisi!", "error");
                 
-                // Bersihkan class editor
-                clone.querySelectorAll('.selected-element').forEach(el => el.classList.remove('selected-element'));
-                clone.querySelectorAll('.comp-wrapper').forEach(el => {
-                    // Unwrap agar bersih di live? Atau biarkan? Biarkan saja biar struktur terjaga.
-                    el.classList.remove('sortable-drag', 'sortable-ghost'); 
-                });
-                const empty = clone.querySelector('#empty-msg');
-                if(empty) empty.remove();
-
-                // INJECT LIVE SCRIPT (Countdown, dll)
-                const liveScript = `
-                <script>
-                document.addEventListener("DOMContentLoaded", function() {
-                    // COUNTDOWN
-                    document.querySelectorAll('.js-countdown').forEach(function(el) {
-                        if(el.dataset.init) return; el.dataset.init="true";
-                        var expire = el.getAttribute("data-expire"); if(!expire) return;
-                        var update = function() {
-                            var now = new Date().getTime(); var dist = new Date(expire).getTime() - now;
-                            if(dist < 0) { el.innerHTML = "EXPIRED"; return; }
-                            var d = Math.floor(dist/(1000*60*60*24));
-                            var h = Math.floor((dist%(1000*60*60*24))/(1000*60*60));
-                            var m = Math.floor((dist%(1000*60*60))/(1000*60));
-                            var s = Math.floor((dist%(1000*60))/1000);
-                            if(el.querySelector(".days")) el.querySelector(".days").innerText = d;
-                            if(el.querySelector(".hours")) el.querySelector(".hours").innerText = h;
-                            if(el.querySelector(".minutes")) el.querySelector(".minutes").innerText = m;
-                            if(el.querySelector(".seconds")) el.querySelector(".seconds").innerText = s;
-                        };
-                        setInterval(update, 1000); update();
-                    });
-                    // ACCORDION
-                    document.querySelectorAll("details").forEach(function(t) {
-                        t.addEventListener("click", function() {
-                            if(!t.open) { document.querySelectorAll("details").forEach(function(o){ if(o!==t) o.removeAttribute("open") }) }
-                        });
-                    });
-                });
-                <\/script>`;
-
+                this.loading = true;
                 try {
+                    const html = window.editor.getHtml();
+                    const css = window.editor.getCss();
+                    
+                    // --- INTELLIGENT SCRIPT INJECTION ---
+                    // Script ini hanya akan berjalan di halaman LIVE, bukan di editor.
+                    
+                    let generatedJS = `
+                    <script id="dynamic-widget-script">
+                    document.addEventListener("DOMContentLoaded", function() {
+                        
+                        // [A] HELPER: Widget Runner (Scope Isolation)
+                        // Menjalankan script widget dengan 'this' yang mengarah ke elemen widget
+                        const runWidget = (id, fn) => {
+                            document.querySelectorAll('[data-widget-type="' + id + '"]').forEach(el => {
+                                try { fn.call(el); } catch(e) { console.error('Widget Error:', id, e); }
+                            });
+                        };
+
+                        // [B] LOGIC LIVE: Accordion (Force Close & Toggle)
+                        // Memastikan accordion tertutup saat pertama load (rapi) & interaktif
+                        const detailsElements = document.querySelectorAll('details');
+                        detailsElements.forEach(el => {
+                            // 1. Force Close saat load
+                            el.removeAttribute('open'); 
+                            
+                            // 2. Click Listener untuk Auto-Close accordion lain
+                            el.querySelector('summary').addEventListener('click', function(e) {
+                                // Jangan preventDefault agar native toggle tetap jalan
+                                // Tapi kita tutup yang lain jika ini akan dibuka
+                                if (!el.hasAttribute('open')) { // Akan dibuka
+                                    detailsElements.forEach(other => {
+                                        if (other !== el) other.removeAttribute('open');
+                                    });
+                                }
+                            });
+                        });
+
+                        // [C] LOGIC LIVE: Inject Script Lain dari Database
+                        // Loop widget apa saja yang dipakai di halaman ini
+                    `;
+
+                    // Cek widget mana yang dipakai di HTML saat ini
+                    Object.keys(this.widgetScripts).forEach(widgetId => {
+                        if (html.includes(`data-widget-type="${widgetId}"`)) {
+                            // Inject script widget yang sesuai
+                            generatedJS += `
+                            runWidget('${widgetId}', function() {
+                                ${this.widgetScripts[widgetId]}
+                            });
+                            `;
+                        }
+                    });
+
+                    generatedJS += `});<\/script>`;
+
+                    // Payload ke Server
                     const payload = {
-                        id: this.page.id, slug: this.page.slug, title: this.page.title,
-                        html: clone.innerHTML + liveScript,
-                        css: '', 
+                        id: this.page.id, 
+                        slug: this.page.slug, 
+                        title: this.page.title,
+                        product_type: this.page.product_type,
+                        html: html + generatedJS, // HTML Bersih + Script Live
+                        css: css, 
                         product_config: this.page.config
                     };
-                    const res = await fetch('/api/admin/pages', { method: 'POST', body: JSON.stringify(payload), headers: {'Content-Type': 'application/json'} });
-                    if(res.ok) this.notify('Berhasil Publish!');
-                } catch(e) { this.notify('Gagal Simpan'); }
-                
-                this.saving = false;
-            }
+                    
+                    const res = await fetch('/api/admin/pages', { 
+                        method: 'POST', 
+                        body: JSON.stringify(payload), 
+                        headers: {'Content-Type': 'application/json'} 
+                    });
+                    
+                    if(!res.ok) throw new Error("Gagal menyimpan data");
+                    
+                    const resData = await res.json();
+                    this.notify('Halaman Berhasil Dipublikasikan!');
+                    
+                    // Update timestamp
+                    const now = new Date();
+                    this.lastSaved = now.toLocaleTimeString();
+
+                } catch (e) { 
+                    console.error(e);
+                    this.notify('Gagal Menyimpan: ' + e.message, 'error'); 
+                }
+                this.loading = false;
+            },
+
+            setDevice(d) { this.device = d; if (window.editor) window.editor.setDevice(d); },
         };
     }
     </script>
