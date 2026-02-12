@@ -64,16 +64,6 @@
         
         .sp-container { z-index: 1000000 !important; position: fixed !important; }
         .gjs-field-color-picker { width: 100%; height: 24px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
-        .sp-container { z-index: 2147483647 !important; position: fixed !important; }
-        .gjs-layer-item { padding: 8px 10px; border-bottom: 1px solid #f3f4f6; }
-        .gjs-layer-item.gjs-selected { background: #e0e7ff !important; color: #4338ca; }
-        .gjs-layer-name { font-size: 11px; font-weight: 600; }
-        .icon-picker-btn {
-            width: 100%; padding: 8px; background: #4f46e5; color: white;
-            border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;
-            display: flex; align-items: center; justify-content: center; gap: 5px;
-        }
-        .icon-picker-btn:hover { background: #4338ca; }
     </style>
 </head>
 <body x-data="editorApp()">
@@ -231,6 +221,7 @@
                     const root = div.firstElementChild;
                     if(root) { 
                         // Kunci untuk Live Hydration: CLASS dan ATRIBUT DATA
+                        // Kita tidak lagi pakai ID untuk script, tapi class marker
                         root.classList.add('js-widget-root');
                         root.setAttribute('data-widget-type', w.id);
                         html = div.innerHTML; 
@@ -303,6 +294,7 @@
                     // --- LIVE SCRIPT INJECTION (EMBEDDED LOGIC) ---
                     // Ini adalah "Script Anti-Bego" yang menjamin countdown jalan di Live
                     // Script ini akan disuntikkan langsung ke dalam HTML halaman.
+                    // Tidak butuh file eksternal, tidak butuh database script yang rumit.
                     const safeJs = `
                     <script>
                     document.addEventListener("DOMContentLoaded", function() {
@@ -339,6 +331,7 @@
                         });
 
                         // 2. INITIALIZE CAROUSEL / SLIDER (Jika ada)
+                        // Tambahkan logika global lain di sini...
                     });
                     <\/script>`;
 
@@ -448,8 +441,17 @@
                 });
 
                 window.editor.on('component:selected', (model) => {
-                    // 1. TOOLBAR LOGIC
-                    model.set('toolbar', [
+                    const el = model.getEl();
+                    if (el && el.innerText && el.childElementCount === 0) {
+                        const currentTraits = model.get('traits').filter(t => t.name !== 'content_text');
+                        model.set('traits', [{ type: 'textarea', name: 'content_text', label: 'Edit Teks', changeProp: 1 }, ...currentTraits]);
+                        model.set('content_text', model.get('content')); 
+                        model.on('change:content_text', () => { model.components(model.get('content_text')); });
+                    }
+                });
+
+                window.editor.on('component:selected', (c) => { 
+                    c.set('toolbar', [
                         { attributes: { class: 'fa' }, command: 'tlb-move', label: '<i class="ph ph-arrows-out-cardinal text-lg"></i>' },
                         { attributes: { class: 'fa' }, command: e => e.runCommand('core:component-exit'), label: '<i class="ph ph-arrow-fat-up text-lg"></i>' },
                         { attributes: { class: 'fa' }, command: e => { e.runCommand('core:copy'); e.getSelected().remove(); }, label: '<i class="ph ph-scissors text-lg text-yellow-300"></i>' },
@@ -458,15 +460,6 @@
                         { attributes: { class: 'fa', title: 'Paste Inside' }, command: e => { const selected = e.getSelected(); const clipboard = e.Models.Clipboard && e.Models.Clipboard.get ? e.Models.Clipboard.get() : null; if(selected && clipboard) selected.append(clipboard); }, label: '<i class="ph ph-arrow-elbow-down-right text-lg text-purple-400"></i>' },
                         { attributes: { class: 'fa' }, command: 'tlb-delete', label: '<i class="ph ph-trash text-lg text-red-400"></i>' }
                     ]);
-
-                    // 2. TEXT EDIT LOGIC
-                    const el = model.getEl();
-                    if (el && el.innerText && el.childElementCount === 0) {
-                        const currentTraits = model.get('traits').filter(t => t.name !== 'content_text');
-                        model.set('traits', [{ type: 'textarea', name: 'content_text', label: 'Edit Teks', changeProp: 1 }, ...currentTraits]);
-                        model.set('content_text', model.get('content')); 
-                        model.on('change:content_text', () => { model.components(model.get('content_text')); });
-                    }
                 });
             }
         };
