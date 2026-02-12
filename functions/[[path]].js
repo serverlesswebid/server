@@ -230,37 +230,26 @@ const requireAuth = async (c, next) => {
     const path = url.pathname;
     
     // 1. DEFINISI AREA TERLARANG (Hanya Area Admin & API Admin)
-    // Logikanya dibalik: Kita hanya mencegat URL yang depannya "/admin" atau "/api/admin"
     const isAdminUI = path.startsWith('/admin');
     const isAdminAPI = path.startsWith('/api/admin');
 
     // 2. LOGIKA PUBLIC (DEFAULT ALLOW)
-    // Jika URL BUKAN area admin, biarkan lolos langsung! 
-    // Ini akan otomatis mengizinkan:
-    // - Halaman Landing Page baru (/promo-spesial, /landing-1, dll)
-    // - API Public (/api/public/checkout, /api/public/contact)
-    // - Asset statis (.js, .css, .png)
-    // - Halaman Login (/login)
     if (!isAdminUI && !isAdminAPI) {
         await next();
         return;
     }
 
     // 3. PENGECUALIAN KHUSUS DI DALAM AREA ADMIN
-    // Halaman Login Admin harus bisa diakses tanpa token
     if (path === '/admin/login' || path === '/admin/login.html') {
         await next();
         return;
     }
 
     // --- DI BAWAH SINI ADALAH ZONA PROTEKSI (HANYA UNTUK ADMIN) ---
-    // Jika kode sampai sini, berarti user mencoba akses /admin/... tanpa izin pengecualian.
-    
     let token = getCookie(c, 'auth_token');
     const authHeader = c.req.header('Authorization');
     if (!token && authHeader && authHeader.startsWith('Bearer ')) token = authHeader.split(' ')[1];
 
-    // Jika tidak ada token -> Tendang
     if (!token) {
         if (isAdminAPI) return c.json({ success: false, message: 'Unauthorized' }, 401);
         return c.redirect('/login'); 
@@ -271,7 +260,7 @@ const requireAuth = async (c, next) => {
         const secret = c.env.APP_MASTER_KEY || JWT_SECRET;
         const payload = await verify(token, secret, 'HS256');
         c.set('user', payload);
-        await next(); // Token valid, silakan masuk ke Admin Dashboard
+        await next(); // Token valid
     } catch (e) {
         deleteCookie(c, 'auth_token');
         if (isAdminAPI) return c.json({ success: false, message: 'Session Expired' }, 401);
@@ -667,7 +656,37 @@ app.post('/api/public/checkout', async (c) => {
 });
 
 // ===============================================
-// FUNGSI RENDER HALAMAN (UPDATE FIX COUNTDOWN & DUPLICATE REMOVED)
+// 7. PUBLIC PAGE RENDERING
+// ===============================================
+
+// HOMEPAGE
+app.get('/', async (c) => {
+    try {
+        const setting = await c.env.DB.prepare("SELECT value FROM settings WHERE key='homepage_slug'").first();
+        if (!setting || !setting.value) {
+            return c.html(`<div style="font-family: sans-serif; text-align: center; padding: 50px;"><h1>Welcome</h1><p>Homepage belum diatur.</p><a href="/login" style="color: blue;">Login Admin</a></div>`);
+        }
+        const page = await c.env.DB.prepare("SELECT * FROM pages WHERE slug=?").bind(setting.value).first();
+        if (!page) return c.text(`Error: Halaman '${setting.value}' tidak ditemukan.`, 404);
+        trackVisit(c, page, 'direct-homepage');
+        return renderPage(c, page);
+    } catch (e) { return c.text(`Server Error: ${e.message}`, 500); }
+});
+
+// SLUG PAGE
+app.get('/:slug', async (c) => {
+    try {
+        const slug = c.req.param('slug');
+        if (slug.includes('.')) return c.env.ASSETS.fetch(c.req.raw);
+        const page = await c.env.DB.prepare("SELECT * FROM pages WHERE slug=?").bind(slug).first();
+        if(!page) return c.text('404 Not Found', 404);
+        trackVisit(c, page, c.req.header('Referer'));
+        return renderPage(c, page);
+    } catch(e) { return c.env.ASSETS.fetch(c.req.raw); }
+});
+
+// ===============================================
+// FUNGSI RENDER HALAMAN (MURNI DATABASE DRIVEN & HARDCODED COUNTDOWN)
 // ===============================================
 async function renderPage(c, page) {
     const config = JSON.parse(page.product_config_json || '{}');
@@ -706,7 +725,6 @@ async function renderPage(c, page) {
     `;
 
     // 3. SYSTEM LOGIC (SYSTEM + COUNTDOWN ENGINE)
-    // SAYA MENAMBAHKAN ENGINE COUNTDOWN LANGSUNG DI SINI AGAR LIVE PASTI JALAN
     const systemScripts = `
     <script>
         // --- A. COUNTDOWN ENGINE (LIVE) ---
@@ -715,14 +733,12 @@ async function renderPage(c, page) {
             const timers = document.querySelectorAll('.js-countdown, [data-expire]');
             
             timers.forEach(el => {
-                // Cegah double run
                 if(el.__isRunning) return;
                 el.__isRunning = true;
 
                 const expireStr = el.getAttribute('data-expire');
                 const msgStr = el.getAttribute('data-msg') || "WAKTU HABIS";
                 
-                // Support Selector Lama (.js-display) & Selector Baru (.js-countdown-display)
                 const display = el.querySelector(".js-display") || el.querySelector(".js-countdown-display"); 
                 const expiredBox = el.querySelector(".js-expired-msg");
                 const expiredText = el.querySelector(".js-expired-text");
@@ -734,10 +750,8 @@ async function renderPage(c, page) {
                     const target = new Date(expireStr).getTime();
                     const distance = target - now;
 
-                    // Helper Set Text (Support class DB: .js-d, .js-h, dll)
                     const setVal = (selector, val) => {
                         const strVal = val < 10 ? "0" + val : val;
-                        // Cari di dalam elemen ini saja
                         el.querySelectorAll(selector).forEach(n => n.innerText = strVal);
                     };
 
@@ -758,35 +772,31 @@ async function renderPage(c, page) {
                     const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
                     const s = Math.floor((distance % (1000 * 60)) / 1000);
 
-                    // Update DOM (Support Multi Selector: Class Lama & Class DB)
                     setVal('.days, .js-d', d);
                     setVal('.hours, .js-h', h);
                     setVal('.minutes, .js-m', m);
                     setVal('.seconds, .js-s', s);
                 };
 
-                update(); // Jalankan frame pertama
-                el.__interval = setInterval(update, 1000); // Simpan interval ID di elemen
+                update(); 
+                el.__interval = setInterval(update, 1000);
             });
         }
 
         // --- B. SYSTEM LOGIC ---
         document.addEventListener('DOMContentLoaded', () => {
-            // 1. JALANKAN COUNTDOWN SEGERA
             initLiveCountdowns();
 
             const DATA = window.BS_DATA || {};
             const config = DATA.config || {};
             const activePayments = DATA.active_payments || [];
 
-            // 2. Notifikasi System
             const params = new URLSearchParams(window.location.search);
             if(params.get('status') === 'sent') {
                 Swal.fire({ icon: 'success', title: 'Terkirim!', text: 'Kami akan segera merespon.', confirmButtonColor: '#2563eb' });
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
 
-            // 3. Checkout Logic
             const container = document.body;
             if (container.innerHTML.includes('[ CHECKOUT ]')) {
                 const paymentHTML = activePayments.length > 0 ? activePayments.map(slug => 
@@ -880,6 +890,7 @@ async function renderPage(c, page) {
     </html>
     `);
 }
+
 // ===============================================
 // HELPER ANALYTICS (TARUH DI LUAR ROUTE)
 // ===============================================
