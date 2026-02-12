@@ -197,6 +197,65 @@
     <script>
     let appBuilderCache = {};
 
+    // --- LOGIKA UTAMA COUNTDOWN (ISOLATED) ---
+    // Fungsi ini akan dikirim mentah ke dalam Iframe GrapesJS dan ke Halaman Live
+    // 'this' akan merujuk otomatis ke elemen Widget Countdown
+    const universalCountdownScript = function() {
+        const el = this; 
+        
+        // Cegah interval ganda
+        if (el.__countdownInterval) clearInterval(el.__countdownInterval);
+
+        const expireStr = el.getAttribute('data-expire');
+        const msgStr = el.getAttribute('data-msg') || "WAKTU HABIS";
+        const display = el.querySelector(".js-display") || el.querySelector(".js-countdown-display"); 
+        const expiredBox = el.querySelector(".js-expired-msg");
+        const expiredText = el.querySelector(".js-expired-text");
+
+        // Helper untuk selector ganda (Support Old Class & New DB Class)
+        const setVal = (cls1, cls2, val) => {
+            const strVal = val < 10 ? "0" + val : val;
+            const nodes = el.querySelectorAll(cls1 + ',' + cls2);
+            nodes.forEach(n => n.innerText = strVal);
+        };
+
+        if (!expireStr) return;
+
+        const update = () => {
+            const now = new Date().getTime();
+            const target = new Date(expireStr).getTime();
+            const distance = target - now;
+
+            if (distance < 0) {
+                if (display) display.style.display = 'none';
+                if (expiredBox) {
+                    expiredBox.classList.remove('hidden');
+                    expiredBox.style.display = 'block';
+                    if (expiredText) expiredText.innerText = msgStr;
+                    else expiredBox.innerText = msgStr; // Fallback jika text container tidak ada
+                }
+                clearInterval(el.__countdownInterval);
+                return;
+            }
+
+            // Kalkulasi Waktu
+            const d = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((distance % (1000 * 60)) / 1000);
+
+            // Update DOM dengan Selector Database (.js-*) dan Selector Lama
+            setVal('.days', '.js-d', d);
+            setVal('.hours', '.js-h', h);
+            setVal('.minutes', '.js-m', m);
+            setVal('.seconds', '.js-s', s);
+        };
+
+        update(); // Jalankan sekali di awal
+        el.__countdownInterval = setInterval(update, 1000);
+    };
+
+
     (function(){
         let activeModel = null; const modal = document.getElementById('iconify-picker-modal'); const input = document.getElementById('iconify-picker-search'); const results = document.getElementById('iconify-picker-results');
         window.openIconifyPicker = function(model) { activeModel = model; modal.classList.remove('hidden'); input.value = ''; input.focus(); searchIcons('star'); };
@@ -234,13 +293,6 @@
                     let html = w.content;
                     try { 
                         window.editor.addComponents(html);
-                        
-                        // TRIGGER SCRIPT DI EDITOR
-                        // Menggunakan API yang Benar: Canvas.getWindow()
-                        const canvasWindow = window.editor.Canvas.getWindow();
-                        if (canvasWindow && canvasWindow.initCountdowns) {
-                            canvasWindow.initCountdowns();
-                        }
                     } catch(e) { console.error('Add Error', e); }
                 }
             },
@@ -259,43 +311,15 @@
                     
                     if (window.editor) {
                         let safeHtml = data.html_content || '';
-                        // CLEANUP: Hapus script usang dari database
+                        // CLEANUP: Hapus script usang dari database agar tidak bentrok
                         safeHtml = safeHtml.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gm, ""); 
                         
                         window.editor.setComponents(safeHtml);
                         window.editor.setStyle(data.css_content || '');
                         
-                        // AUTO OPEN ACCORDION
                         setTimeout(() => {
                             const wrapper = window.editor.getWrapper();
                             wrapper.find('details').forEach(d => d.addAttributes({ open: 'true' }));
-                            
-                            // --- DETEKSI KHUSUS COUNTDOWN ---
-                            // Sesuai instruksi: Cek apakah mengandung kata countdown
-                            const rawHtml = window.editor.getHtml();
-                            if (rawHtml.includes('countdown') || rawHtml.includes('js-countdown')) {
-                                
-                                // 1. Bersihkan atribut data-init yang mungkin terbawa dari database
-                                // Agar script tidak menganggap ini sudah berjalan
-                                const timers = wrapper.find('.js-countdown');
-                                timers.forEach(timer => {
-                                    // Hapus atribut data-init dari Model GrapesJS
-                                    const attr = timer.getAttributes();
-                                    delete attr['data-init'];
-                                    timer.setAttributes(attr);
-                                    
-                                    // Hapus atribut dari DOM Element di Canvas (Hard Clean)
-                                    if(timer.getEl()) {
-                                        timer.getEl().removeAttribute('data-init');
-                                    }
-                                });
-
-                                // 2. Jalankan Script via Window Canvas
-                                const canvasWindow = window.editor.Canvas.getWindow();
-                                if (canvasWindow && canvasWindow.initCountdowns) {
-                                    canvasWindow.initCountdowns();
-                                }
-                            }
                         }, 600);
                     }
                 } catch (e) { this.notify('Error', e.message, 'error'); }
@@ -306,27 +330,33 @@
                 this.loading = true;
                 try {
                     const wrapper = window.editor.getWrapper();
-
-                    // TUTUP ACCORDION SEBELUM SAVE
                     wrapper.find('details').forEach(d => d.addAttributes({ open: null }));
                     
-                    // --- CLEANUP COUNTDOWN SEBELUM SAVE ---
-                    // Ini wajib dilakukan agar di Frontend script mau berjalan ulang
+                    // Cleanup atribut internal GrapesJS sebelum save
                     wrapper.find('.js-countdown').forEach(timer => {
-                        // Kita hapus atribut data-init agar bersih saat masuk database
                         const attr = timer.getAttributes();
-                        delete attr['data-init'];
+                        delete attr['data-gjs-type']; 
                         timer.setAttributes(attr);
-                        
-                        // Pastikan DOM element juga bersih sebelum getHtml() dieksekusi
-                        if(timer.getEl()) timer.getEl().removeAttribute('data-init');
                     });
                     
                     const html = window.editor.getHtml();
                     const css = window.editor.getCss();
                     
-                    // --- LIVE SCRIPT INJECTION ---
-                    const finalHtml = `${html}<script src="/assets/js/countdown.js"><\/script>`;
+                    // --- LIVE SCRIPT INJECTION (CRITICAL) ---
+                    // Kita menyuntikkan script universal secara inline untuk Live View
+                    // Ini menjamin selector .js-d dll terbaca tanpa tergantung file external yang mungkin usang
+                    const liveScript = `
+                        <script>
+                        (function() {
+                            const runners = document.querySelectorAll('.js-countdown');
+                            const logic = ${universalCountdownScript.toString()};
+                            runners.forEach(el => logic.call(el));
+                        })();
+                        <\/script>
+                    `;
+                    
+                    // Tetap sertakan file eksternal jika ada dependensi lain, tapi script inline kita prioritas
+                    const finalHtml = `${html}<script src="/assets/js/countdown.js"><\/script>${liveScript}`;
 
                     const payload = {
                         id: this.page.id, slug: this.page.slug, title: this.page.title,
@@ -348,76 +378,13 @@
                     details > :not(summary) { display: block !important; opacity: 1 !important; height: auto !important; padding-top: 10px; border-top: 1px dashed #e5e7eb; }
                 `; 
 
-                // --- SCRIPT PATCH COUNTDOWN (Di-inject langsung ke Canvas) ---
-                // PERBAIKAN: ESCAPING TAG PENUTUP SCRIPT agar tidak memutus script utama
-                const countdownPatchScript = `
-                    <script>
-                    window.initCountdowns = function() {
-                        const timers = document.querySelectorAll('.js-countdown');
-                        timers.forEach(el => {
-                            if(el.getAttribute('data-running') === 'true') return;
-                            el.setAttribute('data-running', 'true');
-                            
-                            const display = el.querySelector(".js-countdown-display") || el.querySelector(".js-display");
-                            const expiredBox = el.querySelector(".js-expired-msg");
-                            const expiredText = el.querySelector(".js-expired-text");
-                            const expireStr = el.getAttribute("data-expire");
-                            const msgStr = el.getAttribute("data-msg") || "WAKTU HABIS";
-
-                            if (!expireStr) return;
-
-                            const update = () => {
-                                const now = new Date().getTime();
-                                const target = new Date(expireStr).getTime();
-                                const distance = target - now;
-
-                                if (distance < 0) {
-                                    if(display) display.style.display = "none";
-                                    if(expiredBox) {
-                                        expiredBox.style.display = "block";
-                                        expiredBox.classList.remove("hidden");
-                                        if(expiredText) expiredText.innerText = msgStr;
-                                        else expiredBox.innerHTML = msgStr;
-                                    }
-                                    clearInterval(interval);
-                                    return;
-                                }
-
-                                const d = Math.floor(distance / (1000 * 60 * 60 * 24));
-                                const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                                const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                                const s = Math.floor((distance % (1000 * 60)) / 1000);
-
-                                const setTxt = (sel, val) => {
-                                    const nodes = el.querySelectorAll(sel);
-                                    nodes.forEach(node => {
-                                        node.innerText = val < 10 ? "0" + val : val;
-                                    });
-                                };
-
-                                setTxt(".days", d); setTxt(".js-d", d);
-                                setTxt(".hours", h); setTxt(".js-h", h);
-                                setTxt(".minutes", m); setTxt(".js-m", m);
-                                setTxt(".seconds", s); setTxt(".js-s", s);
-                            };
-
-                            const interval = setInterval(update, 1000);
-                            update();
-                        });
-                    };
-                    window.addEventListener('load', window.initCountdowns);
-                    <\/script>
-                `;
-
                 window.editor = grapesjs.init({
                     container: '#gjs',
                     height: '100%',
                     width: 'auto',
                     storageManager: false,
-                    allowScripts: 1, 
-                    layerManager: {
-                        appendTo: '#layers-container'
-                    },
+                    allowScripts: 1, // WAJIB ON agar component.script berjalan
+                    layerManager: { appendTo: '#layers-container' },
                     panels: { defaults: [] },
                     assetManager: {
                         uploadText: 'Upload Gambar',
@@ -439,8 +406,8 @@
                             'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'
                         ],
                         styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
-                        // PERBAIKAN: Menggunakan tag penutup script yang di-escape di variabel countdownPatchScript
-                        content: `${countdownPatchScript}<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"><script>const origWarn=console.warn;console.warn=function(...a){if(a[0]&&typeof a[0]==='string'&&a[0].includes('cdn.tailwindcss.com'))return;origWarn.apply(console,a);};<\/script><style>${bridgeCSS}</style>`
+                        // Suppress warning tailwind
+                        content: `<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"><script>const origWarn=console.warn;console.warn=function(...a){if(a[0]&&typeof a[0]==='string'&&a[0].includes('cdn.tailwindcss.com'))return;origWarn.apply(console,a);};<\/script><style>${bridgeCSS}</style>`
                     },
                     plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg'],
                     deviceManager: { devices: [{ id: 'desktop', width: '' }, { id: 'tablet', width: '768px' }, { id: 'mobile', width: '375px' }] },
@@ -460,8 +427,10 @@
                 const domc = window.editor.DomComponents;
                 const tm = window.editor.TraitManager;
 
+                // --- SHARED MODEL (JANTUNG PERBAIKAN) ---
                 const sharedCountdownModel = {
                     isComponent: el => {
+                        // Deteksi Agresif
                         if(el.getAttribute && el.getAttribute('data-gjs-type') && el.getAttribute('data-gjs-type').includes('countdown')) return true;
                         if(el.classList && el.classList.contains('js-countdown')) return true;
                         if(el.id && el.id.includes('countdown')) return true;
@@ -469,33 +438,22 @@
                     },
                     model: {
                         defaults: {
-                            script: function() {
-                                if(window.initCountdowns) {
-                                    this.removeAttribute('data-init'); 
-                                    this.removeAttribute('data-running');
-                                    window.initCountdowns();
-                                }
-                            },
+                            // Menggunakan script native GrapesJS - PASTI JALAN
+                            script: universalCountdownScript,
                             traits: [
                                 { type: 'datetime-local', name: 'data-expire', label: 'Waktu Berakhir' },
                                 { type: 'text', name: 'data-msg', label: 'Pesan Expired', placeholder: 'PROMO BERAKHIR' }
                             ]
                         },
                         init() {
-                            this.on('change:attributes:data-expire', this.handleUpdate);
-                            this.on('change:attributes:data-msg', this.handleUpdate);
-                        },
-                        handleUpdate() {
-                            this.view.render();
-                            const win = window.editor.Canvas.getWindow();
-                            if(win && win.initCountdowns) {
-                                this.getEl().removeAttribute('data-running');
-                                win.initCountdowns();
-                            }
+                            // Force update saat traits berubah
+                            this.on('change:attributes:data-expire', () => this.view.render());
+                            this.on('change:attributes:data-msg', () => this.view.render());
                         }
                     }
                 };
 
+                // PRE-REGISTER: Agar saat HTML diload, tipe 'countdown-smart' sudah dikenali
                 domc.addType('countdown-smart', sharedCountdownModel);
 
                 tm.addType('icon-picker', {
@@ -529,6 +487,7 @@
                     widgets.forEach(w => {
                         appBuilderCache[w.id] = w;
                         
+                        // LOGIKA CATCH-ALL COUNTDOWN
                         if (w.id.toLowerCase().includes('countdown')) {
                             domc.addType(w.id, sharedCountdownModel);
                         } 
@@ -587,9 +546,9 @@
                     const classes = model.get('classes');
                     const typeName = model.get('type') || '';
                     const tagName = model.get('tagName') || '';
-                    
                     const isIcon = tagName === 'ICONIFY-ICON';
                     
+                    // Proteksi Toolbar Teks
                     const isCountdown = 
                         (Array.isArray(classes) && classes.includes('js-countdown')) || 
                         (classes && classes.models && classes.models.some(c => c.get('name') === 'js-countdown')) ||
