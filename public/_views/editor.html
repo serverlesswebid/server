@@ -26,13 +26,13 @@
     <script src="https://unpkg.com/grapesjs-blocks-basic@1.0.1"></script>
     <script src="https://unpkg.com/grapesjs-plugin-forms@2.0.5"></script> 
     <script src="https://unpkg.com/grapesjs-navbar@1.0.1"></script>
+    <script src="https://unpkg.com/grapesjs-blocks-flexbox@0.1.1"></script>
+    <script src="https://unpkg.com/grapesjs-style-bg@2.0.1"></script>
     <script src="https://unpkg.com/grapesjs-tabs@1.0.6"></script>
     <script src="https://unpkg.com/grapesjs-custom-code@1.0.1"></script>
     <script src="https://unpkg.com/grapesjs-tooltip@0.1.7"></script>
-    <script src="https://unpkg.com/grapesjs-blocks-flexbox@0.1.1"></script>
     <script src="https://unpkg.com/grapesjs-plugin-export@1.0.11"></script>
     <script src="https://unpkg.com/grapesjs-typed@1.0.5"></script>
-    <script src="https://unpkg.com/grapesjs-style-bg@2.0.1"></script>
 
     <style>
         /* 1. RESET & CORE LAYOUT */
@@ -96,10 +96,11 @@
         .gjs-toolbar-item { padding: 8px 10px !important; color: white !important; }
         .gjs-resizer-h { width: 20px !important; height: 20px !important; background: #4f46e5 !important; border: 3px solid #fff !important; border-radius: 50% !important; z-index: 10 !important; }
 
-        /* 9. CUSTOM ELEMENTS & Z-INDEX */
+        /* 9. CUSTOM UI & COLOR PICKER */
         .sp-container { z-index: 9999999 !important; background: white; border: 1px solid #cbd5e1; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-radius: 8px; }
         .trait-upload-btn { width: 100%; background: #4f46e5; color: white; padding: 10px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 5px; text-transform: uppercase; }
         .trait-upload-btn:hover { background: #4338ca; }
+        .gjs-field-color-picker { border: 1px solid #cbd5e1; margin-right: 5px; cursor: pointer; border-radius: 4px; min-width: 30px; padding: 2px; }
         
         .input-field { width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 13px; outline: none; }
         .label-field { display: block; font-size: 10px; font-weight: 800; text-transform: uppercase; color: #6b7280; margin-bottom: 4px; letter-spacing: 0.5px; }
@@ -169,22 +170,13 @@
             </div>
             <div class="flex-1 bg-white custom-scroll relative w-full overflow-y-auto">
                 <div x-show="tab=='blocks'" class="h-full pb-20">
-                    <template x-for="(widgets, category) in groupedWidgets" :key="category">
-                        <details class="category-group" open>
-                            <summary class="list-none cursor-pointer bg-gray-50 p-3 text-[10px] font-black uppercase text-gray-500 border-b" x-text="category || 'General'"></summary>
-                            <div class="widget-grid">
-                                <template x-for="w in widgets" :key="w.id">
-                                    <div class="block-card" @click="addBlockToCanvas(w)">
-                                        <div class="text-indigo-600 text-xl"><i class="ph ph-cube"></i></div>
-                                        <div class="text-[10px] font-bold text-gray-700 text-center" x-text="w.label"></div>
-                                    </div>
-                                </template>
-                            </div>
-                        </details>
-                    </template>
+                    <div id="blocks-container" class="p-2"></div>
                 </div>
                 <div x-show="tab=='traits'" class="h-full pb-20"><div id="traits-container" class="p-4"></div></div>
-                <div x-show="tab=='styles'" class="h-full pb-20"><div id="selectors-container" class="p-3 border-b bg-gray-50"></div><div id="styles-container" class="p-1"></div></div>
+                <div x-show="tab=='styles'" class="h-full pb-20">
+                    <div id="selectors-container" class="p-3 border-b bg-gray-50"></div>
+                    <div id="styles-container" class="p-1"></div>
+                </div>
                 <div x-show="tab=='layers'" class="h-full pb-20"><div id="layers-container"></div></div>
             </div>
         </div>
@@ -207,19 +199,19 @@
     <div x-show="showSettings" x-cloak class="fixed inset-0 z-[400] bg-slate-900/50 backdrop-blur-sm flex justify-end" @click.self="showSettings = false">
         <div class="w-full md:w-[480px] h-full bg-white shadow-2xl flex flex-col border-l">
             <div class="p-5 border-b flex justify-between items-center bg-gray-50">
-                <h2 class="font-bold text-gray-800 flex items-center gap-2"><i class="ph ph-faders text-indigo-600 text-xl"></i> Page Settings</h2>
+                <h2 class="font-bold text-gray-800 flex items-center gap-2"><i class="ph ph-faders text-indigo-600 text-xl"></i> Konfigurasi Halaman</h2>
                 <button @click="showSettings = false" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button>
             </div>
             <div class="flex-1 overflow-y-auto p-6 space-y-6">
                 <div class="space-y-4">
-                    <div><label class="label-field">Nama Halaman</label><input x-model="page.title" class="input-field"></div>
+                    <div><label class="label-field">Judul Halaman</label><input x-model="page.title" class="input-field"></div>
                     <div><label class="label-field">URL Slug</label><input x-model="page.slug" class="input-field"></div>
                     <div><label class="label-field">Harga (IDR)</label><input x-model="page.config.price" type="number" class="input-field"></div>
                     <div><label class="label-field">Pixel ID</label><input x-model="page.config.settings.fb_pixel" class="input-field"></div>
                 </div>
             </div>
             <div class="p-4 border-t bg-gray-50 text-right">
-                <button @click="savePage(); showSettings=false" class="px-8 py-2 bg-indigo-600 text-white text-xs font-black rounded-xl shadow-lg uppercase">Simpan</button>
+                <button @click="savePage(); showSettings=false" class="px-8 py-2 bg-indigo-600 text-white text-xs font-black rounded-xl shadow-lg uppercase">Simpan Perubahan</button>
             </div>
         </div>
     </div>
@@ -230,11 +222,12 @@
                 <input id="iconify-picker-search" placeholder="Search icon..." class="w-full bg-transparent outline-none text-sm" />
                 <button id="iconify-picker-close"><i class="ph ph-x text-lg"></i></button>
             </div>
-            <div id="iconify-picker-results" class="p-4 grid grid-cols-6 gap-3 max-h-[300px] overflow-y-auto"></div>
+            <div id="iconify-picker-results" class="p-4 grid grid-cols-6 gap-3 max-h-[300px] overflow-y-auto custom-scroll"></div>
         </div>
     </div>
 
     <script>
+// 1. ICON PICKER LOGIC
 (function(){
     let activeModel = null; const modal = document.getElementById('iconify-picker-modal'); const input = document.getElementById('iconify-picker-search'); const results = document.getElementById('iconify-picker-results');
     window.openIconifyPicker = function(model) { activeModel = model; modal.classList.remove('hidden'); input.value = ''; input.focus(); searchIcons('star'); };
@@ -242,6 +235,7 @@
     async function searchIcons(q) { if(!q) return; const res = await fetch(`https://api.iconify.design/search?query=${q}&limit=24`); const data = await res.json(); results.innerHTML = ''; if(data.icons) { data.icons.forEach(icon => { const btn = document.createElement('button'); btn.className = 'p-2 hover:bg-indigo-50 rounded flex flex-col items-center gap-1'; btn.innerHTML = `<iconify-icon icon="${icon}" width="24"></iconify-icon><span class="text-[9px] text-gray-400 truncate w-full text-center">${icon.split(':')[1]}</span>`; btn.onclick = () => { if(activeModel) activeModel.setAttributes({ icon: icon }); modal.classList.add('hidden'); }; results.appendChild(btn); }); } }
 })();
 
+// 2. EDITOR APP LOGIC
 function editorApp() {
     return {
         device: 'desktop', tab: 'blocks', clipboard: null, mobileMenuOpen: false, showSettings: false, loading: false, notifications: [],
@@ -312,15 +306,65 @@ function editorApp() {
                 canvas: {
                     scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
                     styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
-                    content: `<style>body{padding:20px;} .hidden{display:none!important;}</style>`
+                    content: `<style>.hidden{display:none!important;}</style>`
                 },
-                plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-tabs', 'grapesjs-custom-code', 'grapesjs-tooltip', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg', 'grapesjs-component-countdown'],
+                plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-tabs', 'grapesjs-custom-code', 'grapesjs-tooltip', 'grapesjs-blocks-flexbox', 'grapesjs-plugin-export', 'grapesjs-typed', 'grapesjs-style-bg'],
+                blockManager: { appendTo: '#blocks-container' },
+                layerManager: { appendTo: '#layers-container' },
                 selectorManager: { appendTo: '#selectors-container' },
                 traitManager: { appendTo: '#traits-container' },
                 styleManager: { appendTo: '#styles-container', sectors: [{ name: 'Typography', buildProps:['font-size','font-weight','color','text-align'] }, { name: 'Decor', buildProps:['background-color','border-radius'] }] }
             });
 
-            // --- 1. TRAIT UPLOAD IMAGE (BASE64) ---
+            const domc = window.editor.DomComponents;
+
+            // --- 1. RADAR LOGIC: REGISTER WIDGETS ---
+            // Kita daftarkan image manual agar punya tombol upload di panel Gigi
+            domc.addType('image', {
+                model: { defaults: { traits: [{ type: 'text', name: 'src', label: 'URL' }, { type: 'file-upload', name: 'up', label: ' ' }, { type: 'text', name: 'alt' }] } }
+            });
+
+            // Loop semua widget dari database
+            if(this.groupedWidgets) {
+                Object.values(this.groupedWidgets).flat().forEach(w => {
+                    const id = w.id.toLowerCase();
+                    
+                    // --- RADAR COUNTDOWN: Jika ID mengandung kata 'countdown' ---
+                    if (id.includes('countdown')) {
+                        domc.addType(w.id, {
+                            model: {
+                                defaults: {
+                                    attributes: { 'data-widget-type': w.id, 'expire': '2025-12-31 23:59', 'msg': 'Selesai' },
+                                    traits: [{ type: 'text', name: 'expire', label: 'Waktu (YYYY-MM-DD HH:mm)' }, { type: 'text', name: 'msg', label: 'Pesan Selesai' }],
+                                    script: function() {
+                                        const el = this;
+                                        const update = () => {
+                                            const diff = new Date(el.getAttribute('expire') || '2025-12-31').getTime() - new Date().getTime();
+                                            const msgEl = el.querySelector('.js-expired-msg'); const wrap = el.querySelector('.js-wrap');
+                                            if (diff <= 0) {
+                                                if(msgEl) { msgEl.innerText = el.getAttribute('msg') || 'Selesai'; msgEl.classList.remove('hidden'); }
+                                                if(wrap) wrap.classList.add('hidden'); return;
+                                            }
+                                            const d = Math.floor(diff / 864e5), h = Math.floor((diff % 864e5) / 36e5), m = Math.floor((diff % 36e5) / 6e4), s = Math.floor((diff % 6e4) / 1e3);
+                                            const upd = (c, v) => { const n = el.querySelector('.'+c); if(n) n.innerText = v.toString().padStart(2,'0'); };
+                                            upd('js-d', d); upd('js-h', h); upd('js-m', m); upd('js-s', s);
+                                            if(msgEl) msgEl.classList.add('hidden'); if(wrap) wrap.classList.remove('hidden');
+                                        };
+                                        setInterval(update, 1000); update();
+                                    }
+                                }
+                            }
+                        });
+                    } else if (w.script && w.id !== 'image') {
+                        // Widget normal yang punya script (selain image dan countdown)
+                        domc.addType(w.id, {
+                            model: { defaults: { attributes: { 'data-widget-type': w.id }, script: w.script } }
+                        });
+                    }
+                });
+            }
+
+            // --- 2. TRAIT: UPLOAD IMAGE (BASE64) ---
             window.editor.TraitManager.addType('file-upload', {
                 createInput({ trait }) {
                     const div = document.createElement('div');
@@ -346,37 +390,7 @@ function editorApp() {
                 }
             });
 
-            window.editor.DomComponents.addType('image', { 
-                model: { defaults: { traits: [{ type: 'text', name: 'src', label: 'URL' }, { type: 'file-upload', name: 'up', label: ' ' }, { type: 'text', name: 'alt' }] } } 
-            });
-
-            // --- 2. COUNTDOWN SMART (EDITABLE) ---
-            window.editor.DomComponents.addType('countdown-smart', {
-                model: {
-                    defaults: {
-                        attributes: { 'data-widget-type': 'countdown-smart', 'expire': '2025-12-31 23:59', 'msg': 'Selesai' },
-                        traits: [{ type: 'text', name: 'expire', label: 'Expire (YYYY-MM-DD HH:mm)' }, { type: 'text', name: 'msg', label: 'Pesan Selesai' }],
-                        script: function() {
-                            const el = this;
-                            const timer = () => {
-                                const diff = new Date(el.getAttribute('expire') || '2025-12-31 23:59').getTime() - new Date().getTime();
-                                const msgEl = el.querySelector('.js-expired-msg'); const wrap = el.querySelector('.js-wrap');
-                                if (diff <= 0) {
-                                    if(msgEl) { msgEl.innerText = el.getAttribute('msg') || 'Selesai'; msgEl.classList.remove('hidden'); }
-                                    if(wrap) wrap.classList.add('hidden'); return;
-                                }
-                                const d = Math.floor(diff / 864e5), h = Math.floor((diff % 864e5) / 36e5), m = Math.floor((diff % 36e5) / 6e4), s = Math.floor((diff % 6e4) / 1e3);
-                                const upd = (c, v) => { const n = el.querySelector('.'+c); if(n) n.innerText = v.toString().padStart(2,'0'); };
-                                upd('js-d', d); upd('js-h', h); upd('js-m', m); upd('js-s', s);
-                                if(msgEl) msgEl.classList.add('hidden'); if(wrap) wrap.classList.remove('hidden');
-                            };
-                            setInterval(timer, 1000); timer();
-                        }
-                    }
-                }
-            });
-
-            // --- 3. TRAIT ICON PICKER ---
+            // --- 3. TRAIT: ICON PICKER ---
             window.editor.TraitManager.addType('icon-picker-btn', {
                 createInput({ trait }) {
                     const btn = document.createElement('button'); btn.className = 'trait-upload-btn'; btn.innerHTML = 'CARI ICON';
@@ -384,27 +398,25 @@ function editorApp() {
                     return btn;
                 }
             });
-
-            window.editor.DomComponents.addType('iconify-icon', {
-                model: { defaults: { tagName: 'iconify-icon', traits: [{ type: 'icon-picker-btn', name: 'p', label: ' ' }, { type: 'text', name: 'icon' }, { type: 'color', name: 'color', changeProp: 1 }] }, init() { this.on('change:color', () => this.addStyle({color: this.get('color')})) } }
+            domc.addType('iconify-icon', {
+                model: { defaults: { tagName: 'iconify-icon', attributes: { icon: 'ph:star-fill', width: '32' }, traits: [{ type: 'icon-picker-btn', name: 'p', label: ' ' }, { type: 'text', name: 'icon' }, { type: 'color', name: 'color', changeProp: 1 }] }, init() { this.on('change:color', () => this.addStyle({color: this.get('color')})) } }
             });
 
-            // --- 4. LOAD DYNAMIC WIDGETS ---
-            if(this.widgetScripts) {
-                Object.keys(this.widgetScripts).forEach(id => {
-                    if(id !== 'countdown-smart' && id !== 'iconify-icon') {
-                        window.editor.DomComponents.addType(id, {
-                            model: { defaults: { attributes: { 'data-widget-type': id }, script: this.widgetScripts[id] } }
-                        });
-                    }
-                });
-            }
-
-            // AUTO SELECT TAB
-            window.editor.on('component:selected', () => { this.tab = 'traits'; });
+            // TOOLBAR MODS
+            window.editor.on('component:selected', (model) => {
+                this.tab = 'traits'; // Auto-switch ke Gigi
+                const toolbar = model.get('toolbar'); if (toolbar.find(item => item.id === 'cut-comp')) return;
+                toolbar.unshift(
+                    { id: 'move-up', command: () => { const i = model.index(); if (i > 0) model.parent().components().add(model, { at: i - 1 }); }, label: '<i class="ph ph-arrow-up"></i>' },
+                    { id: 'move-down', command: () => { const i = model.index(); model.parent().components().add(model, { at: i + 2 }); }, label: '<i class="ph ph-arrow-down"></i>' },
+                    { id: 'cut-comp', command: () => { this.clipboard = model.toHTML(); model.remove(); }, label: '<i class="ph ph-scissors"></i>' }
+                );
+                model.set('toolbar', toolbar);
+            });
         },
 
         addBlockToCanvas(w) { 
+            // Pastikan menggunakan type agar radar bekerja
             window.editor.addComponents({ type: w.id, content: w.content }); 
             if(window.innerWidth < 768) this.mobileMenuOpen = false; 
         }
