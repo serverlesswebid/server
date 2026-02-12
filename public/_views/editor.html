@@ -220,7 +220,7 @@
                     try { 
                         window.editor.addComponents(html);
                         // TRIGGER SCRIPT DI EDITOR SECARA AMAN
-                        // Pastikan ada file /js/countdown.js yang menghandle ini, 
+                        // Pastikan ada file /assets/js/countdown.js yang menghandle ini, 
                         // TAPI untuk kenyamanan di Editor, kita panggil ulang init global jika ada
                         if (window.editor.getWrapper().getEl().contentWindow.initCountdowns) {
                             window.editor.getWrapper().getEl().contentWindow.initCountdowns();
@@ -274,7 +274,7 @@
                     // --- LIVE SCRIPT INJECTION ---
                     // Kita menyuntikkan script eksternal countdown.js agar berjalan di Live
                     // Script ini akan otomatis mencari .js-countdown dan menjalankannya
-                    const finalHtml = `${html}<script src="countdown.js"><\/script>`;
+                    const finalHtml = `${html}<script src="/assets/js/countdown.js"><\/script>`;
 
                     const payload = {
                         id: this.page.id, slug: this.page.slug, title: this.page.title,
