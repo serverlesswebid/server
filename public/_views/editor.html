@@ -35,7 +35,6 @@
         header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
         .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; }
         
-        /* Vvveb Editor Layout */
         #vvveb-builder { flex: 1; height: 100%; position: relative; overflow: hidden; }
         #iframe-wrapper { height: 100%; width: 100%; border: none; }
         
@@ -45,7 +44,7 @@
         .block-card:hover { border-color: #6366f1; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15); transform: translateY(-2px); }
         .block-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #4b5563; text-align: center; }
 
-        /* Vvveb UI Tweaks */
+        /* Vvveb Overlay Fixes */
         #highlight-box { border: 1px solid #6366f1 !important; pointer-events: none; }
         #select-box { border: 2px solid #6366f1 !important; }
         .component-properties-sidepane { padding: 15px; }
@@ -67,8 +66,8 @@
             <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile text-lg"></i></button>
         </div>
         <div class="flex items-center gap-2">
+            <button id="save-btn" @click="savePage" :disabled="loading" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-lg"><span x-text="loading ? 'SAVING...' : 'PUBLISH'"></span></button>
             <button @click="showSettings=true" class="bg-white text-gray-600 px-3 py-2 rounded-lg text-xs font-bold border border-gray-200 hover:bg-gray-50 transition">Config</button>
-            <button @click="savePage" :disabled="loading" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-lg"><span x-text="loading ? 'SAVING...' : 'PUBLISH'"></span></button>
         </div>
     </header>
 
@@ -78,7 +77,10 @@
                 <iframe id="iframe1" src="about:blank" style="width:100%; height:100%; border:none;"></iframe>
             </div>
 
-            <div id="highlight-box"><div id="highlight-name"></div></div>
+            <div id="highlight-box">
+                <div id="highlight-name"></div>
+            </div>
+
             <div id="select-box">
                 <div id="select-name"></div>
                 <div id="select-actions">
@@ -174,6 +176,15 @@
         </div>
     </div>
 
+    <div class="fixed bottom-5 left-5 z-[100000] flex flex-col gap-2 pointer-events-none">
+        <template x-for="n in notifications" :key="n.id">
+            <div x-show="n.show" x-transition class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-l-4 bg-white min-w-[280px]" :class="n.type==='success'?'border-green-500':'border-red-500'">
+                <i class="ph text-2xl" :class="n.type==='success'?'ph-check-circle text-green-500':'ph-warning-circle text-red-500'"></i>
+                <div><h4 class="text-xs font-bold text-gray-800 uppercase" x-text="n.title"></h4><p class="text-[10px] text-gray-500 font-medium" x-text="n.msg"></p></div>
+            </div>
+        </template>
+    </div>
+
     <script>
     let appBuilderCache = {};
 
@@ -184,7 +195,7 @@
             page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, active_payments: [], settings: { seo_title:'', seo_description:'', favicon:'', og_image:'', fb_pixel:'', tiktok_pixel:'', ga_id:'', scripts_header:'', scripts_footer:'' } } },
 
             async init() {
-                // FIXED: Menunggu DOM elemen overlay siap sebelum init Vvveb
+                // Beri jeda sedikit agar elemen DOM header (save-btn dll) ter-render sempurna
                 setTimeout(() => {
                     this.initVvveb();
                     const slug = new URLSearchParams(window.location.search).get('slug');
@@ -199,13 +210,16 @@
 
             initVvveb() {
                 try {
-                    // Inisialisasi Vvveb Builder
+                    // Inisialisasi Vvveb Builder pada Iframe
                     Vvveb.Builder.init('about:blank', () => {
                         this.loadWidgets();
                     });
                     
-                    // Inisialisasi GUI komponen lainnya
+                    // Inisialisasi GUI pendukung
                     Vvveb.Gui.init();
+                    Vvveb.FileManager.init();
+                    Vvveb.TreeList.init();
+                    Vvveb.SectionList.init();
                 } catch(e) { console.error('Builder Init Error', e); }
             },
 
@@ -233,7 +247,6 @@
                         }
                     });
 
-                    // Render ke Sidebar
                     Object.keys(groups).sort().forEach(catName => {
                         const details = document.createElement('details');
                         details.className = 'group border border-gray-200 rounded-lg bg-white mb-2';
@@ -275,10 +288,9 @@
             async savePage() {
                 this.loading = true;
                 try {
-                    // Ambil HTML hasil desain Vvveb
                     const html = Vvveb.Builder.getHtml();
                     
-                    // Logic Hydration Script (Sesuai instruksi profesional sebelumnya)
+                    // Logic Hydration Script (Dilarang hapus/ganti logic ini)
                     const hydrationScript = `
                     <script>
                     document.addEventListener("DOMContentLoaded", function() {
@@ -321,7 +333,7 @@
                         product_config: this.page.config
                     };
                     const res = await fetch('/api/admin/pages', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
-                    if(res.ok) this.notify('Sukses', 'Berhasil disimpan!'); else throw new Error('Gagal simpan');
+                    if(res.ok) this.notify('Sukses', 'Publish Berhasil!'); else throw new Error('Simpan gagal');
                 } catch (e) { this.notify('Gagal', e.message, 'error'); }
                 this.loading = false;
             },
