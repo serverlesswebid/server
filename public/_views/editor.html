@@ -197,30 +197,32 @@
     <script>
     let appBuilderCache = {};
 
-    // --- LOGIKA UTAMA COUNTDOWN (ISOLATED & UNIVERSAL) ---
-    // Fungsi ini tidak boleh tergantung pada variabel luar karena akan di-stringify
+    // ==========================================
+    // 1. LOGIKA UTAMA (SUMBER KEBENARAN TUNGGAL)
+    // ==========================================
+    // Fungsi ini dipakai BERSAMAAN oleh Editor & Live Frontend
     const universalCountdownScript = function() {
         const el = this; 
         
-        // Bersihkan interval lama jika ada (mencegah double running)
+        // Safety: Hentikan interval sebelumnya jika ada (untuk editor yang sering re-render)
         if (el.__countdownInterval) clearInterval(el.__countdownInterval);
 
         const expireStr = el.getAttribute('data-expire');
         const msgStr = el.getAttribute('data-msg') || "WAKTU HABIS";
         
-        // Selektor yang aman untuk berbagai struktur HTML
+        // Selector Element (Support struktur lama & baru)
         const display = el.querySelector(".js-display") || el.querySelector(".js-countdown-display"); 
         const expiredBox = el.querySelector(".js-expired-msg");
         const expiredText = el.querySelector(".js-expired-text");
 
-        // Helper untuk update teks angka (Support Class Lama & Baru dari Database)
+        // Helper update text
         const setVal = (cls1, cls2, val) => {
             const strVal = val < 10 ? "0" + val : val;
             const nodes = el.querySelectorAll(cls1 + ',' + cls2);
             nodes.forEach(n => n.innerText = strVal);
         };
 
-        // KUNCI: Jika tidak ada tanggal, stop. (Ini alasan kenapa mati jika Traits error)
+        // Jika tidak ada target waktu, stop.
         if (!expireStr) return;
 
         const update = () => {
@@ -228,11 +230,12 @@
             const target = new Date(expireStr).getTime();
             const distance = target - now;
 
+            // Jika Waktu Habis
             if (distance < 0) {
                 if (display) display.style.display = 'none';
                 if (expiredBox) {
                     expiredBox.classList.remove('hidden');
-                    expiredBox.style.display = 'block';
+                    expiredBox.style.display = 'block'; // Pastikan muncul
                     if (expiredText) expiredText.innerText = msgStr;
                     else expiredBox.innerText = msgStr;
                 }
@@ -240,23 +243,24 @@
                 return;
             }
 
-            // Kalkulasi Waktu
+            // Kalkulasi
             const d = Math.floor(distance / (1000 * 60 * 60 * 24));
             const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const s = Math.floor((distance % (1000 * 60)) / 1000);
 
-            // Update DOM dengan Selector Database (.js-*) dan Selector Lama (.days, dll)
+            // Update Tampilan (Dual Selector Support)
             setVal('.days', '.js-d', d);
             setVal('.hours', '.js-h', h);
             setVal('.minutes', '.js-m', m);
             setVal('.seconds', '.js-s', s);
         };
 
-        update(); // Jalankan sekali segera
+        update(); // Jalankan frame pertama langsung
         el.__countdownInterval = setInterval(update, 1000);
     };
 
+    // --- Iconify Picker Utility ---
     (function(){
         let activeModel = null; const modal = document.getElementById('iconify-picker-modal'); const input = document.getElementById('iconify-picker-search'); const results = document.getElementById('iconify-picker-results');
         window.openIconifyPicker = function(model) { activeModel = model; modal.classList.remove('hidden'); input.value = ''; input.focus(); searchIcons('star'); };
@@ -291,10 +295,7 @@
             addWidgetToCanvas(id) {
                 const w = appBuilderCache[id];
                 if (w) {
-                    let html = w.content;
-                    try { 
-                        window.editor.addComponents(html);
-                    } catch(e) { console.error('Add Error', e); }
+                    try { window.editor.addComponents(w.content); } catch(e) { console.error('Add Error', e); }
                 }
             },
 
@@ -312,6 +313,7 @@
                     
                     if (window.editor) {
                         let safeHtml = data.html_content || '';
+                        // Bersihkan script lama agar tidak duplikat saat diload kembali
                         safeHtml = safeHtml.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gm, ""); 
                         
                         window.editor.setComponents(safeHtml);
@@ -333,32 +335,36 @@
                     wrapper.find('details').forEach(d => d.addAttributes({ open: null }));
                     
                     // Cleanup atribut internal GrapesJS pada countdown agar bersih di frontend
+                    // Agar tidak ada konflik saat live script dijalankan
                     wrapper.find('.js-countdown').forEach(timer => {
                         const attr = timer.getAttributes();
-                        delete attr['data-gjs-type']; 
-                        delete attr['data-init']; // Pastikan bersih status init
+                        delete attr['data-gjs-type']; // Hapus jejak editor
                         timer.setAttributes(attr);
                     });
                     
                     const html = window.editor.getHtml();
                     const css = window.editor.getCss();
                     
-                    // --- LIVE SCRIPT INJECTION (CRITICAL FIX) ---
-                    // Kita menyuntikkan logika Universal Countdown secara Inline
-                    // Menggunakan DOMContentLoaded agar aman
+                    // ============================================================
+                    // 2. INJEKSI SCRIPT KE LIVE (LOGIC SAMA PERSIS DENGAN EDITOR)
+                    // ============================================================
+                    // Kita serialize fungsi 'universalCountdownScript' menjadi string
+                    // dan membungkusnya agar otomatis berjalan di Frontend.
                     const liveScript = `
                         <script>
                         document.addEventListener("DOMContentLoaded", function() {
-                            const runners = document.querySelectorAll('.js-countdown');
-                            // Kita kirim string fungsi mentah untuk dijalankan di frontend
-                            const logic = ${universalCountdownScript.toString()};
-                            runners.forEach(el => logic.call(el));
+                            // Definisi Logika (Sama persis dengan Editor)
+                            const runCountdown = ${universalCountdownScript.toString()};
+                            
+                            // Cari semua widget dan jalankan logikanya
+                            const timers = document.querySelectorAll('.js-countdown');
+                            timers.forEach(el => runCountdown.call(el));
                         });
                         <\/script>
                     `;
                     
-                    // Tetap sertakan file external sebagai fallback, tapi script inline adalah prioritas
-                    const finalHtml = `${html}<script src="/assets/js/countdown.js"><\/script>${liveScript}`;
+                    // Gabungkan HTML + Script Injeksi
+                    const finalHtml = `${html}${liveScript}`;
 
                     const payload = {
                         id: this.page.id, slug: this.page.slug, title: this.page.title,
@@ -385,7 +391,7 @@
                     height: '100%',
                     width: 'auto',
                     storageManager: false,
-                    allowScripts: 1, // WAJIB
+                    allowScripts: 1, // Penting agar script internal model jalan
                     layerManager: { appendTo: '#layers-container' },
                     panels: { defaults: [] },
                     assetManager: {
@@ -428,44 +434,37 @@
                 const domc = window.editor.DomComponents;
                 const tm = window.editor.TraitManager;
 
-                // --- Base Definition untuk Countdown ---
-                const baseCountdownDef = {
+                // --- 3. DEFINISI MODEL COUNTDOWN ---
+                // Traits: Agar panel setting muncul
+                // Script: Agar logika universalCountdownScript dijalankan di Editor
+                const getCountdownModel = (typeId, labelName) => ({
+                    isComponent: el => {
+                        // Kenali komponen ini jika tipe atau class cocok
+                        if(el.getAttribute && el.getAttribute('data-gjs-type') === typeId) return true;
+                        if(el.classList && el.classList.contains('js-countdown') && !el.getAttribute('data-gjs-type')) return true;
+                        return false;
+                    },
                     model: {
                         defaults: {
-                            // Menggunakan script universal yg kita buat di atas
-                            script: universalCountdownScript,
-                            traits: [
+                            type: typeId, // Kunci agar GrapesJS tahu ini komponen apa
+                            name: labelName || 'Countdown',
+                            script: universalCountdownScript, // JALANKAN LOGIKA DI EDITOR
+                            traits: [ // DEFINISI TRAITS WAJIB DISINI
                                 { type: 'datetime-local', name: 'data-expire', label: 'Waktu Berakhir' },
                                 { type: 'text', name: 'data-msg', label: 'Pesan Expired', placeholder: 'PROMO BERAKHIR' }
                             ]
                         },
                         init() {
-                            // Render ulang saat tanggal berubah
+                            // Update tampilan Editor realtime saat Trait berubah
                             this.on('change:attributes:data-expire', () => this.view.render());
                             this.on('change:attributes:data-msg', () => this.view.render());
                         }
                     }
-                };
-
-                // --- 2. PRE-REGISTER (Mencegah Race Condition di Awal Load) ---
-                // Kita daftarkan 'countdown-smart' dengan type explicit agar HTML awal mengenalinya
-                domc.addType('countdown-smart', {
-                    ...baseCountdownDef,
-                    isComponent: el => {
-                        // Logika deteksi awal
-                        if(el.getAttribute && el.getAttribute('data-gjs-type') === 'countdown-smart') return true;
-                        return false;
-                    },
-                    model: {
-                        ...baseCountdownDef.model,
-                        defaults: {
-                            ...baseCountdownDef.model.defaults,
-                            type: 'countdown-smart' // PENTING: Type harus match
-                        }
-                    }
                 });
 
-                // --- 3. Custom Trait & Iconify ---
+                // Pre-register untuk data awal
+                domc.addType('countdown-smart', getCountdownModel('countdown-smart', 'Countdown Pro'));
+
                 tm.addType('icon-picker', {
                     createInput({ trait }) {
                         const btn = document.createElement('button');
@@ -490,7 +489,6 @@
                     }
                 });
 
-                // --- 4. FETCH DARI DATABASE ---
                 fetch('/api/widgets').then(res => res.json()).then(widgets => {
                     const renderer = document.getElementById('blocks-custom-renderer');
                     renderer.innerHTML = ''; const groups = {};
@@ -498,28 +496,11 @@
                     widgets.forEach(w => {
                         appBuilderCache[w.id] = w;
                         
-                        // --- PERBAIKAN UTAMA: DYNAMIC TYPE REGISTRATION ---
+                        // --- LOGIKA UTAMA: MENERAPKAN MODEL KE SEMUA VARIAN COUNTDOWN ---
                         if (w.id.toLowerCase().includes('countdown')) {
-                            // Kita buat definisi type BARU untuk setiap ID countdown yang ditemukan
-                            // Ini menjamin "countdown-smart", "countdown-simple", dll masing-masing punya Traits
-                            domc.addType(w.id, {
-                                ...baseCountdownDef,
-                                // isComponent khusus untuk ID ini saja (supaya spesifik)
-                                isComponent: el => {
-                                    if(el.getAttribute && el.getAttribute('data-gjs-type') === w.id) return true;
-                                    // Fallback class hanya jika belum ada yang klaim
-                                    if(el.classList && el.classList.contains('js-countdown') && !el.getAttribute('data-gjs-type')) return true;
-                                    return false;
-                                },
-                                model: {
-                                    ...baseCountdownDef.model,
-                                    defaults: {
-                                        ...baseCountdownDef.model.defaults,
-                                        type: w.id, // KUNCI: Type di-set sesuai ID database
-                                        name: w.label // Nama di Layer Manager
-                                    }
-                                }
-                            });
+                            // Registrasi Ulang dengan ID spesifik dari Database
+                            // Memastikan setiap varian (smart, simple, dll) punya Traits & Script yang sama
+                            domc.addType(w.id, getCountdownModel(w.id, w.label));
                         } 
                         else if (w.id !== 'iconify-icon') {
                              domc.addType(w.id, {
