@@ -244,6 +244,7 @@
                     } catch(e) { console.error('Add Error', e); }
                 }
             },
+
             async loadPageData(slug) {
                 this.loading = true;
                 try {
@@ -300,6 +301,7 @@
                 } catch (e) { this.notify('Error', e.message, 'error'); }
                 this.loading = false;
             },
+
             async savePage() {
                 this.loading = true;
                 try {
@@ -347,13 +349,12 @@
                 `; 
 
                 // --- SCRIPT PATCH COUNTDOWN (Di-inject langsung ke Canvas) ---
-                // Ini memastikan selector .js-d, .js-h (dari database) dikenali
+                // PERBAIKAN: ESCAPING TAG PENUTUP SCRIPT agar tidak memutus script utama
                 const countdownPatchScript = `
                     <script>
                     window.initCountdowns = function() {
                         const timers = document.querySelectorAll('.js-countdown');
                         timers.forEach(el => {
-                            // Reset paksa jika script dipanggil ulang
                             if(el.getAttribute('data-running') === 'true') return;
                             el.setAttribute('data-running', 'true');
                             
@@ -394,7 +395,6 @@
                                     });
                                 };
 
-                                // SUPPORT DUA VERSI CLASS (Lama & Baru)
                                 setTxt(".days", d); setTxt(".js-d", d);
                                 setTxt(".hours", h); setTxt(".js-h", h);
                                 setTxt(".minutes", m); setTxt(".js-m", m);
@@ -405,9 +405,8 @@
                             update();
                         });
                     };
-                    // Auto run saat load iframe selesai
                     window.addEventListener('load', window.initCountdowns);
-                    </script>
+                    <\/script>
                 `;
 
                 window.editor = grapesjs.init({
@@ -415,7 +414,7 @@
                     height: '100%',
                     width: 'auto',
                     storageManager: false,
-                    allowScripts: 1, // WAJIB ON
+                    allowScripts: 1, 
                     layerManager: {
                         appendTo: '#layers-container'
                     },
@@ -438,9 +437,9 @@
                         scripts: [
                             'https://cdn.tailwindcss.com', 
                             'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'
-                            // NOTE: countdown.js kita inject manual via 'content' di bawah agar lebih reliable
                         ],
                         styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
+                        // PERBAIKAN: Menggunakan tag penutup script yang di-escape di variabel countdownPatchScript
                         content: `${countdownPatchScript}<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"><script>const origWarn=console.warn;console.warn=function(...a){if(a[0]&&typeof a[0]==='string'&&a[0].includes('cdn.tailwindcss.com'))return;origWarn.apply(console,a);};<\/script><style>${bridgeCSS}</style>`
                     },
                     plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg'],
@@ -461,10 +460,8 @@
                 const domc = window.editor.DomComponents;
                 const tm = window.editor.TraitManager;
 
-                // --- 1. SHARED COUNTDOWN MODEL (Jantung Logika) ---
                 const sharedCountdownModel = {
                     isComponent: el => {
-                        // Deteksi Agresif: Cek atribut type, class, atau ID
                         if(el.getAttribute && el.getAttribute('data-gjs-type') && el.getAttribute('data-gjs-type').includes('countdown')) return true;
                         if(el.classList && el.classList.contains('js-countdown')) return true;
                         if(el.id && el.id.includes('countdown')) return true;
@@ -472,12 +469,8 @@
                     },
                     model: {
                         defaults: {
-                            // Script ini akan dijalankan OLEH GRAPESJS di dalam iframe
-                            // Ini adalah kunci agar tidak static!
                             script: function() {
-                                // Panggil fungsi global yang sudah kita inject
                                 if(window.initCountdowns) {
-                                    // Bersihkan status init agar bisa jalan ulang
                                     this.removeAttribute('data-init'); 
                                     this.removeAttribute('data-running');
                                     window.initCountdowns();
@@ -489,12 +482,10 @@
                             ]
                         },
                         init() {
-                            // Listener perubahan Traits
                             this.on('change:attributes:data-expire', this.handleUpdate);
                             this.on('change:attributes:data-msg', this.handleUpdate);
                         },
                         handleUpdate() {
-                            // Trigger render ulang script saat trait berubah
                             this.view.render();
                             const win = window.editor.Canvas.getWindow();
                             if(win && win.initCountdowns) {
@@ -505,11 +496,8 @@
                     }
                 };
 
-                // --- 2. REGISTER HARDCODED (WAJIB ADA SEBELUM FETCH) ---
-                // Mendaftarkan 'countdown-smart' agar dikenali saat loadPageData berjalan
                 domc.addType('countdown-smart', sharedCountdownModel);
 
-                // --- 3. CUSTOM TRAIT ---
                 tm.addType('icon-picker', {
                     createInput({ trait }) {
                         const btn = document.createElement('button');
@@ -520,7 +508,6 @@
                     }
                 });
 
-                // --- 4. ICONIFY REGISTER ---
                 domc.addType('iconify-icon', {
                     isComponent: el => el.tagName === 'ICONIFY-ICON',
                     model: {
@@ -535,7 +522,6 @@
                     }
                 });
 
-                // --- 5. FETCH WIDGETS ---
                 fetch('/api/widgets').then(res => res.json()).then(widgets => {
                     const renderer = document.getElementById('blocks-custom-renderer');
                     renderer.innerHTML = ''; const groups = {};
@@ -543,13 +529,10 @@
                     widgets.forEach(w => {
                         appBuilderCache[w.id] = w;
                         
-                        // LOGIKA PENERAPAN MODEL (Catch-All Countdown)
                         if (w.id.toLowerCase().includes('countdown')) {
-                            // Gunakan shared model untuk semua widget countdown
                             domc.addType(w.id, sharedCountdownModel);
                         } 
                         else if (w.id !== 'iconify-icon') {
-                            // Widget biasa
                              domc.addType(w.id, {
                                 model: { defaults: { attributes: { 'data-widget-type': w.id } } }
                             });
@@ -601,8 +584,6 @@
                         { attributes: { class: 'fa' }, command: 'tlb-delete', label: '<i class="ph ph-trash text-lg text-red-400"></i>' }
                     ]);
 
-                    // PROTEKSI AGAR TOOLBAR TEXT TIDAK MUNCUL DI CONTAINER COUNTDOWN
-                    // Cek komprehensif: Class, Tipe, ID
                     const classes = model.get('classes');
                     const typeName = model.get('type') || '';
                     const tagName = model.get('tagName') || '';
@@ -614,8 +595,6 @@
                         (classes && classes.models && classes.models.some(c => c.get('name') === 'js-countdown')) ||
                         typeName.toLowerCase().includes('countdown'); 
 
-                    // Hanya tambahkan Edit Teks jika BENAR-BENAR elemen teks biasa
-                    // DAN bukan bagian dari widget kompleks seperti countdown
                     const el = model.getEl();
                     if (el && el.innerText && el.childElementCount === 0 && !isIcon && !isCountdown) {
                         const currentTraits = model.get('traits').filter(t => t.name !== 'content_text');
@@ -624,9 +603,9 @@
                         model.on('change:content_text', () => { model.components(model.get('content_text')); });
                     }
                 });
-            } // Penutup initGrapes
-        }; // Penutup return object Alpine
-    } // Penutup function editorApp
+            }
+        };
+    }
     </script>
 </body>
 </html>
