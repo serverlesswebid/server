@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - VvvebJs Core Edition</title>
+    <title>LandingBuilder Pro - Smart Accordion Core</title>
     
     <script>
+        // Meredam warning library eksternal agar konsol bersih
         (function() {
             const originalWarn = console.warn;
             console.warn = function(...args) {
@@ -15,18 +16,23 @@
         })();
     </script>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
-    <link href="https://cdn.jsdelivr.net/gh/givanz/VvvebJs/libs/builder/builder.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/gh/givanz/VvvebJs/libs/builder/builder.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/givanz/VvvebJs/libs/builder/undo.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/givanz/VvvebJs/libs/builder/inputs.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.2/dist/css/grapes.min.css">
+    <script src="https://unpkg.com/grapesjs@0.21.2/dist/grapes.min.js"></script>
+    <script src="https://unpkg.com/grapesjs-blocks-basic@1.0.1"></script>
+    <script src="https://unpkg.com/grapesjs-plugin-forms@2.0.5"></script> 
+    <script src="https://unpkg.com/grapesjs-navbar@1.0.1"></script>
+    <script src="https://unpkg.com/grapesjs-tabs@1.0.6"></script>
+    <script src="https://unpkg.com/grapesjs-custom-code@1.0.1"></script>
+    <script src="https://unpkg.com/grapesjs-tooltip@0.1.7"></script>
+    <script src="https://unpkg.com/grapesjs-blocks-flexbox@0.1.1"></script>
+    <script src="https://unpkg.com/grapesjs-plugin-export@1.0.11"></script>
+    <script src="https://unpkg.com/grapesjs-typed@1.0.5"></script>
+    <script src="https://unpkg.com/grapesjs-style-bg@2.0.1"></script>
 
     <style>
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: #fff; }
@@ -34,20 +40,34 @@
 
         header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
         .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; }
-        
-        #vvveb-builder { flex: 1; height: 100%; position: relative; overflow: hidden; }
-        #iframe-wrapper { height: 100%; width: 100%; border: none; }
-        
+        #gjs { flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; position: relative; }
         .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; }
         
+        /* STICKY TOOLBAR (FIXED POSITION) */
+        .gjs-toolbar { 
+            position: fixed !important; top: 60px !important; left: 0 !important; right: auto !important; transform: none !important;
+            background-color: #1f2937 !important; border-radius: 0 0 8px 0 !important; box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+            display: flex !important; gap: 4px !important; padding: 6px 10px !important; z-index: 9999 !important; border: 1px solid rgba(255,255,255,0.1) !important;
+            opacity: 1; transition: opacity 0.2s;
+        }
+        .gjs-toolbar.ghost-mode { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; }
+        .gjs-toolbar-item { color: white !important; width: 30px !important; height: 30px !important; display: flex !important; align-items: center; justify-content: center !important; cursor: pointer !important; border-radius: 4px; }
+        .gjs-toolbar-item:hover { background-color: #4f46e5 !important; }
+
+        .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; }
+        .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
+        .gjs-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px; }
+        
+        /* Sidebar Elements */
+        details.group > summary { list-style: none; }
+        details.group > summary::-webkit-details-marker { display: none; }
         .block-card { cursor: pointer; background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: all 0.2s; user-select: none; }
         .block-card:hover { border-color: #6366f1; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15); transform: translateY(-2px); }
         .block-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #4b5563; text-align: center; }
-
-        /* Vvveb Overlay Fixes */
-        #highlight-box { border: 1px solid #6366f1 !important; pointer-events: none; }
-        #select-box { border: 2px solid #6366f1 !important; }
-        .component-properties-sidepane { padding: 15px; }
+        
+        /* Z-INDEX FIX UNTUK COLOR PICKER */
+        .sp-container { z-index: 1000000 !important; position: fixed !important; }
+        .gjs-field-color-picker { width: 100%; height: 24px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body x-data="editorApp()">
@@ -66,38 +86,18 @@
             <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile text-lg"></i></button>
         </div>
         <div class="flex items-center gap-2">
-            <button id="save-btn" @click="savePage" :disabled="loading" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-lg"><span x-text="loading ? 'SAVING...' : 'PUBLISH'"></span></button>
             <button @click="showSettings=true" class="bg-white text-gray-600 px-3 py-2 rounded-lg text-xs font-bold border border-gray-200 hover:bg-gray-50 transition">Config</button>
+            <button @click="savePage" :disabled="loading" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-lg"><span x-text="loading ? 'SAVING...' : 'PUBLISH'"></span></button>
         </div>
     </header>
 
     <div class="workspace">
-        <div id="vvveb-builder">
-            <div id="iframe-wrapper">
-                <iframe id="iframe1" src="about:blank" style="width:100%; height:100%; border:none;"></iframe>
-            </div>
-
-            <div id="highlight-box">
-                <div id="highlight-name"></div>
-            </div>
-
-            <div id="select-box">
-                <div id="select-name"></div>
-                <div id="select-actions">
-                    <a id="drag-box" title="Drag element" href=""><i class="ph ph-arrows-out-cardinal"></i></a>
-                    <a id="parent-box" title="Select parent" href=""><i class="ph ph-arrow-u-up-left"></i></a>
-                    <a id="up-box" title="Move element up" href=""><i class="ph ph-arrow-up"></i></a>
-                    <a id="down-box" title="Move element down" href=""><i class="ph ph-arrow-down"></i></a>
-                    <a id="clone-box" title="Clone element" href=""><i class="ph ph-copy"></i></a>
-                    <a id="delete-box" title="Remove element" href=""><i class="ph ph-trash text-red-500"></i></a>
-                </div>
-            </div>
-        </div>
-
+        <div id="gjs"></div>
         <div class="sidebar-panel">
             <div class="flex border-b border-gray-200 bg-white shrink-0">
                 <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-squares-four text-xl"></i></button>
                 <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-paint-brush text-xl"></i></button>
+                <button @click="tab='traits'" :class="tab=='traits'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-sliders text-xl"></i></button>
                 <button @click="tab='layers'" :class="tab=='layers'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-stack text-xl"></i></button>
             </div>
             <div class="flex-1 bg-white relative w-full overflow-y-auto custom-scroll">
@@ -105,13 +105,11 @@
                     <div id="blocks-custom-renderer" class="space-y-2">
                         <div class="text-center py-10 text-gray-400 text-xs animate-pulse">Memuat Widget...</div>
                     </div>
+                    <div id="blocks-container" class="hidden"></div> 
                 </div>
-                <div x-show="tab=='styles'" class="h-full pb-20">
-                    <div id="properties" class="component-properties-sidepane"></div>
-                </div>
-                <div x-show="tab=='layers'" class="h-full pb-20">
-                    <div id="tree-list"></div>
-                </div>
+                <div x-show="tab=='styles'" class="h-full pb-20"><div id="selectors-container" class="p-3 bg-gray-50 border-b"></div><div id="styles-container" class="p-1"></div></div>
+                <div x-show="tab=='traits'" class="h-full pb-20"><div id="traits-container" class="p-4"></div></div>
+                <div x-show="tab=='layers'" class="h-full pb-20"><div id="layers-container"></div></div>
             </div>
         </div>
     </div>
@@ -188,6 +186,20 @@
     <script>
     let appBuilderCache = {};
 
+    (function(){
+        let activeModel = null; const modal = document.getElementById('iconify-picker-modal'); const input = document.getElementById('iconify-picker-search'); const results = document.getElementById('iconify-picker-results');
+        window.openIconifyPicker = function(model) { activeModel = model; modal.classList.remove('hidden'); input.value = ''; input.focus(); searchIcons('star'); };
+        document.getElementById('iconify-picker-close').onclick = () => modal.classList.add('hidden'); 
+        input.oninput = (e) => searchIcons(e.target.value);
+        async function searchIcons(q) { 
+            if(!q) return; 
+            try { 
+                const res = await fetch(`https://api.iconify.design/search?query=${q}&limit=30`); const data = await res.json(); results.innerHTML = ''; 
+                if(data.icons) data.icons.forEach(icon => { const btn = document.createElement('button'); btn.className = 'p-2 hover:bg-indigo-50 rounded flex flex-col items-center gap-1 transition'; btn.innerHTML = `<iconify-icon icon="${icon}" width="24"></iconify-icon><span class="text-[9px] text-gray-400 truncate w-full text-center">${icon.split(':')[1]}</span>`; btn.onclick = () => { if(activeModel) activeModel.setAttributes({ icon: icon }); modal.classList.add('hidden'); }; results.appendChild(btn); }); 
+            } catch(e) {} 
+        }
+    })();
+
     function editorApp() {
         return {
             device: 'desktop', tab: 'blocks', settingsTab: 'commerce', showSettings: false, loading: false, notifications: [],
@@ -195,12 +207,9 @@
             page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, active_payments: [], settings: { seo_title:'', seo_description:'', favicon:'', og_image:'', fb_pixel:'', tiktok_pixel:'', ga_id:'', scripts_header:'', scripts_footer:'' } } },
 
             async init() {
-                // Beri jeda sedikit agar elemen DOM header (save-btn dll) ter-render sempurna
-                setTimeout(() => {
-                    this.initVvveb();
-                    const slug = new URLSearchParams(window.location.search).get('slug');
-                    if (slug) this.loadPageData(slug);
-                }, 300);
+                this.initGrapes();
+                const slug = new URLSearchParams(window.location.search).get('slug');
+                if (slug) await this.loadPageData(slug);
             },
 
             notify(title, msg, type = 'success') { 
@@ -208,64 +217,18 @@
                 setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); 
             },
 
-            initVvveb() {
-                try {
-                    // Inisialisasi Vvveb Builder pada Iframe
-                    Vvveb.Builder.init('about:blank', () => {
-                        this.loadWidgets();
-                    });
-                    
-                    // Inisialisasi GUI pendukung
-                    Vvveb.Gui.init();
-                    Vvveb.FileManager.init();
-                    Vvveb.TreeList.init();
-                    Vvveb.SectionList.init();
-                } catch(e) { console.error('Builder Init Error', e); }
-            },
-
-            async loadWidgets() {
-                try {
-                    const res = await fetch('/api/widgets');
-                    const widgets = await res.json();
-                    const renderer = document.getElementById('blocks-custom-renderer');
-                    renderer.innerHTML = '';
-                    const groups = {};
-
-                    widgets.forEach(w => {
-                        appBuilderCache[w.id] = w;
-                        
-                        // Register ke Vvveb Components
-                        Vvveb.Components.add(w.id, {
-                            name: w.label,
-                            html: w.content,
-                            image: "icons/widgets.svg",
-                        });
-
-                        if (w.category !== 'System') {
-                            if (!groups[w.category]) groups[w.category] = [];
-                            groups[w.category].push(w);
-                        }
-                    });
-
-                    Object.keys(groups).sort().forEach(catName => {
-                        const details = document.createElement('details');
-                        details.className = 'group border border-gray-200 rounded-lg bg-white mb-2';
-                        details.open = true;
-                        const summary = document.createElement('summary');
-                        summary.className = 'p-3 bg-gray-50 text-xs font-bold cursor-pointer flex justify-between items-center hover:bg-gray-100';
-                        summary.innerHTML = `<span>${catName}</span> <i class="ph ph-caret-down group-open:rotate-180 transition"></i>`;
-                        const contentDiv = document.createElement('div');
-                        contentDiv.className = 'grid grid-cols-3 gap-2 p-2';
-                        groups[catName].forEach(w => {
-                            const btn = document.createElement('div');
-                            btn.className = 'block-card';
-                            btn.onclick = () => Vvveb.Builder.addComponent(w.id);
-                            btn.innerHTML = `<div class="text-indigo-600 mb-1"><i class="ph ph-cube text-xl"></i></div><div class="block-label">${w.label}</div>`; 
-                            contentDiv.appendChild(btn);
-                        });
-                        details.appendChild(summary); details.appendChild(contentDiv); renderer.appendChild(details);
-                    });
-                } catch (e) { console.error('Widget Load Error', e); }
+            addWidgetToCanvas(id) {
+                const w = appBuilderCache[id];
+                if (w) {
+                    let html = w.content;
+                    // FORCE GJS-TYPE AGAR SCRIPT BINDING JALAN (Jika Script Valid)
+                    if(w.script && w.validScript) { 
+                        const div = document.createElement('div'); div.innerHTML = html;
+                        const root = div.firstElementChild;
+                        if(root) { root.setAttribute('data-gjs-type', w.id); html = div.innerHTML; }
+                    }
+                    try { window.editor.addComponents(html); } catch(e) { console.error('Add Error', e); }
+                }
             },
 
             async loadPageData(slug) {
@@ -278,9 +241,20 @@
                         const conf = typeof data.product_config_json === 'string' ? JSON.parse(data.product_config_json) : data.product_config_json;
                         this.page.config = { ...this.page.config, ...conf }; 
                     }
-                    
-                    const combinedHtml = `<style>${data.css_content || ''}</style>${data.html_content || ''}`;
-                    Vvveb.Builder.setHtml(combinedHtml);
+                    if (window.editor) {
+                        // SANITASI HALAMAN: HAPUS SEMUA TAG <SCRIPT> YANG MUNGKIN KOTOR DARI DATABASE
+                        let safeHtml = data.html_content || '';
+                        safeHtml = safeHtml.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gm, ""); 
+                        
+                        window.editor.setComponents(safeHtml);
+                        window.editor.setStyle(data.css_content || '');
+                        
+                        // AUTO OPEN ACCORDION (Logika Khusus)
+                        setTimeout(() => {
+                            const details = window.editor.getWrapper().find('details');
+                            details.forEach(d => d.addAttributes({ open: 'true' }));
+                        }, 600);
+                    }
                 } catch (e) { this.notify('Error', e.message, 'error'); }
                 this.loading = false;
             },
@@ -288,49 +262,22 @@
             async savePage() {
                 this.loading = true;
                 try {
-                    const html = Vvveb.Builder.getHtml();
+                    // AUTO CLOSE ACCORDION BEFORE SAVE (Logika Khusus)
+                    // Cari semua tag 'details' (bukan cuma widget accordion tertentu)
+                    const details = window.editor.getWrapper().find('details');
+                    details.forEach(d => d.addAttributes({ open: null })); // Hapus atribut open
                     
-                    // Logic Hydration Script (Dilarang hapus/ganti logic ini)
-                    const hydrationScript = `
-                    <script>
-                    document.addEventListener("DOMContentLoaded", function() {
-                        document.querySelectorAll('.js-countdown').forEach(function(el) {
-                            if(el.dataset.init === "true") return;
-                            el.dataset.init = "true";
-                            var display = el.querySelector(".js-display");
-                            var expiredBox = el.querySelector(".js-expired-msg");
-                            var expireStr = el.getAttribute("data-expire");
-                            var msgStr = el.getAttribute("data-msg") || "WAKTU HABIS";
-                            if (!expireStr) return;
-                            var update = function() {
-                                var now = new Date().getTime();
-                                var distance = new Date(expireStr).getTime() - now;
-                                if (distance < 0) {
-                                    if(display) display.style.display = "none";
-                                    if(expiredBox) { expiredBox.style.display = "block"; expiredBox.classList.remove("hidden"); expiredBox.innerHTML = msgStr; }
-                                    clearInterval(interval); return;
-                                }
-                                var d = Math.floor(distance / (1000 * 60 * 60 * 24));
-                                var h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                                var m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                                var s = Math.floor((distance % (1000 * 60)) / 1000);
-                                var setTxt = function(sel, val) {
-                                    var node = el.querySelector(sel);
-                                    if (node) node.innerText = val < 10 ? "0" + val : val;
-                                };
-                                setTxt(".days", d); setTxt(".hours", h); setTxt(".minutes", m); setTxt(".seconds", s);
-                            };
-                            var interval = setInterval(update, 1000);
-                            update();
-                        });
-                    });
-                    <\/script>`;
+                    const html = window.editor.getHtml();
+                    const css = window.editor.getCss();
+                    const rawJs = window.editor.getJs();
+                    
+                    // LIVE SCRIPT WRAPPER: Supaya halaman live aman dari script error
+                    const safeJs = `document.addEventListener("DOMContentLoaded", function() { try { ${rawJs} } catch(e) { console.warn("Widget JS Error ignored:", e); } });`;
 
                     const payload = {
                         id: this.page.id, slug: this.page.slug, title: this.page.title,
-                        html: html + hydrationScript, 
-                        css: "", 
-                        product_config: this.page.config
+                        html: `${html}<script>${safeJs}<\/script>`,
+                        css: css, product_config: this.page.config
                     };
                     const res = await fetch('/api/admin/pages', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
                     if(res.ok) this.notify('Sukses', 'Publish Berhasil!'); else throw new Error('Simpan gagal');
@@ -338,33 +285,145 @@
                 this.loading = false;
             },
 
-            setDevice(d) { 
-                this.device = d; 
-                const iframe = document.getElementById('iframe1');
-                if (d === 'mobile') iframe.style.width = '375px';
-                else if (d === 'tablet') iframe.style.width = '768px';
-                else iframe.style.width = '100%';
+            setDevice(d) { this.device = d; if (window.editor) window.editor.setDevice(d); },
+
+            initGrapes() {
+                const bridgeCSS = `
+                    body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; padding-top: 65px !important; } 
+                    img { max-width: 100% !important; height: auto !important; display: block; }
+                    /* Style untuk Accordion di Editor */
+                    details > :not(summary) { display: block !important; opacity: 1 !important; height: auto !important; padding-top: 10px; border-top: 1px dashed #e5e7eb; }
+                `; 
+
+                window.editor = grapesjs.init({
+                    container: '#gjs', height: '100%', width: 'auto', storageManager: false, panels: { defaults: [] }, allowScripts: 1,
+                    assetManager: {
+                        uploadText: 'Upload Gambar',
+                        uploadFile: async (e) => {
+                            const file = e.dataTransfer ? e.dataTransfer.files[0] : e.target.files[0];
+                            if(!file) return;
+                            const toBase64 = f => new Promise((r,j)=>{const x=new FileReader();x.onload=()=>r(x.result);x.readAsDataURL(f)});
+                            try {
+                                const b64 = await toBase64(file);
+                                const res = await fetch('/api/admin/upload-image', { method: 'POST', body: JSON.stringify({ image: b64, filename: file.name }) });
+                                const d = await res.json();
+                                if(d.data) { window.editor.AssetManager.add(d.data); this.notify('Sukses', 'Gambar diupload!'); }
+                            } catch(err) { this.notify('Gagal', 'Upload gagal', 'error'); }
+                        }
+                    },
+                    canvas: {
+                        scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
+                        styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
+                        content: `<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"><script>console.warn=function(){};<\/script><style>${bridgeCSS}</style>`
+                    },
+                    plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg'],
+                    deviceManager: { devices: [{ id: 'desktop', width: '' }, { id: 'tablet', width: '768px' }, { id: 'mobile', width: '375px' }] },
+                    styleManager: { 
+                        appendTo: '#styles-container', 
+                        sectors: [
+                            { name: 'Typography', open: 1, buildProps: ['font-family', 'font-size', 'font-weight', 'letter-spacing', 'line-height', 'color', 'text-align', 'text-decoration', 'font-style', 'text-transform', 'text-shadow'] }, 
+                            { name: 'Layout', open: 0, buildProps: ['width', 'height', 'padding', 'margin', 'display', 'flex-direction', 'justify-content', 'align-items', 'position', 'top', 'bottom', 'left', 'right', 'z-index'] },
+                            { name: 'Background', open: 0, buildProps: ['background-color', 'background-image', 'background-repeat', 'background-size', 'background-position'] },
+                            { name: 'Border & Effects', open: 0, buildProps: ['border', 'border-radius', 'box-shadow', 'opacity', 'cursor', 'overflow'] }
+                        ] 
+                    }
+                });
+
+                const domc = window.editor.DomComponents;
+
+                // --- ROBUST REGISTER: FILTER SCRIPT RUSAK (SOLUSI ANTI-CRASH) ---
+                fetch('/api/widgets').then(res => res.json()).then(widgets => {
+                    const renderer = document.getElementById('blocks-custom-renderer');
+                    renderer.innerHTML = ''; const groups = {};
+                    
+                    widgets.forEach(w => {
+                        appBuilderCache[w.id] = w;
+                        w.validScript = false; // Flag status script
+
+                        if (w.script && w.script.trim() !== "") {
+                            // TEST COMPILE SCRIPT DULU
+                            try {
+                                const fn = new Function(w.script); 
+                                // Jika sukses (tidak throw error), berarti ini Accordion/Countdown yang VALID.
+                                domc.addType(w.id, {
+                                    model: {
+                                        defaults: {
+                                            script: fn, 
+                                            attributes: { 'data-gjs-type': w.id }
+                                        }
+                                    }
+                                });
+                                w.validScript = true;
+                            } catch(e) {
+                                // JIKA ERROR (Seperti 'Unexpected token .'), SKIP SCRIPTNYA.
+                                // Tapi tetap daftarkan WIDGETNYA agar bisa didrag.
+                                console.warn(`Script Widget '${w.id}' CORRUPT (SQL Injection?). Script diabaikan.`);
+                                domc.addType(w.id, {
+                                    model: { defaults: { attributes: { 'data-gjs-type': w.id } } }
+                                });
+                            }
+                        }
+
+                        if (w.category !== 'System') {
+                            if (!groups[w.category]) groups[w.category] = [];
+                            groups[w.category].push(w);
+                        }
+                    });
+
+                    // Render Sidebar
+                    Object.keys(groups).sort().forEach(catName => {
+                        const details = document.createElement('details'); details.className = 'group border border-gray-200 rounded-lg bg-white mb-2'; details.open = true;
+                        const summary = document.createElement('summary'); summary.className = 'p-3 bg-gray-50 text-xs font-bold cursor-pointer flex justify-between items-center hover:bg-gray-100';
+                        summary.innerHTML = `<span>${catName}</span> <i class="ph ph-caret-down group-open:rotate-180 transition"></i>`;
+                        const contentDiv = document.createElement('div'); contentDiv.className = 'grid grid-cols-3 gap-2 p-2';
+                        groups[catName].forEach(w => {
+                            const btn = document.createElement('div'); btn.className = 'block-card'; 
+                            btn.onclick = () => this.addWidgetToCanvas(w.id);
+                            btn.innerHTML = `<div class="text-indigo-600 mb-1"><i class="ph ph-cube text-xl"></i></div><div class="block-label">${w.label}</div>`; 
+                            contentDiv.appendChild(btn);
+                        });
+                        details.appendChild(summary); details.appendChild(contentDiv); renderer.appendChild(details);
+                    });
+                });
+
+                window.editor.on('rte:enable', () => document.querySelectorAll('.gjs-toolbar').forEach(t => t.classList.add('ghost-mode')));
+                window.editor.on('rte:disable', () => document.querySelectorAll('.gjs-toolbar').forEach(t => t.classList.remove('ghost-mode')));
+
+                window.editor.Traits.addType('textarea', {
+                    createInput({ trait }) {
+                        const el = document.createElement('textarea');
+                        el.className = 'w-full p-2 text-xs border border-gray-300 rounded bg-gray-50 text-gray-800 focus:outline-none focus:border-indigo-500 transition';
+                        el.style.minHeight = '80px';
+                        el.addEventListener('input', (e) => this.onChange(e));
+                        return el;
+                    },
+                    onUpdate({ elInput, component }) { elInput.value = component.get(this.model.get('name')) || component.get('content') || ''; },
+                });
+
+                window.editor.on('component:selected', (model) => {
+                    const el = model.getEl();
+                    if (el && el.innerText && el.childElementCount === 0) {
+                        const currentTraits = model.get('traits').filter(t => t.name !== 'content_text');
+                        model.set('traits', [{ type: 'textarea', name: 'content_text', label: 'Edit Teks', changeProp: 1 }, ...currentTraits]);
+                        model.set('content_text', model.get('content')); 
+                        model.on('change:content_text', () => { model.components(model.get('content_text')); });
+                    }
+                });
+
+                window.editor.on('component:selected', (c) => { 
+                    c.set('toolbar', [
+                        { attributes: { class: 'fa' }, command: 'tlb-move', label: '<i class="ph ph-arrows-out-cardinal text-lg"></i>' },
+                        { attributes: { class: 'fa' }, command: e => e.runCommand('core:component-exit'), label: '<i class="ph ph-arrow-fat-up text-lg"></i>' },
+                        { attributes: { class: 'fa' }, command: e => { e.runCommand('core:copy'); e.getSelected().remove(); }, label: '<i class="ph ph-scissors text-lg text-yellow-300"></i>' },
+                        { attributes: { class: 'fa' }, command: e => e.runCommand('core:copy'), label: '<i class="ph ph-copy text-lg text-blue-300"></i>' },
+                        { attributes: { class: 'fa' }, command: e => e.runCommand('core:paste'), label: '<i class="ph ph-clipboard-text text-lg text-green-300"></i>' },
+                        { attributes: { class: 'fa', title: 'Paste Inside' }, command: e => { const selected = e.getSelected(); const clipboard = e.Models.Clipboard && e.Models.Clipboard.get ? e.Models.Clipboard.get() : null; if(selected && clipboard) selected.append(clipboard); }, label: '<i class="ph ph-arrow-elbow-down-right text-lg text-purple-400"></i>' },
+                        { attributes: { class: 'fa' }, command: 'tlb-delete', label: '<i class="ph ph-trash text-lg text-red-400"></i>' }
+                    ]);
+                });
             }
         };
     }
-    </script>
-
-    <script id="vvveb-input-textinput" type="text/html">
-        <div class="mb-3">
-            <label class="vvveb-input-label">{%=name%}</label>
-            <input name="{%=key%}" type="text" class="w-full p-2 text-xs border rounded bg-gray-50 focus:outline-none focus:border-indigo-500"/>
-        </div>
-    </script>
-
-    <script id="vvveb-input-selectinput" type="text/html">
-        <div class="mb-3">
-            <label class="vvveb-input-label">{%=name%}</label>
-            <select name="{%=key%}" class="w-full p-2 text-xs border rounded bg-gray-50">
-                {% for ( var i = 0; i < options.length; i++ ) { %}
-                    <option value="{%=options[i].value%}">{%=options[i].text%}</option>
-                {% } %}
-            </select>
-        </div>
     </script>
 </body>
 </html>
