@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - VvvebJS Core Edition</title>
+    <title>LandingBuilder Pro - VvvebJS Fixed</title>
     
     <script>
         (function() {
@@ -18,7 +18,6 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js"></script>
-
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
@@ -36,8 +35,7 @@
         header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
         .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; }
         
-        /* Vvveb Canvas UI */
-        #vvveb-builder { flex: 1; height: 100%; position: relative; }
+        #vvveb-builder { flex: 1; height: 100%; position: relative; overflow: hidden; background: #f3f4f6; }
         #iframe-wrapper { height: 100%; width: 100%; border: none; }
         
         .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; }
@@ -46,10 +44,10 @@
         .block-card:hover { border-color: #6366f1; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15); transform: translateY(-2px); }
         .block-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #4b5563; text-align: center; }
 
-        /* Vvveb Specific Styles */
-        .component-properties-sidepane { height: 100%; overflow-y: auto; padding: 15px; }
-        .vvveb-input-group { margin-bottom: 15px; }
-        .vvveb-input-label { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #9ca3af; margin-bottom: 5px; display: block; }
+        /* Vvveb UI Customizations */
+        #highlight-box { border: 1px solid #6366f1 !important; }
+        #select-box { border: 2px solid #6366f1 !important; }
+        #vvveb-properties { padding: 15px; }
     </style>
 </head>
 <body x-data="editorApp()">
@@ -78,6 +76,22 @@
             <div id="iframe-wrapper">
                 <iframe id="iframe1" src="about:blank" style="width:100%; height:100%; border:none;"></iframe>
             </div>
+
+            <div id="highlight-box">
+                <div id="highlight-name"></div>
+            </div>
+
+            <div id="select-box">
+                <div id="select-name"></div>
+                <div id="select-actions">
+                    <a id="drag-box" title="Drag element" href=""><i class="ph ph-arrows-out-cardinal"></i></a>
+                    <a id="parent-box" title="Select parent" href=""><i class="ph ph-arrow-u-up-left"></i></a>
+                    <a id="up-box" title="Move element up" href=""><i class="ph ph-arrow-up"></i></a>
+                    <a id="down-box" title="Move element down" href=""><i class="ph ph-arrow-down"></i></a>
+                    <a id="clone-box" title="Clone element" href=""><i class="ph ph-copy"></i></a>
+                    <a id="delete-box" title="Remove element" href=""><i class="ph ph-trash"></i></a>
+                </div>
+            </div>
         </div>
 
         <div class="sidebar-panel">
@@ -93,12 +107,10 @@
                     </div>
                 </div>
                 <div x-show="tab=='styles'" class="h-full pb-20">
-                    <div id="properties" class="component-properties-sidepane">
-                        <div class="text-center py-10 text-gray-400 text-xs">Pilih elemen untuk mengedit properties</div>
-                    </div>
+                    <div id="properties"></div>
                 </div>
                 <div x-show="tab=='layers'" class="h-full pb-20">
-                    <div id="tree-list" class="p-2"></div>
+                    <div id="tree-list"></div>
                 </div>
             </div>
         </div>
@@ -157,13 +169,6 @@
         </div>
     </div>
 
-    <div id="iconify-picker-modal" class="fixed inset-0 hidden z-[99999] bg-black/40 flex items-start justify-center p-6 backdrop-blur-sm">
-        <div class="bg-white rounded-xl w-full max-w-xl shadow-2xl mt-10 overflow-hidden">
-            <div class="flex items-center justify-between p-4 border-b bg-gray-50"><input id="iconify-picker-search" placeholder="Cari icon..." class="w-full bg-transparent outline-none text-sm" /><button id="iconify-picker-close"><i class="ph ph-x text-lg"></i></button></div>
-            <div id="iconify-picker-results" class="p-4 grid grid-cols-6 gap-3 max-h-[300px] overflow-y-auto"></div>
-        </div>
-    </div>
-
     <div class="fixed bottom-5 left-5 z-[100000] flex flex-col gap-2 pointer-events-none">
         <template x-for="n in notifications" :key="n.id">
             <div x-show="n.show" x-transition class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-l-4 bg-white min-w-[280px]" :class="n.type==='success'?'border-green-500':'border-red-500'">
@@ -176,20 +181,6 @@
     <script>
     let appBuilderCache = {};
 
-    (function(){
-        let activeModel = null; const modal = document.getElementById('iconify-picker-modal'); const input = document.getElementById('iconify-picker-search'); const results = document.getElementById('iconify-picker-results');
-        window.openIconifyPicker = function(model) { activeModel = model; modal.classList.remove('hidden'); input.value = ''; input.focus(); searchIcons('star'); };
-        document.getElementById('iconify-picker-close').onclick = () => modal.classList.add('hidden'); 
-        input.oninput = (e) => searchIcons(e.target.value);
-        async function searchIcons(q) { 
-            if(!q) return; 
-            try { 
-                const res = await fetch(`https://api.iconify.design/search?query=${q}&limit=30`); const data = await res.json(); results.innerHTML = ''; 
-                if(data.icons) data.icons.forEach(icon => { const btn = document.createElement('button'); btn.className = 'p-2 hover:bg-indigo-50 rounded flex flex-col items-center gap-1 transition'; btn.innerHTML = `<iconify-icon icon="${icon}" width="24"></iconify-icon><span class="text-[9px] text-gray-400 truncate w-full text-center">${icon.split(':')[1]}</span>`; btn.onclick = () => { if(activeModel) { activeModel.setAttribute('icon', icon); Vvveb.Gui.updateComponent(); } modal.classList.add('hidden'); }; results.appendChild(btn); }); 
-            } catch(e) {} 
-        }
-    })();
-
     function editorApp() {
         return {
             device: 'desktop', tab: 'blocks', settingsTab: 'commerce', showSettings: false, loading: false, notifications: [],
@@ -197,9 +188,12 @@
             page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, active_payments: [], settings: { seo_title:'', seo_description:'', favicon:'', og_image:'', fb_pixel:'', tiktok_pixel:'', ga_id:'', scripts_header:'', scripts_footer:'' } } },
 
             async init() {
-                this.initVvveb();
-                const slug = new URLSearchParams(window.location.search).get('slug');
-                if (slug) await this.loadPageData(slug);
+                // FIXED: Tunggu elemen DOM Rendered
+                setTimeout(() => {
+                    this.initVvveb();
+                    const slug = new URLSearchParams(window.location.search).get('slug');
+                    if (slug) this.loadPageData(slug);
+                }, 300);
             },
 
             notify(title, msg, type = 'success') { 
@@ -208,15 +202,17 @@
             },
 
             initVvveb() {
-                // Initialize Vvveb Builder
-                Vvveb.Builder.init('about:blank', () => {
-                    this.loadWidgets();
-                });
-
-                // Vvveb Gui Inits
-                Vvveb.Gui.init();
-                Vvveb.FileManager.init();
-                Vvveb.TreeList.init();
+                try {
+                    // Initialize Vvveb Builder
+                    Vvveb.Builder.init('about:blank', () => {
+                        this.loadWidgets();
+                    });
+                    
+                    // Initialize GUI Components
+                    Vvveb.Gui.init();
+                    Vvveb.SectionList.init();
+                    Vvveb.Breadcrumb.init();
+                } catch(e) { console.error('Vvveb Init Error', e); }
             },
 
             async loadWidgets() {
@@ -235,7 +231,6 @@
                             name: w.label,
                             html: w.content,
                             image: "icons/widgets.svg",
-                            // Mapping properties dari database widget jika ada atribut khusus
                             properties: [] 
                         });
 
@@ -245,7 +240,6 @@
                         }
                     });
 
-                    // Render Sidebar
                     Object.keys(groups).sort().forEach(catName => {
                         const details = document.createElement('details');
                         details.className = 'group border border-gray-200 rounded-lg bg-white mb-2';
@@ -264,7 +258,7 @@
                         });
                         details.appendChild(summary); details.appendChild(contentDiv); renderer.appendChild(details);
                     });
-                } catch (e) { console.error('Error load widgets', e); }
+                } catch (e) { console.error('Widget Error', e); }
             },
 
             async loadPageData(slug) {
@@ -290,7 +284,7 @@
                 try {
                     const html = Vvveb.Builder.getHtml();
                     
-                    // Logic Hydration Script (Preserved)
+                    // Logic Hydration Script (Dilarang Hapus)
                     const hydrationScript = `
                     <script>
                     document.addEventListener("DOMContentLoaded", function() {
@@ -304,7 +298,8 @@
                             if (!expireStr) return;
                             var update = function() {
                                 var now = new Date().getTime();
-                                var distance = new Date(expireStr).getTime() - now;
+                                var target = new Date(expireStr).getTime();
+                                var distance = target - now;
                                 if (distance < 0) {
                                     if(display) display.style.display = "none";
                                     if(expiredBox) { expiredBox.style.display = "block"; expiredBox.classList.remove("hidden"); expiredBox.innerHTML = msgStr; }
@@ -350,27 +345,9 @@
     </script>
 
     <script id="vvveb-input-textinput" type="text/html">
-        <div class="vvveb-input-group">
+        <div class="mb-3">
             <label class="vvveb-input-label">{%=name%}</label>
             <input name="{%=key%}" type="text" class="w-full p-2 text-xs border rounded bg-gray-50 focus:outline-none focus:border-indigo-500"/>
-        </div>
-    </script>
-
-    <script id="vvveb-input-selectinput" type="text/html">
-        <div class="vvveb-input-group">
-            <label class="vvveb-input-label">{%=name%}</label>
-            <select name="{%=key%}" class="w-full p-2 text-xs border rounded bg-gray-50">
-                {% for ( var i = 0; i < options.length; i++ ) { %}
-                    <option value="{%=options[i].value%}">{%=options[i].text%}</option>
-                {% } %}
-            </select>
-        </div>
-    </script>
-
-    <script id="vvveb-input-colorinput" type="text/html">
-        <div class="vvveb-input-group">
-            <label class="vvveb-input-label">{%=name%}</label>
-            <input name="{%=key%}" type="color" class="w-full h-8 border rounded bg-gray-50 cursor-pointer"/>
         </div>
     </script>
 </body>
