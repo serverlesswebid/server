@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - EDITABLE FIXED</title>
+    <title>LandingBuilder Pro - BUTTON LOGIC FIXED</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -22,7 +22,7 @@
     <script src="https://unpkg.com/grapesjs-tabs@1.0.6"></script>
 
     <style>
-        /* RESET */
+        /* RESET & BASE */
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: #fff; }
         [x-cloak] { display: none !important; }
 
@@ -30,14 +30,24 @@
         header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; }
         .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; }
         
-        /* SIDEBAR */
+        /* SIDEBAR (Z-INDEX 150) */
         .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 150; display: flex; flex-direction: column; flex-shrink: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 4px 0 24px rgba(0,0,0,0.1); }
         .mobile-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 140; backdrop-filter: blur(4px); }
 
         #gjs { flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; position: relative; }
         
-        /* COLOR PICKER Z-INDEX FIX */
-        .sp-container { z-index: 1000000 !important; background: white; border: 1px solid #cbd5e1; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2); border-radius: 8px; }
+        /* --- FIX UPLOAD MODAL (MOBILE) --- */
+        .gjs-mdl-container { z-index: 3000000 !important; }
+        @media (max-width: 768px) {
+            .gjs-mdl-dialog { width: 95% !important; max-width: 95% !important; left: 2.5% !important; top: 5% !important; margin: 0 !important; height: 90% !important; border-radius: 8px; overflow: hidden; }
+            .gjs-am-assets-cont { width: 100% !important; padding: 5px !important; }
+            .gjs-am-asset { width: 46% !important; margin: 2% !important; }
+            .gjs-am-file-uploader { padding: 20px !important; background: #f0fdf4 !important; border: 2px dashed #4ade80 !important; }
+            .gjs-am-file-uploader::before { content: "Klik Disini untuk Upload Foto"; display: block; font-size: 14px; font-weight: bold; color: #166534; margin-bottom: 5px; }
+        }
+
+        /* --- FIX COLOR PICKER (Z-INDEX) --- */
+        .sp-container { z-index: 4000000 !important; background: white; border: 1px solid #cbd5e1; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2); border-radius: 8px; }
         .sp-picker-container { border: none; }
         .gjs-field-color-picker { border: 1px solid #e2e8f0; border-radius: 4px; background: white; min-width: 30px; cursor: pointer; padding: 2px; }
 
@@ -48,21 +58,18 @@
         .gjs-field input { color: #333; font-size: 12px; width: 100%; }
         
         /* ACCORDION HIGHLIGHT */
-        /* Memberikan visual border putus-putus pada accordion parent agar user tahu area klik */
         .gjs-hovered[data-gjs-type="details"] { outline: 2px dashed #6366f1 !important; outline-offset: 4px; }
         
         /* TRAIT BUTTON */
         .trait-btn { width: 100%; background: #4f46e5; color: white; padding: 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; border: none; transition: background 0.2s; text-align: center; display:flex; align-items:center; justify-content:center; gap:6px; }
         .trait-btn:hover { background: #4338ca; }
         
-        /* WIDGET GRID */
+        /* WIDGET & ICONS */
         details.category-group > summary { list-style: none; cursor: pointer; background: #f9fafb; padding: 12px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #4b5563; border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; }
         details.category-group[open] > summary { border-bottom: 1px solid #e5e7eb; background: #fff; color: #4f46e5; border-left: 3px solid #4f46e5; }
         .widget-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px; background: #fff; }
         .block-card { cursor: grab; background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: all 0.2s; user-select: none; }
         .block-card:hover { border-color: #6366f1; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        
-        /* ICON GRID */
         .icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); gap: 8px; max-height: 250px; overflow-y: auto; padding: 4px; }
         .icon-item { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 22px; cursor: pointer; color: #64748b; transition: all 0.2s; position: relative; }
         .icon-item:hover { background-color: #e0e7ff; color: #4f46e5; border-color: #6366f1; transform: scale(1.05); }
@@ -110,10 +117,10 @@
             </div>
 
             <div class="flex border-b border-gray-200 bg-white shrink-0">
-                <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-squares-four text-xl"></i></button>
-                <button @click="tab='traits'" :class="tab=='traits'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-gear text-xl"></i></button>
-                <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-paint-brush text-xl"></i></button>
-                <button @click="tab='layers'" :class="tab=='layers'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-stack text-xl"></i></button>
+                <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition" title="Widgets"><i class="ph ph-squares-four text-xl"></i></button>
+                <button @click="tab='traits'" :class="tab=='traits'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition" title="Settings"><i class="ph ph-gear text-xl"></i></button>
+                <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition" title="Styles"><i class="ph ph-paint-brush text-xl"></i></button>
+                <button @click="tab='layers'" :class="tab=='layers'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition" title="Layers"><i class="ph ph-stack text-xl"></i></button>
             </div>
             
             <div class="flex-1 bg-white relative w-full overflow-y-auto custom-scroll">
@@ -134,7 +141,9 @@
                 </div>
                 <div x-show="tab=='traits'" class="h-full pb-20">
                     <div id="traits-container" class="p-3"></div>
-                    <div class="p-4 text-center"><p class="text-[10px] text-gray-400 bg-blue-50 text-blue-700 p-2 rounded border border-blue-100"><i class="ph ph-info"></i> Klik elemen di canvas untuk edit Link, Gambar, atau Icon.</p></div>
+                    <div class="p-4 text-center">
+                        <p class="text-[10px] text-gray-400 bg-blue-50 text-blue-700 p-2 rounded border border-blue-100"><i class="ph ph-info"></i> Klik elemen di canvas (Tombol, Link, Icon) untuk edit propertinya.</p>
+                    </div>
                 </div>
                 <div x-show="tab=='styles'" class="h-full pb-20"><div id="selectors-container" class="p-3 border-b bg-gray-50"></div><div id="styles-container" class="p-1"></div></div>
                 <div x-show="tab=='layers'" class="h-full pb-20"><div id="layers-container" class="p-2"></div></div>
@@ -250,10 +259,8 @@
             initGrapes() {
                 window.editor = grapesjs.init({
                     container: '#gjs', height: '100%', width: 'auto', storageManager: false, panels: { defaults: [] }, 
-                    allowScripts: 1, // FIX: ALLOW SCRIPT AGAR COUNTDOWN JALAN
-                    
+                    allowScripts: 1, 
                     assetManager: { upload: '/api/admin/upload', uploadName: 'files', embedAsBase64: 0, autoAdd: 1, openAssetsOnDrop: 0 },
-                    
                     canvas: {
                         scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
                         styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
@@ -266,7 +273,21 @@
                     layerManager: { appendTo: '#layers-container' }
                 });
 
-                // TRAIT CUSTOM BTN
+                // --- 1. LINK / BUTTON COMPONENT (FIX LOGIC BUTTON) ---
+                window.editor.DomComponents.addType('link', {
+                    model: {
+                        defaults: {
+                            traits: [
+                                { type: 'text', name: 'href', label: 'URL / Link' },
+                                { type: 'select', name: 'target', label: 'Target', options: [{ value: '', name: 'Self' }, { value: '_blank', name: 'New Tab' }] },
+                                { type: 'text', name: 'id', label: 'ID (Anchor)' },
+                                { type: 'text', name: 'title', label: 'Title / Tooltip' }
+                            ]
+                        }
+                    }
+                });
+
+                // --- 2. TRAIT BUTTON ICON ---
                 window.editor.TraitManager.addType('icon-picker-btn', {
                     createInput({ trait }) {
                         const btn = document.createElement('button');
@@ -277,7 +298,7 @@
                     }
                 });
 
-                // COMPONENT: ICONIFY
+                // --- 3. ICONIFY COMPONENT ---
                 window.editor.DomComponents.addType('iconify-icon', {
                     isComponent: el => el.tagName === 'ICONIFY-ICON',
                     model: {
@@ -297,7 +318,7 @@
                     }
                 });
 
-                // COMPONENT: ACCORDION (FIX COPY PASTE)
+                // --- 4. ACCORDION COMPONENT ---
                 window.editor.DomComponents.addType('details', {
                     model: {
                         defaults: {
@@ -307,10 +328,10 @@
                     }
                 });
                 window.editor.DomComponents.addType('summary', {
-                    model: { defaults: { draggable: false, droppable: false, editable: true } } // Text di summary bisa diedit
+                    model: { defaults: { draggable: false, droppable: false, editable: true } } 
                 });
 
-                // TOOLBAR SHORTCUT
+                // --- 5. TOOLBAR SHORTCUT ---
                 window.editor.on('component:selected', (model) => {
                     const toolbar = model.get('toolbar');
                     if (!toolbar.some(t => t.command === 'open-icon-picker')) {
@@ -323,14 +344,12 @@
 
                 if(this.groupedWidgets) {
                     Object.values(this.groupedWidgets).flat().forEach(w => {
-                        // FIX: HANYA DAFTARKAN TIPE KHUSUS JIKA ITU SCRIPT WIDGET (COUNTDOWN DLL)
-                        // AGAR TEXT WIDGET BIASA TETAP EDITABLE SECARA NATIVE
                         if(w.script) {
                              window.editor.DomComponents.addType(w.id, {
                                 model: {
                                     defaults: {
                                         attributes: { 'data-widget-type': w.id },
-                                        script: w.script // Inject Script agar jalan di Editor
+                                        script: w.script
                                     }
                                 }
                             });
