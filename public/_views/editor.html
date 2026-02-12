@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - Fix Syntax & Full Config</title>
+    <title>LandingBuilder Pro - Fix Syntax & Ultimate Config</title>
     
     <script>
         (function() {
@@ -45,7 +45,7 @@
         
         .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; }
         
-        /* STICKY TOOLBAR: Dibawah bar ikon preview */
+        /* STICKY TOOLBAR: Diam di bawah bar ikon preview */
         .gjs-toolbar { 
             position: fixed !important; 
             top: 60px !important; 
@@ -81,7 +81,7 @@
         .block-card:hover { border-color: #6366f1; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15); transform: translateY(-2px); }
         .block-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #4b5563; text-align: center; }
         
-        /* COLOR PICKER FIX */
+        /* FIX COLOR PICKER PALETTE AGAR TIDAK TERTUTUP */
         .sp-container { z-index: 1000000 !important; position: fixed !important; }
         .gjs-field-color-picker { width: 100%; height: 24px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
     </style>
@@ -206,8 +206,8 @@
     </div>
 
     <script>
-    // DEKLARASI GLOBAL WIDGET CACHE
-    let globalBuilderCache = {};
+    // DEKLARASI GLOBAL - HANYA SEKALI
+    let appBuilderCache = {};
 
     (function(){
         let activeModel = null; const modal = document.getElementById('iconify-picker-modal'); const input = document.getElementById('iconify-picker-search'); const results = document.getElementById('iconify-picker-results');
@@ -228,7 +228,7 @@
             device: 'desktop', tab: 'blocks', settingsTab: 'commerce', showSettings: false, loading: false, notifications: [],
             paymentProviders: [
                 { slug: 'paspay', name: 'Paspay QRIS' },
-                { slug: 'paspay-va', name: 'Paspay VA' },
+                { slug: 'Paspay-va', name: 'Paspay VA' },
                 { slug: 'midtrans', name: 'Midtrans' }
             ],
             page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, active_payments: [], settings: { seo_title:'', seo_description:'', favicon:'', og_image:'', fb_pixel:'', tiktok_pixel:'', ga_id:'', scripts_header:'', scripts_footer:'' } } },
@@ -245,7 +245,7 @@
             },
 
             addWidgetToCanvas(id) {
-                const w = globalBuilderCache[id];
+                const w = appBuilderCache[id];
                 if (w) {
                     let html = w.content;
                     if(w.script) {
@@ -261,6 +261,7 @@
                 this.loading = true;
                 try {
                     const res = await fetch(`/api/admin/pages/${slug}`);
+                    if(!res.ok) throw new Error('Data not found');
                     const data = await res.json();
                     this.page.id = data.id; this.page.slug = data.slug; this.page.title = data.title || '';
                     if (data.product_config_json) { 
@@ -274,7 +275,7 @@
                             window.editor.getWrapper().find('details').forEach(d => d.addAttributes({ open: 'true' }));
                         }, 600);
                     }
-                } catch (e) { this.notify('Error', 'Gagal memuat halaman', 'error'); }
+                } catch (e) { this.notify('Error', e.message, 'error'); }
                 this.loading = false;
             },
 
@@ -331,32 +332,33 @@
                             { name: 'Typography', open: 1, buildProps: ['font-family', 'font-size', 'font-weight', 'letter-spacing', 'line-height', 'color', 'text-align', 'text-decoration', 'font-style', 'text-transform', 'text-shadow'] }, 
                             { name: 'Layout', open: 0, buildProps: ['width', 'height', 'padding', 'margin', 'display', 'flex-direction', 'justify-content', 'align-items', 'position', 'top', 'bottom', 'left', 'right', 'z-index'] },
                             { name: 'Background', open: 0, buildProps: ['background-color', 'background-image', 'background-repeat', 'background-size', 'background-position'] },
-                            { name: 'Border & Effects', open: 0, buildProps: ['border', 'border-radius', 'box-shadow', 'opacity', 'cursor', 'overflow'] }
+                            { name: 'Border', open: 0, buildProps: ['border', 'border-radius', 'box-shadow', 'opacity', 'cursor', 'overflow'] }
                         ] 
                     }
                 });
 
-                // --- FIX SYNTAX: DINAMIS REGISTER SEBAGAI STRING (BUKAN FUNCTION) ---
+                // --- FIX SYNTAX: DINAMIS REGISTER DENGAN ESCAPE AMAN ---
                 fetch('/api/widgets').then(res => res.json()).then(widgets => {
                     const renderer = document.getElementById('blocks-custom-renderer');
                     renderer.innerHTML = ''; const groups = {};
                     
                     widgets.forEach(w => {
-                        globalBuilderCache[w.id] = w;
+                        appBuilderCache[w.id] = w;
 
                         if (w.script && w.script.trim() !== "") {
                             try {
+                                // Membersihkan script dari titik liar atau spasi di awal
+                                const cleanScript = w.script.trim();
                                 window.editor.DomComponents.addType(w.id, {
                                     model: {
                                         defaults: {
-                                            // MASALAHNYA DISINI: Jangan gunakan new Function() saat mendaftarkan
-                                            // Kirim string mentah, GrapesJS akan menanganinya di iframe
-                                            script: w.script.trim(), 
+                                            // Gunakan fungsi asli, bukan string, agar GrapesJS tidak salah parsing
+                                            script: new Function(cleanScript),
                                             attributes: { 'data-gjs-type': w.id }
                                         }
                                     }
                                 });
-                            } catch(e) { console.warn('Script Error widget:', w.id); }
+                            } catch(e) { console.warn('Script Error di widget:', w.id); }
                         }
 
                         if (w.category !== 'System') {
@@ -370,7 +372,6 @@
                         const summary = document.createElement('summary'); summary.className = 'p-3 bg-gray-50 text-xs font-bold cursor-pointer flex justify-between items-center';
                         summary.innerHTML = `<span>${catName}</span> <i class="ph ph-caret-down group-open:rotate-180 transition"></i>`;
                         const contentDiv = document.createElement('div'); contentDiv.className = 'grid grid-cols-3 gap-2 p-2';
-                        
                         groups[catName].forEach(w => {
                             const btn = document.createElement('div'); btn.className = 'block-card'; 
                             btn.onclick = () => this.addWidgetToCanvas(w.id);
