@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - VvvebJS Fixed</title>
+    <title>LandingBuilder Pro - VvvebJs Core Edition</title>
     
     <script>
         (function() {
@@ -35,7 +35,8 @@
         header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
         .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; }
         
-        #vvveb-builder { flex: 1; height: 100%; position: relative; overflow: hidden; background: #f3f4f6; }
+        /* Vvveb Editor Layout */
+        #vvveb-builder { flex: 1; height: 100%; position: relative; overflow: hidden; }
         #iframe-wrapper { height: 100%; width: 100%; border: none; }
         
         .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; }
@@ -44,10 +45,10 @@
         .block-card:hover { border-color: #6366f1; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15); transform: translateY(-2px); }
         .block-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #4b5563; text-align: center; }
 
-        /* Vvveb UI Customizations */
-        #highlight-box { border: 1px solid #6366f1 !important; }
+        /* Vvveb UI Tweaks */
+        #highlight-box { border: 1px solid #6366f1 !important; pointer-events: none; }
         #select-box { border: 2px solid #6366f1 !important; }
-        #vvveb-properties { padding: 15px; }
+        .component-properties-sidepane { padding: 15px; }
     </style>
 </head>
 <body x-data="editorApp()">
@@ -77,10 +78,7 @@
                 <iframe id="iframe1" src="about:blank" style="width:100%; height:100%; border:none;"></iframe>
             </div>
 
-            <div id="highlight-box">
-                <div id="highlight-name"></div>
-            </div>
-
+            <div id="highlight-box"><div id="highlight-name"></div></div>
             <div id="select-box">
                 <div id="select-name"></div>
                 <div id="select-actions">
@@ -89,7 +87,7 @@
                     <a id="up-box" title="Move element up" href=""><i class="ph ph-arrow-up"></i></a>
                     <a id="down-box" title="Move element down" href=""><i class="ph ph-arrow-down"></i></a>
                     <a id="clone-box" title="Clone element" href=""><i class="ph ph-copy"></i></a>
-                    <a id="delete-box" title="Remove element" href=""><i class="ph ph-trash"></i></a>
+                    <a id="delete-box" title="Remove element" href=""><i class="ph ph-trash text-red-500"></i></a>
                 </div>
             </div>
         </div>
@@ -107,7 +105,7 @@
                     </div>
                 </div>
                 <div x-show="tab=='styles'" class="h-full pb-20">
-                    <div id="properties"></div>
+                    <div id="properties" class="component-properties-sidepane"></div>
                 </div>
                 <div x-show="tab=='layers'" class="h-full pb-20">
                     <div id="tree-list"></div>
@@ -169,13 +167,11 @@
         </div>
     </div>
 
-    <div class="fixed bottom-5 left-5 z-[100000] flex flex-col gap-2 pointer-events-none">
-        <template x-for="n in notifications" :key="n.id">
-            <div x-show="n.show" x-transition class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-l-4 bg-white min-w-[280px]" :class="n.type==='success'?'border-green-500':'border-red-500'">
-                <i class="ph text-2xl" :class="n.type==='success'?'ph-check-circle text-green-500':'ph-warning-circle text-red-500'"></i>
-                <div><h4 class="text-xs font-bold text-gray-800 uppercase" x-text="n.title"></h4><p class="text-[10px] text-gray-500 font-medium" x-text="n.msg"></p></div>
-            </div>
-        </template>
+    <div id="iconify-picker-modal" class="fixed inset-0 hidden z-[99999] bg-black/40 flex items-start justify-center p-6 backdrop-blur-sm">
+        <div class="bg-white rounded-xl w-full max-w-xl shadow-2xl mt-10 overflow-hidden">
+            <div class="flex items-center justify-between p-4 border-b bg-gray-50"><input id="iconify-picker-search" placeholder="Cari icon..." class="w-full bg-transparent outline-none text-sm" /><button id="iconify-picker-close"><i class="ph ph-x text-lg"></i></button></div>
+            <div id="iconify-picker-results" class="p-4 grid grid-cols-6 gap-3 max-h-[300px] overflow-y-auto"></div>
+        </div>
     </div>
 
     <script>
@@ -188,7 +184,7 @@
             page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, active_payments: [], settings: { seo_title:'', seo_description:'', favicon:'', og_image:'', fb_pixel:'', tiktok_pixel:'', ga_id:'', scripts_header:'', scripts_footer:'' } } },
 
             async init() {
-                // FIXED: Tunggu elemen DOM Rendered
+                // FIXED: Menunggu DOM elemen overlay siap sebelum init Vvveb
                 setTimeout(() => {
                     this.initVvveb();
                     const slug = new URLSearchParams(window.location.search).get('slug');
@@ -203,16 +199,14 @@
 
             initVvveb() {
                 try {
-                    // Initialize Vvveb Builder
+                    // Inisialisasi Vvveb Builder
                     Vvveb.Builder.init('about:blank', () => {
                         this.loadWidgets();
                     });
                     
-                    // Initialize GUI Components
+                    // Inisialisasi GUI komponen lainnya
                     Vvveb.Gui.init();
-                    Vvveb.SectionList.init();
-                    Vvveb.Breadcrumb.init();
-                } catch(e) { console.error('Vvveb Init Error', e); }
+                } catch(e) { console.error('Builder Init Error', e); }
             },
 
             async loadWidgets() {
@@ -226,12 +220,11 @@
                     widgets.forEach(w => {
                         appBuilderCache[w.id] = w;
                         
-                        // Register Component Vvveb
+                        // Register ke Vvveb Components
                         Vvveb.Components.add(w.id, {
                             name: w.label,
                             html: w.content,
                             image: "icons/widgets.svg",
-                            properties: [] 
                         });
 
                         if (w.category !== 'System') {
@@ -240,6 +233,7 @@
                         }
                     });
 
+                    // Render ke Sidebar
                     Object.keys(groups).sort().forEach(catName => {
                         const details = document.createElement('details');
                         details.className = 'group border border-gray-200 rounded-lg bg-white mb-2';
@@ -258,7 +252,7 @@
                         });
                         details.appendChild(summary); details.appendChild(contentDiv); renderer.appendChild(details);
                     });
-                } catch (e) { console.error('Widget Error', e); }
+                } catch (e) { console.error('Widget Load Error', e); }
             },
 
             async loadPageData(slug) {
@@ -274,7 +268,6 @@
                     
                     const combinedHtml = `<style>${data.css_content || ''}</style>${data.html_content || ''}`;
                     Vvveb.Builder.setHtml(combinedHtml);
-
                 } catch (e) { this.notify('Error', e.message, 'error'); }
                 this.loading = false;
             },
@@ -282,9 +275,10 @@
             async savePage() {
                 this.loading = true;
                 try {
+                    // Ambil HTML hasil desain Vvveb
                     const html = Vvveb.Builder.getHtml();
                     
-                    // Logic Hydration Script (Dilarang Hapus)
+                    // Logic Hydration Script (Sesuai instruksi profesional sebelumnya)
                     const hydrationScript = `
                     <script>
                     document.addEventListener("DOMContentLoaded", function() {
@@ -298,8 +292,7 @@
                             if (!expireStr) return;
                             var update = function() {
                                 var now = new Date().getTime();
-                                var target = new Date(expireStr).getTime();
-                                var distance = target - now;
+                                var distance = new Date(expireStr).getTime() - now;
                                 if (distance < 0) {
                                     if(display) display.style.display = "none";
                                     if(expiredBox) { expiredBox.style.display = "block"; expiredBox.classList.remove("hidden"); expiredBox.innerHTML = msgStr; }
@@ -348,6 +341,17 @@
         <div class="mb-3">
             <label class="vvveb-input-label">{%=name%}</label>
             <input name="{%=key%}" type="text" class="w-full p-2 text-xs border rounded bg-gray-50 focus:outline-none focus:border-indigo-500"/>
+        </div>
+    </script>
+
+    <script id="vvveb-input-selectinput" type="text/html">
+        <div class="mb-3">
+            <label class="vvveb-input-label">{%=name%}</label>
+            <select name="{%=key%}" class="w-full p-2 text-xs border rounded bg-gray-50">
+                {% for ( var i = 0; i < options.length; i++ ) { %}
+                    <option value="{%=options[i].value%}">{%=options[i].text%}</option>
+                {% } %}
+            </select>
         </div>
     </script>
 </body>
