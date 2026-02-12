@@ -2,29 +2,21 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - Fix Syntax & Ultimate Config</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LandingBuilder - Ultimate Editor</title>
     
-    <script>
-        (function() {
-            const originalWarn = console.warn;
-            console.warn = function(...args) {
-                if (args[0] && typeof args[0] === 'string' && (args[0].includes('cdn.tailwindcss.com') || args[0].includes('production'))) return;
-                originalWarn.apply(console, args);
-            };
-        })();
-    </script>
-
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
     <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.2/dist/css/grapes.min.css">
     <script src="https://unpkg.com/grapesjs@0.21.2/dist/grapes.min.js"></script>
+    
     <script src="https://unpkg.com/grapesjs-blocks-basic@1.0.1"></script>
-    <script src="https://unpkg.com/grapesjs-plugin-forms@2.0.5"></script> 
+    <script src="https://unpkg.com/grapesjs-plugin-forms@2.0.5"></script>
     <script src="https://unpkg.com/grapesjs-navbar@1.0.1"></script>
+    <script src="https://unpkg.com/grapesjs-component-countdown@1.0.1"></script>
     <script src="https://unpkg.com/grapesjs-tabs@1.0.6"></script>
     <script src="https://unpkg.com/grapesjs-custom-code@1.0.1"></script>
     <script src="https://unpkg.com/grapesjs-tooltip@0.1.7"></script>
@@ -32,394 +24,664 @@
     <script src="https://unpkg.com/grapesjs-plugin-export@1.0.11"></script>
     <script src="https://unpkg.com/grapesjs-typed@1.0.5"></script>
     <script src="https://unpkg.com/grapesjs-style-bg@2.0.1"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: #fff; }
+        /* --- RESET & BASE --- */
+        body, html { height: 100%; margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; background: #fff; color: #1e293b; }
         [x-cloak] { display: none !important; }
-
-        header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
         
-        .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; }
+        /* --- GRAPESJS UI OVERRIDES --- */
+        .gjs-pn-top-panel, .gjs-pn-views-container, .gjs-pn-views { display: none !important; }
         
-        #gjs { flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; position: relative; }
-        
-        .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; }
-        
-        /* STICKY TOOLBAR: Diam di bawah bar ikon preview */
-        .gjs-toolbar { 
-            position: fixed !important; 
+        /* Layout Utama: Canvas di Kiri, Sidebar di Kanan */
+        /* UPDATE: Diturunkan 60px agar tidak tertutup Header */
+        .gjs-cv-canvas { 
+            width: calc(100% - 320px) !important; 
+            height: calc(100% - 60px) !important; 
             top: 60px !important; 
             left: 0 !important;
-            right: auto !important;
-            transform: none !important;
-            background-color: #1f2937 !important; 
-            border-radius: 0 0 8px 0 !important; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
-            display: flex !important; 
-            gap: 4px !important; 
-            padding: 6px 10px !important;
-            z-index: 9999 !important; 
-            border: 1px solid rgba(255,255,255,0.1) !important;
-            border-top: none !important;
-            border-left: none !important;
-            opacity: 1;
-            transition: opacity 0.2s;
+            background-color: #f1f5f9; 
         }
 
-        .gjs-toolbar.ghost-mode { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; }
-
-        .gjs-toolbar-item { color: white !important; width: 30px !important; height: 30px !important; display: flex !important; align-items: center; justify-content: center !important; cursor: pointer !important; border-radius: 4px; }
-        .gjs-toolbar-item:hover { background-color: #4f46e5 !important; }
-
-        .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; }
-        .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
-        .gjs-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px; }
+        .gjs-selected { outline: 2px solid #2563eb !important; outline-offset: -2px; }
         
-        details.group > summary { list-style: none; }
-        details.group > summary::-webkit-details-marker { display: none; }
-        .block-card { cursor: pointer; background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: all 0.2s; user-select: none; }
-        .block-card:hover { border-color: #6366f1; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15); transform: translateY(-2px); }
-        .block-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #4b5563; text-align: center; }
+        /* --- COLOR PICKER FIX (Agar tidak tertutup) --- */
+        .gjs-color-picker, .gjs-field-color-picker {
+            z-index: 99999 !important; 
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        .gjs-field-colorp-c {
+            overflow: visible !important;
+        }
         
-        /* FIX COLOR PICKER PALETTE AGAR TIDAK TERTUTUP */
-        .sp-container { z-index: 1000000 !important; position: fixed !important; }
-        .gjs-field-color-picker { width: 100%; height: 24px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 6px; height: 6px; } 
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+
+        /* PANEL TABS */
+        .panel-tabs { display: flex; border-bottom: 1px solid #e2e8f0; background: #fff; }
+        .panel-tabs button { flex: 1; padding: 12px; color: #94a3b8; font-size: 20px; transition: all 0.2s; border: none; background: none; cursor: pointer; }
+        .panel-tabs button:hover { color: #334155; background: #f8fafc; }
+        .panel-tabs button.active { color: #2563eb; border-bottom: 2px solid #2563eb; background: #eff6ff; }
+        
+        /* BLOCKS GRID */
+        .gjs-blocks-c { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 12px; background: #fff; }
+        .gjs-block { 
+            width: 100% !important; 
+            min-height: auto !important; 
+            padding: 15px 5px !important; 
+            margin: 0 !important; 
+            background: #fff; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 8px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 6px; 
+            cursor: grab; 
+            transition: all 0.2s; 
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .gjs-block:hover { border-color: #3b82f6; color: #2563eb; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.15); }
+        .gjs-block-label { font-size: 10px; font-weight: 600; text-align: center; margin-top: 4px; color: #475569; }
+        .gjs-block-category .gjs-title { background: #f8fafc; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; padding: 10px 12px; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* INPUTS STANDARDIZATION */
+        .input-std { width: 100%; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px; font-size: 13px; outline: none; transition: border-color 0.2s; background: #fff; }
+        .input-std:focus { border-color: #2563eb; ring: 2px solid #eff6ff; }
+        
+        /* PANEL KANAN (SIDEBAR) */
+        .sidebar-desktop {
+            position: fixed;
+            top: 56px; /* Tinggi header */
+            right: 0;
+            bottom: 0;
+            width: 320px;
+            background: white;
+            border-left: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            box-shadow: -4px 0 15px rgba(0,0,0,0.02);
+        }
+
+        /* RESPONSIVE TWEAKS */
+        /* Menghilangkan mobile editor panel yang lama */
+        .bottom-editor-nav, .sidebar-panel { display: none !important; }
+        
+        /* Header adjustments */
+        @media (max-width: 768px) {
+            .header-slug-section span { display: none; }
+            .header-slug-section input { width: 120px; }
+        }
     </style>
 </head>
+
 <body x-data="editorApp()">
 
-    <header>
-        <div class="flex items-center gap-3 overflow-hidden w-full max-w-[250px]">
-            <a href="/admin/pages" class="text-gray-400 hover:text-indigo-600 transition p-1.5 rounded shrink-0"><i class="ph ph-arrow-left text-xl"></i></a>
-            <div class="flex-1 min-w-0">
-                <input x-model="page.title" class="bg-transparent font-bold text-xs text-gray-800 outline-none w-full truncate" placeholder="Nama Halaman">
-                <div class="flex items-center gap-1"><span class="text-[8px] font-black text-gray-300 uppercase shrink-0">Slug:</span><input x-model="page.slug" class="bg-transparent font-mono text-[9px] text-gray-400 outline-none w-full truncate"></div>
-            </div>
-        </div>
-        <div class="hidden md:flex absolute left-1/2 transform -translate-x-1/2 items-center bg-gray-100 rounded-lg p-1 border shadow-sm">
-            <button @click="setDevice('desktop')" :class="device=='desktop'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-desktop text-lg"></i></button>
-            <button @click="setDevice('tablet')" :class="device=='tablet'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-tablet text-lg"></i></button>
-            <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile text-lg"></i></button>
-        </div>
-        <div class="flex items-center gap-2">
-            <button @click="showSettings=true" class="bg-white text-gray-600 px-3 py-2 rounded-lg text-xs font-bold border border-gray-200 hover:bg-gray-50 transition">Config</button>
-            <button @click="savePage" :disabled="loading" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-lg"><span x-text="loading ? 'SAVING...' : 'PUBLISH'"></span></button>
-        </div>
-    </header>
-
-    <div class="workspace">
-        <div id="gjs"></div>
-        
-        <div class="sidebar-panel">
-            <div class="flex border-b border-gray-200 bg-white shrink-0">
-                <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-squares-four text-xl"></i></button>
-                <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-paint-brush text-xl"></i></button>
-                <button @click="tab='traits'" :class="tab=='traits'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-sliders text-xl"></i></button>
-                <button @click="tab='layers'" :class="tab=='layers'?'text-indigo-600 bg-indigo-50 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3 transition"><i class="ph ph-stack text-xl"></i></button>
-            </div>
-            <div class="flex-1 bg-white relative w-full overflow-y-auto custom-scroll">
-                <div x-show="tab=='blocks'" class="h-full pb-20 p-2">
-                    <div id="blocks-custom-renderer" class="space-y-2">
-                        <div class="text-center py-10 text-gray-400 text-xs animate-pulse">Memuat Widget...</div>
-                    </div>
-                    <div id="blocks-container" class="hidden"></div> 
-                </div>
-                <div x-show="tab=='styles'" class="h-full pb-20"><div id="selectors-container" class="p-3 bg-gray-50 border-b"></div><div id="styles-container" class="p-1"></div></div>
-                <div x-show="tab=='traits'" class="h-full pb-20"><div id="traits-container" class="p-4"></div></div>
-                <div x-show="tab=='layers'" class="h-full pb-20"><div id="layers-container"></div></div>
-            </div>
-        </div>
-    </div>
-
-    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[400] bg-slate-900/50 backdrop-blur-sm flex justify-end" @click.self="showSettings = false">
-        <div class="w-full md:w-[480px] h-full bg-white shadow-2xl flex flex-col border-l border-gray-200">
-            <div class="p-5 border-b flex justify-between items-center bg-gray-50">
-                <h2 class="font-bold text-gray-800 flex items-center gap-2"><i class="ph ph-faders text-indigo-600 text-xl"></i> Page Settings</h2>
-                <button @click="showSettings = false" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button>
-            </div>
-            
-            <div class="flex border-b text-[11px] font-black uppercase bg-white">
-                <button @click="settingsTab='commerce'" :class="settingsTab==='commerce'?'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 py-4">Commerce</button>
-                <button @click="settingsTab='seo'" :class="settingsTab==='seo'?'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 py-4">SEO</button>
-                <button @click="settingsTab='advanced'" :class="settingsTab==='advanced'?'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 py-4">Scripts</button>
-            </div>
-
-            <div class="flex-1 overflow-y-auto p-6 space-y-6">
-                <div x-show="settingsTab === 'commerce'" class="space-y-4">
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Judul Halaman</label><input x-model="page.title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none focus:border-indigo-500 transition"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">URL Slug</label><input x-model="page.slug" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tipe Produk</label><select x-model="page.product_type" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm"><option value="physical">Physical Product</option><option value="digital">Digital Product</option></select></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Harga Dasar (Rp)</label><input type="number" x-model="page.config.price" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
-                    <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Metode Pembayaran</label>
-                        <div class="grid grid-cols-2 gap-2 mt-3">
-                            <label class="flex items-center gap-2 p-2 bg-white border rounded-lg cursor-pointer"><input type="checkbox" value="whatsapp" x-model="page.config.active_payments" class="w-4 h-4 rounded text-indigo-600"><span class="text-[11px] font-medium text-gray-700">WhatsApp</span></label>
-                            <template x-for="p in paymentProviders" :key="p.slug">
-                                <label class="flex items-center gap-2 p-2 bg-white border rounded-lg cursor-pointer"><input type="checkbox" :value="p.slug" x-model="page.config.active_payments" class="w-4 h-4 rounded text-indigo-600"><span class="text-[11px] font-medium text-gray-700" x-text="p.name"></span></label>
-                            </template>
-                        </div>
-                    </div>
-                </div>
-
-                <div x-show="settingsTab === 'seo'" class="space-y-4">
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">SEO Browser Title</label><input x-model="page.config.settings.seo_title" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none" placeholder="Judul di Google"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Meta Description</label><textarea x-model="page.config.settings.seo_description" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm h-24 outline-none resize-none"></textarea></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Favicon URL</label><input x-model="page.config.settings.favicon" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
-                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Social Image (OG)</label><input x-model="page.config.settings.og_image" class="w-full mt-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none"></div>
-                </div>
-
-                <div x-show="settingsTab === 'advanced'" class="space-y-6">
-                    <div class="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 space-y-4">
-                        <h4 class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Pixels & Analytics</h4>
-                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">FB Pixel ID</label><input x-model="page.config.settings.fb_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none"></div>
-                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">TikTok Pixel ID</label><input x-model="page.config.settings.tiktok_pixel" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none"></div>
-                        <div><label class="text-[9px] font-bold text-indigo-400 uppercase">GA4 ID</label><input x-model="page.config.settings.ga_id" class="w-full mt-1 px-4 py-2 bg-white border border-indigo-200 rounded-lg text-sm outline-none"></div>
-                    </div>
-                    <div class="space-y-4">
-                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Header Script</label><textarea x-model="page.config.settings.scripts_header" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none" placeholder="<script>...</script>"></textarea></div>
-                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Footer Script</label><textarea x-model="page.config.settings.scripts_footer" class="w-full mt-1 px-4 py-3 bg-gray-900 text-indigo-300 font-mono text-[10px] h-28 rounded-xl outline-none" placeholder="Sebelum </body>"></textarea></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="p-4 border-t bg-gray-50 flex justify-end gap-3">
-                <button @click="showSettings=false" class="px-5 py-2 text-xs font-bold text-gray-500">BATAL</button>
-                <button @click="savePage(); showSettings=false" class="px-8 py-2 bg-indigo-600 text-white text-xs font-black rounded-xl shadow-lg active:scale-95 transition-all">SIMPAN</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="iconify-picker-modal" class="fixed inset-0 hidden z-[99999] bg-black/40 flex items-start justify-center p-6 backdrop-blur-sm">
-        <div class="bg-white rounded-xl w-full max-w-xl shadow-2xl mt-10 overflow-hidden">
-            <div class="flex items-center justify-between p-4 border-b bg-gray-50"><input id="iconify-picker-search" placeholder="Cari icon..." class="w-full bg-transparent outline-none text-sm" /><button id="iconify-picker-close"><i class="ph ph-x text-lg"></i></button></div>
-            <div id="iconify-picker-results" class="p-4 grid grid-cols-6 gap-3 max-h-[300px] overflow-y-auto"></div>
-        </div>
-    </div>
-
-    <div class="fixed bottom-5 left-5 z-[100000] flex flex-col gap-2 pointer-events-none">
+    <div class="fixed bottom-5 left-5 z-[9999] flex flex-col gap-2 pointer-events-none">
         <template x-for="n in notifications" :key="n.id">
-            <div x-show="n.show" x-transition class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-l-4 bg-white min-w-[280px]" :class="n.type==='success'?'border-green-500':'border-red-500'">
-                <i class="ph text-2xl" :class="n.type==='success'?'ph-check-circle text-green-500':'ph-warning-circle text-red-500'"></i>
-                <div><h4 class="text-xs font-bold text-gray-800 uppercase" x-text="n.title"></h4><p class="text-[10px] text-gray-500 font-medium" x-text="n.msg"></p></div>
+            <div x-show="n.show" x-transition class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border-l-4 bg-white min-w-[250px]" :class="n.type==='success'?'border-green-500':'border-red-500'">
+                <i class="ph text-xl" :class="n.type==='success'?'ph-check-circle text-green-500':'ph-warning-circle text-red-500'"></i>
+                <div><h4 class="text-xs font-bold text-gray-800" x-text="n.title"></h4><p class="text-[10px] text-gray-500" x-text="n.msg"></p></div>
             </div>
         </template>
     </div>
 
-    <script>
-    // DEKLARASI GLOBAL - HANYA SEKALI
-    let appBuilderCache = {};
+    <div id="iconify-picker-modal" class="fixed inset-0 hidden z-[99999] bg-black/40 flex items-start justify-center p-6 backdrop-blur-sm">
+      <div class="bg-white rounded-xl w-full max-w-2xl shadow-2xl overflow-hidden mt-10 border border-gray-200">
+        <div class="flex items-center justify-between p-4 border-b bg-gray-50">
+          <div class="flex items-center gap-2 w-full">
+            <i class="ph ph-magnifying-glass text-lg text-gray-500"></i>
+            <input id="iconify-picker-search" placeholder="Cari icon, mis. ph:shopping-cart atau 'cart'" class="w-full bg-transparent outline-none text-sm ml-2" />
+            <button id="iconify-picker-clear" class="ml-2 text-xs font-bold text-gray-400 hover:text-red-500">CLEAR</button>
+          </div>
+          <button id="iconify-picker-close" class="ml-4 text-gray-400 hover:text-gray-600"><i class="ph ph-x text-xl"></i></button>
+        </div>
+        <div id="iconify-picker-results" class="p-4 grid grid-cols-6 gap-3 max-h-[400px] overflow-y-auto custom-scroll">
+            <div class="col-span-full text-center text-gray-400 text-xs py-8">Ketik pencarian di atas...</div>
+        </div>
+        <div class="p-3 text-[10px] text-gray-400 border-t bg-gray-50 flex justify-between">
+            <span>Tip: Double-click icon di canvas untuk mengganti.</span>
+            <span class="font-mono">Powered by Iconify</span>
+        </div>
+      </div>
+    </div>
 
-    (function(){
-        let activeModel = null; const modal = document.getElementById('iconify-picker-modal'); const input = document.getElementById('iconify-picker-search'); const results = document.getElementById('iconify-picker-results');
-        window.openIconifyPicker = function(model) { activeModel = model; modal.classList.remove('hidden'); input.value = ''; input.focus(); searchIcons('star'); };
-        document.getElementById('iconify-picker-close').onclick = () => modal.classList.add('hidden'); 
-        input.oninput = (e) => searchIcons(e.target.value);
-        async function searchIcons(q) { 
-            if(!q) return; 
-            try { 
-                const res = await fetch(`https://api.iconify.design/search?query=${q}&limit=30`); const data = await res.json(); results.innerHTML = ''; 
-                if(data.icons) data.icons.forEach(icon => { const btn = document.createElement('button'); btn.className = 'p-2 hover:bg-indigo-50 rounded flex flex-col items-center gap-1 transition'; btn.innerHTML = `<iconify-icon icon="${icon}" width="24"></iconify-icon><span class="text-[9px] text-gray-400 truncate w-full text-center">${icon.split(':')[1]}</span>`; btn.onclick = () => { if(activeModel) activeModel.setAttributes({ icon: icon }); modal.classList.add('hidden'); }; results.appendChild(btn); }); 
-            } catch(e) {} 
-        }
-    })();
+    <header class="h-14 bg-white border-b border-gray-200 flex justify-between items-center px-4 z-50 relative shrink-0 shadow-sm">
+        <div class="flex items-center gap-4">
+            <a href="/admin/pages" class="text-gray-400 hover:text-blue-600 transition p-1 rounded-md hover:bg-gray-100"><i class="ph ph-arrow-left text-xl"></i></a>
+            <div class="h-6 w-px bg-gray-200 header-slug-section"></div>
+            <div class="header-slug-section">
+                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Page Slug</span>
+                <input x-model="page.slug" class="bg-transparent font-mono font-bold text-sm text-gray-700 outline-none w-48 placeholder-gray-300 focus:text-blue-600 transition" placeholder="nama-halaman">
+            </div>
+        </div>
+        
+        <div class="absolute left-1/2 transform -translate-x-1/2 flex items-center bg-gray-100 rounded-lg p-1 border border-gray-200 shadow-inner">
+            <button @click="setDevice('desktop')" :class="device=='desktop'?'bg-white shadow text-blue-600':'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded-md transition" title="Desktop"><i class="ph ph-desktop text-lg"></i></button>
+            <button @click="setDevice('tablet')" :class="device=='tablet'?'bg-white shadow text-blue-600':'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded-md transition" title="Tablet"><i class="ph ph-device-tablet text-lg"></i></button>
+            <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-white shadow text-blue-600':'text-gray-400 hover:text-gray-600'" class="p-1.5 rounded-md transition" title="Mobile"><i class="ph ph-device-mobile text-lg"></i></button>
+            <div class="w-px h-5 bg-gray-300 mx-2"></div>
+            <button @click="cmd('core:preview')" class="text-gray-500 hover:text-blue-600 p-1.5" title="Preview"><i class="ph ph-eye text-lg"></i></button>
+            <button @click="cmd('core:undo')" class="text-gray-400 hover:text-gray-700 p-1.5" title="Undo"><i class="ph ph-arrow-u-up-left text-lg"></i></button>
+            <button @click="cmd('core:redo')" class="text-gray-400 hover:text-gray-700 p-1.5" title="Redo"><i class="ph ph-arrow-u-up-right text-lg"></i></button>
+        </div>
 
-    function editorApp() {
-        return {
-            device: 'desktop', tab: 'blocks', settingsTab: 'commerce', showSettings: false, loading: false, notifications: [],
-            paymentProviders: [
-                { slug: 'paspay', name: 'Paspay QRIS' },
-                { slug: 'Paspay-va', name: 'Paspay VA' },
-                { slug: 'midtrans', name: 'Midtrans' }
-            ],
-            page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, active_payments: [], settings: { seo_title:'', seo_description:'', favicon:'', og_image:'', fb_pixel:'', tiktok_pixel:'', ga_id:'', scripts_header:'', scripts_footer:'' } } },
+        <div class="flex items-center gap-3">
+            <button @click="cmd('gjs-export-zip')" class="text-gray-500 hover:text-green-600 flex items-center gap-1 text-xs font-bold px-2 hidden md:flex hover:bg-green-50 p-1.5 rounded transition"><i class="ph ph-download-simple text-lg"></i> ZIP</button>
+            <button @click="showSettings=true" class="bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 border border-gray-200 transition"><i class="ph ph-gear-six text-lg"></i> Config</button>
+            <button @click="savePage" :disabled="loading" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-blue-500/30 hover:shadow-blue-600/40">
+                <i x-show="loading" class="ph ph-spinner animate-spin"></i>
+                <span x-text="loading ? 'SAVING...' : 'PUBLISH'"></span>
+            </button>
+        </div>
+    </header>
 
-            async init() {
-                this.initGrapes();
-                const slug = new URLSearchParams(window.location.search).get('slug');
-                if (slug) await this.loadPageData(slug);
-            },
+    <div class="flex h-[calc(100vh-3.5rem)] overflow-hidden relative">
+        <div class="flex-1 relative bg-[#e2e8f0] overflow-hidden">
+            <div id="gjs" class="w-full h-full"></div>
+        </div>
+        
+        <div class="sidebar-desktop">
+            <div class="panel-tabs">
+                <button @click="tab='blocks'" :class="tab=='blocks'?'active':''" title="Elements"><i class="ph ph-squares-four"></i></button>
+                <button @click="tab='styles'" :class="tab=='styles'?'active':''" title="Style"><i class="ph ph-paint-brush"></i></button>
+                <button @click="tab='traits'" :class="tab=='traits'?'active':''" title="Settings"><i class="ph ph-sliders"></i></button>
+                <button @click="tab='layers'" :class="tab=='layers'?'active':''" title="Layers"><i class="ph ph-stack"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto bg-white relative custom-scroll">
+                <div x-show="tab=='blocks'" id="blocks-container" class="absolute inset-0 pb-20"></div>
+                <div x-show="tab=='styles'"><div id="selectors-container" class="p-3 border-b bg-gray-50"></div><div id="styles-container" class="pb-20"></div></div>
+                <div x-show="tab=='traits'"><div class="p-3 bg-gray-50 text-gray-500 text-[10px] font-bold uppercase tracking-widest border-b">Element Config</div><div id="traits-container" class="p-2 pb-20"></div></div>
+                <div x-show="tab=='layers'" id="layers-container" class="absolute inset-0 pb-20"></div>
+            </div>
+        </div>
+    </div>
 
-            notify(title, msg, type = 'success') { 
-                const id = Date.now(); this.notifications.push({ id, title, msg, type, show: true }); 
-                setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); 
-            },
-
-            addWidgetToCanvas(id) {
-                const w = appBuilderCache[id];
-                if (w) {
-                    let html = w.content;
-                    if(w.script) {
-                        const div = document.createElement('div'); div.innerHTML = html;
-                        const root = div.firstElementChild;
-                        if(root) { root.setAttribute('data-gjs-type', w.id); html = div.innerHTML; }
-                    }
-                    try { window.editor.addComponents(html); } catch(e) { console.error('Add Error', e); }
-                }
-            },
-
-            async loadPageData(slug) {
-                this.loading = true;
-                try {
-                    const res = await fetch(`/api/admin/pages/${slug}`);
-                    if(!res.ok) throw new Error('Data not found');
-                    const data = await res.json();
-                    this.page.id = data.id; this.page.slug = data.slug; this.page.title = data.title || '';
-                    if (data.product_config_json) { 
-                        const conf = typeof data.product_config_json === 'string' ? JSON.parse(data.product_config_json) : data.product_config_json;
-                        this.page.config = { ...this.page.config, ...conf }; 
-                    }
-                    if (window.editor) {
-                        window.editor.setComponents(data.html_content || '');
-                        window.editor.setStyle(data.css_content || '');
-                        setTimeout(() => {
-                            window.editor.getWrapper().find('details').forEach(d => d.addAttributes({ open: 'true' }));
-                        }, 600);
-                    }
-                } catch (e) { this.notify('Error', e.message, 'error'); }
-                this.loading = false;
-            },
-
-            async savePage() {
-                this.loading = true;
-                try {
-                    window.editor.getWrapper().find('details').forEach(d => d.addAttributes({ open: null }));
-                    const payload = {
-                        id: this.page.id, slug: this.page.slug, title: this.page.title,
-                        html: `${window.editor.getHtml()}<script>${window.editor.getJs()}<\/script>`,
-                        css: window.editor.getCss(), product_config: this.page.config
-                    };
-                    const res = await fetch('/api/admin/pages', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
-                    if(res.ok) this.notify('Sukses', 'Publish Berhasil!'); else throw new Error('Simpan gagal');
-                } catch (e) { this.notify('Gagal', e.message, 'error'); }
-                this.loading = false;
-            },
-
-            setDevice(d) { this.device = d; if (window.editor) window.editor.setDevice(d); },
-
-            initGrapes() {
-                const bridgeCSS = `
-                    body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; padding-top: 65px !important; } 
-                    img { max-width: 100% !important; height: auto !important; display: block; }
-                    details > :not(summary) { display: block !important; opacity: 1 !important; height: auto !important; padding-top: 10px; border-top: 1px dashed #e5e7eb; }
-                `; 
-
-                window.editor = grapesjs.init({
-                    container: '#gjs', height: '100%', width: 'auto', storageManager: false, panels: { defaults: [] }, allowScripts: 1,
-                    assetManager: {
-                        uploadText: 'Upload Gambar',
-                        uploadFile: async (e) => {
-                            const file = e.dataTransfer ? e.dataTransfer.files[0] : e.target.files[0];
-                            if(!file) return;
-                            const toBase64 = f => new Promise((r,j)=>{const x=new FileReader();x.onload=()=>r(x.result);x.readAsDataURL(f)});
-                            try {
-                                const b64 = await toBase64(file);
-                                const res = await fetch('/api/admin/upload-image', { method: 'POST', body: JSON.stringify({ image: b64, filename: file.name }) });
-                                const d = await res.json();
-                                if(d.data) { window.editor.AssetManager.add(d.data); this.notify('Sukses', 'Gambar diupload!'); }
-                            } catch(err) { this.notify('Gagal', 'Upload gagal', 'error'); }
-                        }
-                    },
-                    canvas: {
-                        scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
-                        styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
-                        content: `<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"><script>console.warn=function(){};<\/script><style>${bridgeCSS}</style>`
-                    },
-                    plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg'],
-                    deviceManager: { devices: [{ id: 'desktop', width: '' }, { id: 'tablet', width: '768px' }, { id: 'mobile', width: '375px' }] },
-                    styleManager: { 
-                        appendTo: '#styles-container', 
-                        sectors: [
-                            { name: 'Typography', open: 1, buildProps: ['font-family', 'font-size', 'font-weight', 'letter-spacing', 'line-height', 'color', 'text-align', 'text-decoration', 'font-style', 'text-transform', 'text-shadow'] }, 
-                            { name: 'Layout', open: 0, buildProps: ['width', 'height', 'padding', 'margin', 'display', 'flex-direction', 'justify-content', 'align-items', 'position', 'top', 'bottom', 'left', 'right', 'z-index'] },
-                            { name: 'Background', open: 0, buildProps: ['background-color', 'background-image', 'background-repeat', 'background-size', 'background-position'] },
-                            { name: 'Border', open: 0, buildProps: ['border', 'border-radius', 'box-shadow', 'opacity', 'cursor', 'overflow'] }
-                        ] 
-                    }
-                });
-
-                // --- FIX SYNTAX: DINAMIS REGISTER DENGAN ESCAPE AMAN ---
-                fetch('/api/widgets').then(res => res.json()).then(widgets => {
-                    const renderer = document.getElementById('blocks-custom-renderer');
-                    renderer.innerHTML = ''; const groups = {};
+    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[200] bg-slate-900/50 backdrop-blur-sm flex justify-end" @click.self="showSettings = false">
+        <div class="settings-modal w-[450px] h-full bg-white shadow-2xl flex flex-col border-l border-gray-200" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0">
+            <div class="p-5 border-b flex justify-between items-center bg-gray-50">
+                <h2 class="font-bold text-gray-800 flex items-center gap-2"><i class="ph ph-faders text-blue-600 text-xl"></i> Konfigurasi Halaman</h2>
+                <button @click="showSettings = false" class="text-gray-400 hover:text-red-500 transition"><i class="ph ph-x text-xl"></i></button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-6 space-y-8 custom-scroll bg-white">
+                
+                <div>
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2"><i class="ph ph-package"></i> Tipe Produk</h3>
+                    <div class="flex bg-gray-100 p-1 rounded-lg mb-4">
+                        <button @click="page.product_type='physical'" :class="page.product_type=='physical'?'bg-white shadow-sm text-blue-600':'text-gray-500'" class="flex-1 py-2 text-xs font-bold rounded-md transition flex items-center justify-center gap-2"><i class="ph ph-cube"></i> Fisik</button>
+                        <button @click="page.product_type='digital'" :class="page.product_type=='digital'?'bg-white shadow-sm text-blue-600':'text-gray-500'" class="flex-1 py-2 text-xs font-bold rounded-md transition flex items-center justify-center gap-2"><i class="ph ph-file-cloud"></i> Digital</button>
+                        <button @click="page.product_type='donation'" :class="page.product_type=='donation'?'bg-white shadow-sm text-blue-600':'text-gray-500'" class="flex-1 py-2 text-xs font-bold rounded-md transition flex items-center justify-center gap-2"><i class="ph ph-heart"></i> Donasi</button>
+                    </div>
                     
-                    widgets.forEach(w => {
-                        appBuilderCache[w.id] = w;
+                    <div x-show="page.product_type==='physical'" class="space-y-3 bg-blue-50 p-4 rounded-lg border border-blue-100">
+                        <div>
+                            <label class="text-[11px] font-bold text-gray-600">Berat Produk (gram)</label>
+                            <input x-model="page.config.shipping.weight" type="number" class="input-std mt-1" placeholder="1000">
+                        </div>
+                        <div class="flex items-center gap-2 mt-2">
+                            <input type="checkbox" id="enable_cod" x-model="page.config.shipping.cod" class="w-4 h-4 text-blue-600 rounded cursor-pointer">
+                            <label for="enable_cod" class="text-xs font-medium text-gray-700 cursor-pointer">Aktifkan COD (Bayar di Tempat)</label>
+                        </div>
+                        <p class="text-[10px] text-gray-400 italic">*Alamat lengkap & ongkir akan dihitung otomatis di halaman checkout.</p>
+                    </div>
 
-                        if (w.script && w.script.trim() !== "") {
-                            try {
-                                // Membersihkan script dari titik liar atau spasi di awal
-                                const cleanScript = w.script.trim();
-                                window.editor.DomComponents.addType(w.id, {
-                                    model: {
-                                        defaults: {
-                                            // Gunakan fungsi asli, bukan string, agar GrapesJS tidak salah parsing
-                                            script: new Function(cleanScript),
-                                            attributes: { 'data-gjs-type': w.id }
-                                        }
-                                    }
-                                });
-                            } catch(e) { console.warn('Script Error di widget:', w.id); }
-                        }
+                    <div x-show="page.product_type==='digital'" class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <p class="text-[10px] text-gray-500 flex items-center gap-2"><i class="ph ph-info text-blue-500"></i> Email pembeli wajib diisi saat checkout.</p>
+                    </div>
+                </div>
 
-                        if (w.category !== 'System') {
-                            if (!groups[w.category]) groups[w.category] = [];
-                            groups[w.category].push(w);
-                        }
-                    });
+                <div class="border-t border-gray-100 pt-6" x-show="page.product_type !== 'donation'">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2"><i class="ph ph-tag"></i> Harga & Varian</h3>
+                        <div class="text-[10px] text-gray-400">Harga Satuan</div>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <template x-for="(v, i) in page.config.variants">
+                            <div class="flex gap-2 items-center group">
+                                <div class="bg-gray-100 h-8 w-6 flex items-center justify-center rounded text-[10px] font-mono text-gray-400" x-text="i+1"></div>
+                                <input x-model="v.name" class="input-std flex-1" placeholder="Nama Paket (mis: Paket Hemat)">
+                                <div class="relative w-28">
+                                    <span class="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs">Rp</span>
+                                    <input x-model="v.price" type="number" class="input-std pl-7" placeholder="0">
+                                </div>
+                                <button @click="page.config.variants.splice(i,1)" class="text-gray-300 hover:text-red-500 transition px-1"><i class="ph ph-trash text-lg"></i></button>
+                            </div>
+                        </template>
+                        <button @click="addVariant" class="w-full border-2 border-dashed border-gray-300 text-gray-500 font-bold text-xs py-3 rounded-lg hover:border-blue-400 hover:text-blue-500 transition flex items-center justify-center gap-2"><i class="ph ph-plus-circle"></i> Tambah Varian Produk</button>
+                    </div>
+                    
+                    <div x-show="page.config.variants.length === 0" class="mt-4 p-4 bg-gray-50 rounded-lg border">
+                        <label class="text-[11px] font-bold text-gray-600">Harga Produk (Single)</label>
+                        <div class="relative mt-1">
+                            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-bold text-xs">Rp</span>
+                            <input x-model="page.config.price" type="number" class="input-std pl-8 font-bold text-gray-700" placeholder="0">
+                        </div>
+                    </div>
+                </div>
 
-                    Object.keys(groups).sort().forEach(catName => {
-                        const details = document.createElement('details'); details.className = 'group border border-gray-200 rounded-lg bg-white mb-2'; details.open = true;
-                        const summary = document.createElement('summary'); summary.className = 'p-3 bg-gray-50 text-xs font-bold cursor-pointer flex justify-between items-center';
-                        summary.innerHTML = `<span>${catName}</span> <i class="ph ph-caret-down group-open:rotate-180 transition"></i>`;
-                        const contentDiv = document.createElement('div'); contentDiv.className = 'grid grid-cols-3 gap-2 p-2';
-                        groups[catName].forEach(w => {
-                            const btn = document.createElement('div'); btn.className = 'block-card'; 
-                            btn.onclick = () => this.addWidgetToCanvas(w.id);
-                            btn.innerHTML = `<div class="text-indigo-600 mb-1"><i class="ph ph-cube text-xl"></i></div><div class="block-label">${w.label}</div>`; 
-                            contentDiv.appendChild(btn);
-                        });
-                        details.appendChild(summary); details.appendChild(contentDiv); renderer.appendChild(details);
-                    });
-                });
+                <div class="border-t border-gray-100 pt-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-xs font-bold text-purple-600 uppercase tracking-wider flex items-center gap-2"><i class="ph ph-lightning"></i> Order Bump</h3>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" x-model="page.config.order_bump.active" class="sr-only peer">
+                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+                        </label>
+                    </div>
+                    <div x-show="page.config.order_bump.active" class="space-y-3 bg-purple-50 p-4 rounded-lg border border-purple-100 shadow-sm" x-transition>
+                        <input x-model="page.config.order_bump.title" class="input-std font-bold text-purple-900 placeholder-purple-300" placeholder="Judul Penawaran (mis: Tambah Ebook Premium)">
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400 text-xs">Rp</span>
+                            <input x-model="page.config.order_bump.price" type="number" class="input-std pl-8" placeholder="Harga Bump">
+                        </div>
+                        <textarea x-model="page.config.order_bump.desc" class="input-std text-xs" rows="2" placeholder="Deskripsi singkat penawaran..."></textarea>
+                    </div>
+                </div>
 
-                window.editor.on('rte:enable', () => document.querySelectorAll('.gjs-toolbar').forEach(t => t.classList.add('ghost-mode')));
-                window.editor.on('rte:disable', () => document.querySelectorAll('.gjs-toolbar').forEach(t => t.classList.remove('ghost-mode')));
+                <div class="border-t border-gray-100 pt-6">
+                    <h3 class="text-xs font-bold text-red-500 uppercase tracking-wider mb-3 flex items-center gap-2"><i class="ph ph-ticket"></i> Kupon Diskon</h3>
+                    <div class="space-y-2">
+                        <template x-for="(c, i) in page.config.coupons">
+                            <div class="bg-white p-2 rounded-lg border border-gray-200 flex gap-2 items-center shadow-sm">
+                                <input x-model="c.code" class="input-std uppercase font-mono font-bold text-red-600 w-1/3" placeholder="KODE">
+                                <select x-model="c.type" class="input-std w-24 text-xs bg-gray-50">
+                                    <option value="percent">% Persen</option>
+                                    <option value="flat">Rp Flat</option>
+                                </select>
+                                <input x-model="c.value" type="number" class="input-std w-20" placeholder="Nilai">
+                                <button @click="page.config.coupons.splice(i,1)" class="text-gray-300 hover:text-red-500"><i class="ph ph-x-circle text-lg"></i></button>
+                            </div>
+                        </template>
+                        <button @click="page.config.coupons.push({code:'', type:'percent', value:0})" class="w-full py-2 text-xs font-bold text-red-500 border border-red-200 rounded-lg hover:bg-red-50 transition">+ Tambah Kode Kupon</button>
+                    </div>
+                </div>
 
-                window.editor.Traits.addType('textarea', {
-                    createInput({ trait }) {
-                        const el = document.createElement('textarea');
-                        el.className = 'w-full p-2 text-xs border border-gray-300 rounded bg-gray-50 text-gray-800 focus:outline-none focus:border-indigo-500 transition';
-                        el.style.minHeight = '80px';
-                        el.addEventListener('input', (e) => this.onChange(e));
-                        return el;
-                    },
-                    onUpdate({ elInput, component }) { elInput.value = component.get(this.model.get('name')) || component.get('content') || ''; },
-                });
+                <div class="border-t border-gray-100 pt-6">
+                    <h3 class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-3 flex items-center gap-2"><i class="ph ph-credit-card"></i> Pembayaran</h3>
 
-                window.editor.on('component:selected', (model) => {
-                    const el = model.getEl();
-                    if (el && el.innerText && el.childElementCount === 0) {
-                        const currentTraits = model.get('traits').filter(t => t.name !== 'content_text');
-                        model.set('traits', [{ type: 'textarea', name: 'content_text', label: 'Edit Teks', changeProp: 1 }, ...currentTraits]);
-                        model.set('content_text', model.get('content')); 
-                        model.on('change:content_text', () => { model.components(model.get('content_text')); });
-                    }
-                });
+                    <label class="text-[10px] font-bold text-gray-500">Provider Default</label>
+                    <div class="relative">
+                        <select x-model="page.slug_payment" class="input-std mt-1 mb-4 bg-white border-blue-200 focus:ring-2 focus:ring-blue-500 appearance-none">
+                            <option value="whatsapp">WhatsApp (Manual)</option>
+                            <template x-for="p in paymentProviders" :key="p.slug">
+                                <option :value="p.slug" x-text="p.name"></option>
+                            </template>
+                        </select>
+                        <i class="ph ph-caret-down absolute right-3 top-4 text-gray-400 pointer-events-none"></i>
+                    </div>
 
-                window.editor.on('component:selected', (c) => { 
-                    c.set('toolbar', [
-                        { attributes: { class: 'fa' }, command: 'tlb-move', label: '<i class="ph ph-arrows-out-cardinal text-lg"></i>' },
-                        { attributes: { class: 'fa' }, command: e => e.runCommand('core:component-exit'), label: '<i class="ph ph-arrow-fat-up text-lg"></i>' },
-                        { attributes: { class: 'fa' }, command: e => { e.runCommand('core:copy'); e.getSelected().remove(); }, label: '<i class="ph ph-scissors text-lg text-yellow-300"></i>' },
-                        { attributes: { class: 'fa' }, command: e => e.runCommand('core:copy'), label: '<i class="ph ph-copy text-lg text-blue-300"></i>' },
-                        { attributes: { class: 'fa' }, command: e => e.runCommand('core:paste'), label: '<i class="ph ph-clipboard-text text-lg text-green-300"></i>' },
-                        { attributes: { class: 'fa', title: 'Paste Inside' }, command: e => { const selected = e.getSelected(); const clipboard = e.Models.Clipboard && e.Models.Clipboard.get ? e.Models.Clipboard.get() : null; if(selected && clipboard) selected.append(clipboard); }, label: '<i class="ph ph-arrow-elbow-down-right text-lg text-purple-400"></i>' },
-                        { attributes: { class: 'fa' }, command: 'tlb-delete', label: '<i class="ph ph-trash text-lg text-red-400"></i>' }
-                    ]);
-                });
-            }
-        };
+                    <h4 class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Metode Aktif</h4>
+                    <div class="space-y-1 bg-gray-50 p-3 rounded-lg border border-gray-200 max-h-40 overflow-y-auto custom-scroll">
+                        <template x-for="p in paymentProviders" :key="p.slug">
+                            <label class="flex items-center gap-3 cursor-pointer hover:bg-white p-2 rounded-md transition border border-transparent hover:border-gray-200">
+                                <input type="checkbox" :value="p.slug" x-model="page.config.active_payments" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                                <div>
+                                    <span class="text-xs font-bold text-gray-700 block" x-text="p.name"></span>
+                                    <span class="text-[9px] text-gray-400 block" x-text="p.slug"></span>
+                                </div>
+                            </label>
+                        </template>
+                        <div x-show="paymentProviders.length === 0" class="text-center text-xs text-gray-400 py-2">Belum ada provider terhubung.</div>
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-100 pt-6 space-y-4">
+                    <h3 class="text-xs font-bold text-green-600 uppercase tracking-wider flex items-center gap-2"><i class="ph ph-globe"></i> SEO & Meta</h3>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500">Judul Halaman (Meta Title)</label>
+                        <input x-model="page.config.settings.seo_title" class="input-std mt-1">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500">Deskripsi (Meta Description)</label>
+                        <textarea x-model="page.config.settings.seo_description" class="input-std mt-1" rows="3"></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div><label class="text-[10px] font-bold text-gray-500">Favicon URL</label><input x-model="page.config.settings.favicon" class="input-std mt-1"></div>
+                        <div><label class="text-[10px] font-bold text-gray-500">OG Image URL</label><input x-model="page.config.settings.og_image" class="input-std mt-1"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div><label class="text-[10px] font-bold text-gray-500">Pixel FB ID</label><input x-model="page.config.settings.fb_pixel_id" class="input-std mt-1" placeholder="12345xxx"></div>
+                        <div><label class="text-[10px] font-bold text-gray-500">Pixel TikTok ID</label><input x-model="page.config.settings.tiktok_pixel_id" class="input-std mt-1" placeholder="Cxxxx"></div>
+                    </div>
+                </div>
+
+            </div>
+            
+            <div class="p-4 border-t bg-gray-50 flex justify-end gap-2">
+                <button @click="showSettings=false" class="px-4 py-2 text-xs font-bold text-gray-500 hover:text-gray-700">TUTUP</button>
+                <button @click="savePage(); showSettings=false" class="px-6 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-200">SIMPAN SEMUA</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+// --- 1. ICONIFY PICKER LOGIC ---
+(function(){
+    let iconifyPickerState = { model: null };
+    const modal = document.getElementById('iconify-picker-modal');
+    const input = document.getElementById('iconify-picker-search');
+    const results = document.getElementById('iconify-picker-results');
+    const closeBtn = document.getElementById('iconify-picker-close');
+    const clearBtn = document.getElementById('iconify-picker-clear');
+
+    window.openIconifyPicker = function(model){
+        iconifyPickerState.model = model || null;
+        if(modal) modal.classList.remove('hidden');
+        if(input) input.focus();
+        try {
+            const cur = model && model.get ? (model.get('attributes') || {}).icon : '';
+            if(input) input.value = cur || '';
+            if(cur) doSearch(cur); 
+        } catch(e){ if(input) input.value=''; }
+    };
+
+    function closeIconifyPicker(){
+        if(modal) modal.classList.add('hidden');
+        iconifyPickerState.model = null;
+        if(results) results.innerHTML = '<div class="col-span-full text-center text-gray-400 text-xs py-8">Ketik pencarian di atas...</div>';
     }
-    </script>
+
+    function debounce(fn, wait=300){ 
+        let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), wait); }; 
+    }
+
+    async function searchIconify(q){
+        if(!q) return [];
+        const plain = q.includes(':') ? q.split(':').pop() : q;
+        const qEnc = encodeURIComponent(plain);
+        try {
+            const res = await fetch(`https://api.iconify.design/search?query=${qEnc}&limit=24`);
+            const json = await res.json();
+            return Array.isArray(json.icons) ? json.icons : [];
+        } catch(e){ return []; }
+    }
+
+    function renderResults(list){
+        if(!results) return;
+        results.innerHTML = '';
+        if(!list || list.length===0){
+            results.innerHTML = `<div class="col-span-6 text-sm text-gray-500 text-center">Tidak ada hasil</div>`;
+            return;
+        }
+        list.forEach(iconName=>{
+            const btn = document.createElement('button');
+            btn.className = 'flex flex-col items-center gap-1 p-2 rounded hover:bg-blue-50 border border-transparent hover:border-blue-200 transition';
+            btn.innerHTML = `<iconify-icon icon="${iconName}" width="28" style="color:#333;"></iconify-icon><span class="text-[9px] text-gray-500 truncate w-full text-center">${iconName}</span>`;
+            btn.addEventListener('click', ()=>{
+                if(iconifyPickerState.model) iconifyPickerState.model.addAttributes({ icon: iconName });
+                closeIconifyPicker();
+            });
+            results.appendChild(btn);
+        });
+    }
+
+    const doSearch = debounce(async (q) => {
+        const list = await searchIconify(q.trim());
+        renderResults(list);
+    }, 300);
+
+    if(closeBtn) closeBtn.addEventListener('click', closeIconifyPicker);
+    if(input) input.addEventListener('input', (e)=> doSearch(e.target.value));
+    if(clearBtn) clearBtn.addEventListener('click', ()=>{ if(input){input.value=''; input.focus();} });
+    if(modal) modal.addEventListener('click', (e)=>{ if(e.target === modal) closeIconifyPicker(); });
+})();
+
+// --- 2. MAIN EDITOR APP ---
+function editorApp() {
+    return {
+        loading: false, 
+        showSettings: false, 
+        device: 'desktop', 
+        tab: 'blocks', 
+        notifications: [], 
+        paymentProviders: [],
+        page: { 
+            slug: '', title: '', product_type: 'physical', slug_payment: 'whatsapp', 
+            config: { 
+                price: 0,
+                variants: [], 
+                shipping: { weight: 1000, cod: false }, 
+                order_bump: { active: false, title: '', price: 0, desc: '' }, 
+                coupons: [], 
+                settings: {}, 
+                active_payments: [] 
+            } 
+        },
+
+        async init() {
+            const params = new URLSearchParams(window.location.search);
+            this.page.slug = params.get('slug');
+
+            const ok = await this.fetchPaymentProviders();
+            if (!ok) {
+                window.location.href = '/login';
+                return;
+            }
+
+            this.initGrapes();
+        },
+
+        async fetchPaymentProviders() {
+            try {
+                const res = await fetch('/api/admin/templates?type=payment', { credentials: 'same-origin' });
+                if (res.status === 401) return false;
+                const json = await res.json();
+                if (Array.isArray(json)) this.paymentProviders = json;
+                else if (Array.isArray(json.data)) this.paymentProviders = json.data;
+                else if (Array.isArray(json.results)) this.paymentProviders = json.results;
+                else this.paymentProviders = json || [];
+                return true;
+            } catch (e) { return false; }
+        },
+
+        notify(title, msg, type = 'success') {
+            const id = Date.now();
+            this.notifications.push({ id, title, msg, type, show: true });
+            setTimeout(() => {
+                const idx = this.notifications.findIndex(n => n.id === id);
+                if (idx > -1) this.notifications[idx].show = false;
+            }, 3000);
+        },
+
+        setDevice(d) { this.device = d; if (window.editor) window.editor.setDevice(d); },
+        cmd(c) { if (window.editor) window.editor.runCommand(c); },
+        addVariant() { this.page.config.variants.push({ id: Date.now(), name: '', price: 0 }); },
+
+        async savePage() {
+            this.loading = true;
+            try {
+                const res = await fetch('/api/admin/pages', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        slug: this.page.slug, title: this.page.title, product_type: this.page.product_type,
+                        provider: this.page.slug_payment, html: window.editor.getHtml(), css: window.editor.getCss(), product_config: this.page.config
+                    })
+                });
+                if (res.status === 401) { window.location.href = '/login'; return; }
+                if (res.ok) this.notify('Sukses', 'Halaman tersimpan!');
+                else this.notify('Error', 'Gagal simpan', 'error');
+            } catch (e) { this.notify('Error', 'Gagal simpan', 'error'); }
+            this.loading = false;
+        },
+
+        initGrapes() {
+            window.editor = grapesjs.init({
+                container: '#gjs', height: '100%', fromElement: false, storageManager: false,
+                canvas: {
+                    styles: [
+                        'https://cdn.tailwindcss.com',
+                        /* CSS Khusus untuk Tampilan Mobile agar tidak mepet */
+                        '@media (max-width: 480px) { body { padding: 0 16px; box-sizing: border-box; } }'
+                    ]
+                },
+                plugins: [
+                    'gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-component-countdown', 
+                    'grapesjs-tabs', 'grapesjs-custom-code', 'grapesjs-tooltip', 'grapesjs-blocks-flexbox', 
+                    'grapesjs-plugin-export', 'grapesjs-typed', 'grapesjs-style-bg'
+                ],
+                deviceManager: { devices: [{ id: 'desktop', width: '' }, { id: 'tablet', width: '768px' }, { id: 'mobile', width: '375px' }] },
+                blockManager: { appendTo: '#blocks-container' },
+                layerManager: { appendTo: '#layers-container' },
+                selectorManager: { appendTo: '#selectors-container' },
+                traitManager: { appendTo: '#traits-container' },
+                styleManager: { 
+                    appendTo: '#styles-container',
+                    sectors: [
+                        { name: 'Typography', open: true, buildProps: ['font-family', 'font-size', 'font-weight', 'color', 'text-align'] },
+                        { name: 'Dimensions', open: false, buildProps: ['width', 'height', 'padding', 'margin'] },
+                        { name: 'Decorations', open: false, buildProps: ['background-color', 'border', 'border-radius', 'box-shadow'] }
+                    ]
+                }
+            });
+
+            const domc = window.editor.DomComponents;
+            domc.addType('iconify-icon', {
+                model: {
+                    defaults: {
+                        tagName: 'iconify-icon', droppable: false,
+                        attributes: { icon: 'mdi:home', width: '48', style: 'color:#2563eb' },
+                        traits: [
+                            { type: 'button', text: '🔍 Pilih Icon', full: true, command: (ed, trait) => window.openIconifyPicker(trait.target) },
+                            { name: 'width', type: 'number', label: 'Size' },
+                            { name: 'color', type: 'color', label: 'Color' }
+                        ]
+                    }
+                }
+            });
+
+            window.editor.on('component:dblclick', (model) => {
+                if(model.get('tagName') === 'iconify-icon') window.openIconifyPicker(model);
+            });
+
+            // --- BLOCK MANAGER ---
+            const bm = window.editor.BlockManager;
+            bm.add('container-fluid', { label: 'Container', category: 'Layout', content: `<div style="width:90%; max-width:1200px; margin:0 auto; padding:20px; min-height:50px;"></div>` });
+            bm.add('section-std', { label: 'Section', category: 'Layout', content: `<section style="padding:60px 20px; background-color:#fff;"><div style="width:90%; max-width:1100px; margin:0 auto; padding:0 20px;"></div></section>` });
+            bm.add('iconify-blk', { label: 'Iconify', category: 'Media', attributes: { class: 'ph ph-star' }, content: { type: 'iconify-icon' } });
+            
+            // --- TEMPLATE CHECKOUT EKSKLUSIF ---
+            const checkoutNote = `<div style="text-align:center; padding:20px; color:#aaa; font-size:12px; border:1px dashed #ccc;">[Formulir Checkout akan muncul disini]</div>`;
+            
+            // 1. Checkout Standard (Card)
+            bm.add('checkout-card', { 
+                label: 'Checkout Card', 
+                category: 'E-Commerce', 
+                media: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/><rect x="7" y="7" width="10" height="2"/><rect x="7" y="11" width="10" height="2"/><rect x="7" y="15" width="6" height="2"/></svg>',
+                content: `<section style="padding:50px 20px; background:#f8fafc;"><div style="max-width:500px; margin:0 auto; background:#fff; padding:30px; border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,0.05); border:1px solid #e2e8f0;">[ CHECKOUT ]</div></section>` 
+            });
+
+            // 2. Checkout Trust (Dengan Badge)
+            bm.add('checkout-trust', { 
+                label: 'Checkout Trust', 
+                category: 'E-Commerce', 
+                media: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>',
+                content: `<section style="padding:60px 20px;"><div style="max-width:600px; margin:0 auto;"><div style="text-align:center; margin-bottom:30px;"><h2 style="font-weight:900; margin-bottom:10px;">Amankan Pesanan Anda</h2><p style="color:#666;">Data terenkripsi 256-bit. Transaksi aman.</p></div>[ CHECKOUT ]<div style="display:flex; justify-content:center; gap:20px; margin-top:30px; opacity:0.6;"><iconify-icon icon="logos:visa" width="40"></iconify-icon><iconify-icon icon="logos:mastercard" width="40"></iconify-icon><iconify-icon icon="logos:bca" width="40"></iconify-icon></div></div></section>` 
+            });
+
+            // 3. Checkout Split (Produk Kiri, Form Kanan)
+            bm.add('checkout-split', { 
+                label: 'Checkout Split', 
+                category: 'E-Commerce', 
+                media: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M3 4h18v16H3V4zm9 2H5v12h7V6zm2 0h5v12h-5V6z"/></svg>',
+                content: `<section style="padding:60px 20px; background:#fff;"><div style="max-width:1100px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:50px; align-items:start;"><div class="product-info"><h1>Nama Produk Premium</h1><p style="line-height:1.6; color:#666; margin-bottom:20px;">Deskripsi lengkap produk yang meyakinkan pembeli bahwa ini adalah investasi terbaik mereka.</p><ul style="list-style:none; padding:0; margin-bottom:30px;"><li style="margin-bottom:10px; display:flex; align-items:center; gap:10px;"><iconify-icon icon="ph:check-circle-fill" style="color:#22c55e"></iconify-icon> Garansi 30 Hari</li><li style="margin-bottom:10px; display:flex; align-items:center; gap:10px;"><iconify-icon icon="ph:check-circle-fill" style="color:#22c55e"></iconify-icon> Support Prioritas</li></ul><img src="https://via.placeholder.com/500x300" style="width:100%; border-radius:10px;"></div><div style="background:#f8fafc; padding:30px; border-radius:15px; border:1px solid #e2e8f0;">[ CHECKOUT ]</div></div></section>` 
+            });
+
+            // --- WIDGET CONTACT PRO BARU ---
+            const contactFormHTML = `
+                <div style="padding: 40px 20px;">
+                    <form action="/api/public/contact" method="POST" style="max-width: 500px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+                        <input type="hidden" name="page_id" value="0"> 
+                        
+                        <div style="text-align: center; margin-bottom: 24px;">
+                            <h3 style="font-size: 20px; font-weight: 800; color: #1f2937; margin-bottom: 8px;">Hubungi Kami</h3>
+                            <p style="font-size: 14px; color: #6b7280;">Kami siap membantu kebutuhan Anda.</p>
+                        </div>
+
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-size: 12px; font-weight: 700; color: #374151; text-transform: uppercase; margin-bottom: 4px;">Perihal</label>
+                            <select name="subject" style="width: 100%; padding: 12px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; outline: none; font-size: 14px;">
+                                <option value="Kontak">Kontak Umum</option>
+                                <option value="Info">Minta Informasi</option>
+                                <option value="Pertanyaan">Pertanyaan</option>
+                                <option value="Keluhan">Keluhan</option>
+                                <option value="Saran">Saran</option>
+                                <option value="Kerjasama">Kerjasama</option>
+                            </select>
+                        </div>
+
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-size: 12px; font-weight: 700; color: #374151; text-transform: uppercase; margin-bottom: 4px;">Nama Lengkap</label>
+                            <input type="text" name="name" required style="width: 100%; padding: 12px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; outline: none; font-size: 14px;" placeholder="Nama Anda">
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                            <div>
+                                <label style="display: block; font-size: 12px; font-weight: 700; color: #374151; text-transform: uppercase; margin-bottom: 4px;">Email</label>
+                                <input type="email" name="email" style="width: 100%; padding: 12px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; outline: none; font-size: 14px;" placeholder="email@contoh.com">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 12px; font-weight: 700; color: #374151; text-transform: uppercase; margin-bottom: 4px;">WhatsApp</label>
+                                <input type="tel" name="phone" style="width: 100%; padding: 12px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; outline: none; font-size: 14px;" placeholder="0812...">
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 24px;">
+                            <label style="display: block; font-size: 12px; font-weight: 700; color: #374151; text-transform: uppercase; margin-bottom: 4px;">Pesan Anda</label>
+                            <textarea name="message" required rows="4" style="width: 100%; padding: 12px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; outline: none; font-size: 14px;" placeholder="Tulis pesan Anda disini..."></textarea>
+                        </div>
+
+                        <button type="submit" style="width: 100%; padding: 14px; background: #2563eb; color: white; font-weight: 800; border-radius: 8px; border: none; cursor: pointer; transition: background 0.2s; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);">
+                            KIRIM PESAN
+                        </button>
+                    </form>
+                </div>
+            `;
+
+            bm.add('contact-pro', {
+                label: 'Contact Pro',
+                category: 'Forms',
+                media: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>',
+                content: contactFormHTML
+            });
+
+            // Init Data
+            if (this.page.slug) {
+                fetch('/api/admin/pages/' + this.page.slug, { credentials: 'same-origin' })
+                .then(r => {
+                    if (r.status === 401) { window.location.href = '/login'; throw new Error('Unauthorized'); }
+                    return r.json();
+                })
+                .then(d => {
+                    if (d.id) {
+                        this.page.title = d.title; this.page.product_type = d.product_type || 'physical'; this.page.slug_payment = d.provider || 'whatsapp';
+                        try {
+                            const c = JSON.parse(d.product_config_json || '{}');
+                            this.page.config = { 
+                                price: c.price || 0,
+                                variants: c.variants || [], 
+                                shipping: c.shipping || { weight: 1000, cod: false }, 
+                                order_bump: c.order_bump || { active: false, title:'', price:0, desc:'' }, 
+                                coupons: c.coupons || [], 
+                                settings: c.settings || {},
+                                active_payments: c.active_payments || []
+                            };
+                        } catch (e) {}
+                        if (d.html_content) window.editor.setComponents(d.html_content);
+                        if (d.css_content) window.editor.setStyle(d.css_content);
+                    }
+                }).catch(()=>{});
+            }
+        }
+    };
+}
+</script>
 </body>
 </html>
