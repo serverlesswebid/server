@@ -3,8 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LandingBuilder Pro - BASE64 UPLOAD</title>
+    <title>LandingBuilder - Pro Mobile</title>
     
+    <script>
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0] && typeof args[0] === 'string' && (args[0].includes('cdn.tailwindcss.com') || args[0].includes('production'))) return;
+                originalWarn.apply(console, args);
+            };
+        })();
+    </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
@@ -22,472 +32,255 @@
     <script src="https://unpkg.com/grapesjs-tabs@1.0.6"></script>
 
     <style>
-        /* RESET & BASE */
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: #fff; }
         [x-cloak] { display: none !important; }
 
         /* HEADER */
         header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 40; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; }
-        .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; z-index: 0; }
         
-        /* SIDEBAR (Z-INDEX 50) */
+        /* WORKSPACE */
+        .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; z-index: 0; }
+        #gjs { flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; position: relative; }
+
+        /* SIDEBAR (Panel Upload ada disini) */
         .sidebar-panel { width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 4px 0 24px rgba(0,0,0,0.1); }
         .mobile-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 45; backdrop-filter: blur(4px); }
 
-        #gjs { flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; position: relative; }
-        
-        /* --- FIX COLOR PICKER PALETTE (Z-INDEX PALING ATAS) --- */
-        .sp-container { 
-            z-index: 9999999 !important; /* HARUS PALING DEPAN */
-            background: white; 
-            border: 1px solid #cbd5e1; 
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2); 
-            border-radius: 8px; 
+        /* MOBILE FIX */
+        @media (max-width: 768px) {
+            .mobile-tools { display: flex !important; }
+            .workspace { top: 110px; } 
+            #gjs { right: 0 !important; bottom: 60px !important; }
+            .sidebar-panel { position: fixed; right: 0; top: 110px; bottom: 60px; width: 100% !important; z-index: 9999 !important; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+            .sidebar-panel.open { transform: translateX(0); }
         }
-        .sp-picker-container { border: none; }
-        
-        /* ALPINE MODAL */
-        .alpine-modal { z-index: 100; }
+        .mobile-tools { display: none; height: 50px; width: 100%; position: fixed; top: 60px; left: 0; z-index: 90; background: #f8fafc; border-bottom: 1px solid #e2e8f0; align-items: center; justify-content: center; gap: 15px; }
 
-        /* GRAPESJS UI TWEAKS */
+        /* UI COMPONENTS */
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
         .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; } 
         
-        .gjs-field { border: 1px solid #e5e7eb; border-radius: 4px; background: #fff; color: #333; padding: 5px; }
-        .gjs-field input { color: #333; font-size: 12px; width: 100%; }
-        .gjs-field-color-picker { border: 1px solid #cbd5e1; margin-right: 5px; cursor: pointer; border-radius: 4px; min-width: 30px; padding: 2px; }
+        /* COLOR PICKER Z-INDEX FIX */
+        .sp-container { z-index: 9999999 !important; background: white; border: 1px solid #cbd5e1; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2); border-radius: 8px; }
+        .gjs-field-color-picker { border: 1px solid #e2e8f0; border-radius: 4px; padding: 2px; cursor: pointer; min-width: 25px; }
 
-        /* TRAIT BUTTON */
-        .trait-btn { width: 100%; background: #4f46e5; color: white; padding: 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; border: none; transition: background 0.2s; text-align: center; display:flex; align-items:center; justify-content:center; gap:6px; margin-top: 5px; }
-        .trait-btn:hover { background: #4338ca; }
-        .trait-btn.loading { background: #9ca3af; cursor: not-allowed; }
-        
-        /* ACCORDION */
-        details.category-group > summary { list-style: none; cursor: pointer; background: #f9fafb; padding: 12px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #4b5563; border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; }
-        details.category-group[open] > summary { border-bottom: 1px solid #e5e7eb; background: #fff; color: #4f46e5; border-left: 3px solid #4f46e5; }
-        
-        /* GRID & ICONS */
-        .widget-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px; background: #fff; }
-        .block-card { cursor: grab; background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: all 0.2s; user-select: none; }
-        .block-card:hover { border-color: #6366f1; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        
-        .icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); gap: 8px; max-height: 250px; overflow-y: auto; padding: 4px; }
-        .icon-item { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 22px; cursor: pointer; color: #64748b; transition: all 0.2s; position: relative; }
-        .icon-item:hover { background-color: #e0e7ff; color: #4f46e5; border-color: #6366f1; transform: scale(1.05); }
-        
-        .custom-scroll::-webkit-scrollbar { width: 5px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .input-field { width: 100%; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; outline: none; transition: border 0.2s; }
-        .input-field:focus { border-color: #4f46e5; ring: 1px solid #4f46e5; }
-        .label-field { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #6b7280; margin-bottom: 4px; }
+        /* UPLOAD BUTTON STYLE */
+        .trait-btn-upload {
+            width: 100%; background: #4f46e5; color: white; padding: 10px; border-radius: 6px; 
+            font-size: 12px; font-weight: bold; cursor: pointer; border: none; 
+            display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 5px;
+        }
+        .trait-btn-upload:hover { background: #4338ca; }
+        .trait-btn-upload:disabled { opacity: 0.7; cursor: not-allowed; }
     </style>
 </head>
-<body x-data="editorApp()" x-init="window.editorApp = $data">
+<body x-data="editorApp()">
+
+    <div class="fixed bottom-20 left-5 z-[9999] flex flex-col gap-2 pointer-events-none">
+        <template x-for="n in notifications" :key="n.id">
+            <div x-show="n.show" x-transition class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border-l-4 bg-white" :class="n.type==='success'?'border-green-500':'border-red-500'">
+                <i class="ph text-xl" :class="n.type==='success'?'ph-check-circle text-green-500':'ph-warning-circle text-red-500'"></i>
+                <div class="text-xs font-bold text-gray-800" x-text="n.title"></div>
+            </div>
+        </template>
+    </div>
 
     <header>
         <div class="flex items-center gap-3 flex-1 min-w-0">
             <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden shrink-0 text-gray-600 bg-gray-100 hover:bg-gray-200 p-2 rounded-lg transition"><i class="ph ph-list text-2xl"></i></button>
             <a href="/admin/pages" class="hidden md:block text-gray-400 hover:text-indigo-600 p-1.5 hover:bg-gray-50 rounded"><i class="ph ph-arrow-left text-xl"></i></a>
             <div class="flex flex-col min-w-0 flex-1">
-                <input x-model="page.title" class="bg-transparent font-bold text-sm text-gray-800 outline-none w-full truncate placeholder-gray-300 focus:text-indigo-600" placeholder="Nama Halaman...">
-                <span class="text-[10px] text-gray-400 truncate font-mono hidden sm:block" x-text="page.slug ? '/'+page.slug : 'Draft Mode'"></span>
+                <input x-model="page.title" class="bg-transparent font-bold text-sm text-gray-800 outline-none w-full truncate" placeholder="Nama Halaman">
+                <span class="text-[10px] text-gray-400 truncate font-mono" x-text="page.slug ? '/'+page.slug : 'Draft Mode'"></span>
             </div>
         </div>
-        <div class="hidden md:flex bg-gray-100 rounded-lg p-1 border shadow-sm mx-4">
-            <button @click="setDevice('desktop')" :class="device=='desktop'?'bg-white shadow-sm text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-desktop"></i></button>
-            <button @click="setDevice('tablet')" :class="device=='tablet'?'bg-white shadow-sm text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-tablet"></i></button>
-            <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-white shadow-sm text-indigo-600':'text-gray-400'" class="p-1.5 rounded transition"><i class="ph ph-device-mobile"></i></button>
+        <div class="hidden md:flex items-center bg-gray-100 rounded-lg p-1 border shadow-sm mx-4">
+            <button @click="setDevice('desktop')" :class="device=='desktop'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded"><i class="ph ph-desktop"></i></button>
+            <button @click="setDevice('mobile')" :class="device=='mobile'?'bg-white shadow text-indigo-600':'text-gray-400'" class="p-1.5 rounded"><i class="ph ph-device-mobile"></i></button>
         </div>
         <div class="flex items-center gap-2 shrink-0">
-            <button @click="showSettings=true" class="flex items-center gap-2 bg-white text-gray-600 px-3 py-2 rounded-lg text-xs font-bold border hover:bg-gray-50 transition shadow-sm"><i class="ph ph-gear"></i> <span class="hidden md:inline">CONFIG</span></button>
-            <button @click="savePage" :disabled="loading" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md shadow-indigo-200 transition active:scale-95">
-                <i class="ph ph-floppy-disk text-lg" x-show="!loading"></i><i class="ph ph-spinner animate-spin text-lg" x-show="loading"></i>
-                <span x-text="loading ? '...' : 'PUBLISH'" class="hidden sm:inline"></span>
+            <button @click="showSettings=true" class="flex items-center gap-2 bg-white text-gray-600 px-3 py-2 rounded-lg text-xs font-bold border hover:bg-gray-50"><i class="ph ph-gear"></i> <span class="hidden md:inline">CONFIG</span></button>
+            <button @click="savePage" :disabled="loading" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md transition active:scale-95">
+                <span x-text="loading ? 'SAVING...' : 'PUBLISH'"></span>
             </button>
         </div>
     </header>
 
+    <div class="mobile-tools">
+        <button @click="setDevice('desktop')" :class="device=='desktop'?'text-indigo-600 bg-white shadow-sm':'text-gray-400'" class="p-1.5 rounded"><i class="ph ph-desktop text-lg"></i></button>
+        <button @click="setDevice('mobile')" :class="device=='mobile'?'text-indigo-600 bg-white shadow-sm':'text-gray-400'" class="p-1.5 rounded"><i class="ph ph-device-mobile text-lg"></i></button>
+    </div>
+
     <div class="workspace">
         <div id="gjs"></div>
-        <div x-show="mobileMenuOpen" x-cloak class="mobile-backdrop" @click="mobileMenuOpen = false" x-transition.opacity></div>
+        <div x-show="mobileMenuOpen" class="mobile-backdrop" @click="mobileMenuOpen = false" x-transition.opacity></div>
 
         <div class="sidebar-panel fixed inset-y-0 left-0 md:static transform duration-300 ease-in-out" :class="mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'">
             <div class="md:hidden flex items-center justify-between p-4 border-b bg-gray-50">
-                <span class="font-bold text-gray-800 text-sm uppercase flex items-center gap-2"><i class="ph ph-toolbox"></i> Tools</span>
-                <button @click="mobileMenuOpen = false" class="text-gray-500 hover:text-red-600 bg-white p-1 rounded border"><i class="ph ph-x text-lg"></i></button>
+                <span class="font-bold text-gray-800 text-sm uppercase">Tools</span>
+                <button @click="mobileMenuOpen = false"><i class="ph ph-x text-lg"></i></button>
             </div>
-
             <div class="flex border-b border-gray-200 bg-white shrink-0">
-                <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition" title="Widgets"><i class="ph ph-squares-four text-xl"></i></button>
-                <button @click="tab='traits'" :class="tab=='traits'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition" title="Settings"><i class="ph ph-gear text-xl"></i></button>
-                <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition" title="Styles"><i class="ph ph-paint-brush text-xl"></i></button>
-                <button @click="tab='layers'" :class="tab=='layers'?'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50':'text-gray-400'" class="flex-1 p-3 transition" title="Layers"><i class="ph ph-stack text-xl"></i></button>
+                <button @click="tab='blocks'" :class="tab=='blocks'?'text-indigo-600 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3"><i class="ph ph-squares-four text-xl"></i></button>
+                <button @click="tab='traits'" :class="tab=='traits'?'text-indigo-600 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3"><i class="ph ph-gear text-xl"></i></button>
+                <button @click="tab='styles'" :class="tab=='styles'?'text-indigo-600 border-b-2 border-indigo-600':'text-gray-400'" class="flex-1 p-3"><i class="ph ph-paint-brush text-xl"></i></button>
             </div>
             
-            <div class="flex-1 bg-white relative w-full overflow-y-auto custom-scroll">
-                <div x-show="tab=='blocks'" class="h-full pb-20">
-                    <template x-for="(widgets, category) in groupedWidgets" :key="category">
-                        <details class="category-group" open>
-                            <summary x-text="category || 'General'"></summary>
-                            <div class="widget-grid">
-                                <template x-for="w in widgets" :key="w.id">
-                                    <div class="block-card" @click="addBlockToCanvas(w)" draggable="true" @dragstart="handleDragStart($event, w)">
-                                        <div class="block-icon"><i class="ph" :class="getIconForCategory(category)"></i></div>
-                                        <div class="block-label" x-text="w.label"></div>
-                                    </div>
-                                </template>
-                            </div>
-                        </details>
-                    </template>
-                </div>
+            <div class="flex-1 bg-white relative w-full overflow-y-auto">
+                <div x-show="tab=='blocks'" class="h-full pb-20"><div id="blocks-container" class="p-2"></div></div>
                 <div x-show="tab=='traits'" class="h-full pb-20">
                     <div id="traits-container" class="p-3"></div>
-                    <div class="p-4 text-center">
-                        <p class="text-[10px] text-gray-400 bg-blue-50 text-blue-700 p-2 rounded border border-blue-100">
-                            <i class="ph ph-info"></i> Pilih elemen untuk edit properti khusus (Upload Gambar, Link, Icon).
-                        </p>
-                    </div>
+                    <div class="p-4 text-center text-xs text-gray-400 bg-gray-50 border-t">Klik elemen di canvas untuk melihat opsi.</div>
                 </div>
                 <div x-show="tab=='styles'" class="h-full pb-20"><div id="selectors-container" class="p-3 border-b bg-gray-50"></div><div id="styles-container" class="p-1"></div></div>
-                <div x-show="tab=='layers'" class="h-full pb-20"><div id="layers-container" class="p-2"></div></div>
             </div>
         </div>
     </div>
 
-    <div x-show="showIconPicker" x-cloak class="alpine-modal fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4" x-transition.opacity>
-        <div class="w-full max-w-lg bg-white rounded-xl shadow-2xl flex flex-col max-h-[80vh] border border-gray-100" @click.outside="closeIconPicker()">
-            <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-xl"><h3 class="font-bold text-gray-800">Cari Icon (Iconify)</h3><button @click="closeIconPicker()" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button></div>
-            <div class="p-4 space-y-4 overflow-hidden flex flex-col h-full">
-                <div class="flex gap-2">
-                    <div class="relative flex-1"><i class="ph ph-magnifying-glass absolute left-3 top-2.5 text-gray-400"></i><input x-model="iconSearch" @keyup.enter="searchIcons()" class="w-full pl-9 pr-3 py-2 border rounded text-sm font-mono focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Cth: whatsapp, user, cart..."></div>
-                    <button @click="searchIcons()" class="px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded shadow-sm hover:bg-indigo-700 transition"><span x-show="!loadingIcons">CARI</span><i x-show="loadingIcons" class="ph ph-spinner animate-spin"></i></button>
-                </div>
-                <div class="flex-1 overflow-hidden flex flex-col">
-                    <div class="icon-grid custom-scroll" x-show="iconList.length > 0">
-                        <template x-for="icon in iconList" :key="icon">
-                            <div class="icon-item group" :title="icon" @click="applyIcon(icon)">
-                                <iconify-icon :icon="icon"></iconify-icon>
-                                <span class="hidden group-hover:block absolute bottom-full mb-1 left-1/2 -translate-x-1/2 text-[9px] bg-black text-white px-1 rounded whitespace-nowrap" x-text="icon"></span>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div x-show="showSettings" x-cloak class="alpine-modal fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex justify-end" x-transition.opacity>
-        <div class="w-full md:w-[420px] h-full bg-white shadow-2xl flex flex-col border-l border-gray-200 transform transition-transform duration-300" x-transition:enter="translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="translate-x-0" x-transition:leave-end="translate-x-full" @click.outside="showSettings=false">
+    <div x-show="showSettings" x-cloak class="fixed inset-0 z-[400] bg-slate-900/50 backdrop-blur-sm flex justify-end" @click.self="showSettings = false">
+        <div class="w-full md:w-[480px] h-full bg-white shadow-2xl flex flex-col border-l">
             <div class="p-5 border-b flex justify-between items-center bg-gray-50">
-                <div><h3 class="font-bold text-gray-800 text-lg">Konfigurasi Halaman</h3><p class="text-xs text-gray-500">Pengaturan Bisnis, SEO & Data</p></div>
-                <button @click="showSettings=false" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-2xl"></i></button>
+                <h2 class="font-bold text-gray-800">Page Config</h2>
+                <button @click="showSettings = false" class="text-gray-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button>
             </div>
-            <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scroll">
+            <div class="flex-1 overflow-y-auto p-6 space-y-6">
                 <div class="space-y-4">
-                    <div class="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-wider border-b pb-1 mb-2">Identitas</div>
-                    <div><label class="label-field">Judul Halaman</label><input x-model="page.title" class="input-field"></div>
-                    <div><label class="label-field">Slug URL</label><input x-model="page.slug" class="input-field"></div>
-                </div>
-                <div class="space-y-4">
-                    <div class="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-wider border-b pb-1 mb-2">Produk & Transaksi</div>
-                    <div><label class="label-field">Harga Produk (IDR)</label><input x-model="page.config.price" type="number" class="input-field"></div>
-                    <div><label class="label-field">Tipe Produk</label><select x-model="page.product_type" class="input-field bg-white"><option value="physical">Fisik (Butuh Ongkir)</option><option value="digital">Digital (Tanpa Ongkir)</option></select></div>
-                </div>
-                <div class="space-y-4">
-                    <div class="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-wider border-b pb-1 mb-2">SEO & Tracking</div>
-                    <div><label class="label-field">Meta Title (SEO)</label><input x-model="page.config.settings.seo_title" class="input-field"></div>
-                    <div><label class="label-field">Meta Description</label><textarea x-model="page.config.settings.seo_description" class="input-field h-24 resize-none"></textarea></div>
-                    <div><label class="label-field">Facebook Pixel ID</label><input x-model="page.config.settings.fb_pixel" class="input-field"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase">Harga Produk</label><input x-model="page.config.price" type="number" class="w-full mt-1 px-3 py-2 border rounded"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase">Pixel ID</label><input x-model="page.config.settings.fb_pixel" class="w-full mt-1 px-3 py-2 border rounded"></div>
                 </div>
             </div>
-            <div class="p-5 border-t bg-gray-50 text-right"><button @click="savePage(); showSettings=false" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded shadow-lg">SIMPAN & PUBLISH</button></div>
+            <div class="p-4 border-t bg-gray-50 flex justify-end gap-3">
+                <button @click="savePage(); showSettings=false" class="px-8 py-2 bg-indigo-600 text-white text-xs font-black rounded-xl shadow-lg">SIMPAN</button>
+            </div>
         </div>
-    </div>
-
-    <div class="fixed bottom-5 left-5 z-[100000] flex flex-col gap-2 pointer-events-none">
-        <template x-for="n in notifications" :key="n.id">
-            <div x-show="n.show" x-transition class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border-l-4 bg-white" :class="n.type==='error'?'border-red-500':'border-green-500'"><i class="ph text-xl" :class="n.type==='error'?'ph-warning-circle text-red-500':'ph-check-circle text-green-500'"></i><div class="text-xs font-bold text-gray-800" x-text="n.title"></div></div>
-        </template>
     </div>
 
     <script>
     function editorApp() {
         return {
-            device: 'desktop', tab: 'blocks', mobileMenuOpen: false, showSettings: false, showIconPicker: false, iconSearch: '', loading: false, loadingIcons: false, notifications: [],
-            page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, variants:[], shipping: {}, settings: {} } },
-            groupedWidgets: {}, widgetScripts: {}, iconList: [],
+            device: 'desktop', tab: 'blocks', mobileMenuOpen: false, showSettings: false, loading: false, notifications: [],
+            page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, settings: {} } },
 
             async init() {
-                await this.loadWidgets();
                 this.initGrapes();
-                const slug = new URLSearchParams(window.location.search).get('slug');
+                const params = new URLSearchParams(window.location.search);
+                const slug = params.get('slug');
                 if (slug) await this.loadPageData(slug);
-                this.iconList = ['ph:star-fill','ph:heart-fill','ph:check-circle-fill','ph:warning-circle-fill','ph:shopping-cart-fill','ph:rocket-launch-fill','ph:user-fill','ph:house-fill','logos:whatsapp-icon','logos:facebook','logos:instagram-icon','logos:tiktok-icon','lucide:check','lucide:x'];
             },
 
-            notify(title, type = 'success') { const id = Date.now(); this.notifications.push({ id, title, type, show: true }); setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); },
-
-            async searchIcons() {
-                if(!this.iconSearch) return;
-                this.loadingIcons = true;
+            async loadPageData(slug) {
                 try {
-                    const res = await fetch(`https://api.iconify.design/search?query=${encodeURIComponent(this.iconSearch)}&limit=60`);
-                    if(res.ok) { const data = await res.json(); this.iconList = data.icons || []; }
-                } catch(e) { console.error(e); this.notify('Gagal mencari icon', 'error'); }
-                this.loadingIcons = false;
+                    const res = await fetch(`/api/admin/pages/${slug}`);
+                    const data = await res.json();
+                    this.page.id = data.id; this.page.slug = data.slug; this.page.title = data.title;
+                    if(data.product_config_json) this.page.config = JSON.parse(data.product_config_json);
+                    if(window.editor) {
+                        window.editor.setComponents(data.html_content);
+                        window.editor.setStyle(data.css_content);
+                    }
+                } catch(e) {}
             },
 
-            async loadWidgets() {
-                try {
-                    const res = await fetch('/api/widgets');
-                    const widgets = await res.json();
-                    this.groupedWidgets = {}; this.widgetScripts = {};
-                    widgets.forEach(w => {
-                        if(w.script && w.id !== 'iconify-icon' && w.id !== 'faq-accordion') this.widgetScripts[w.id] = w.script;
-                        const cat = w.category || 'General';
-                        if(!this.groupedWidgets[cat]) this.groupedWidgets[cat] = [];
-                        this.groupedWidgets[cat].push(w);
-                    });
-                } catch(e) { this.notify('Gagal load widget', 'error'); }
+            async savePage() {
+                this.loading = true;
+                const html = window.editor.getHtml(); const css = window.editor.getCss();
+                const payload = { id: this.page.id, slug: this.page.slug, title: this.page.title, html: html, css: css, product_config: this.page.config };
+                const res = await fetch('/api/admin/pages', { method: 'POST', body: JSON.stringify(payload), headers: {'Content-Type': 'application/json'} });
+                if(res.ok) this.notify('Berhasil Disimpan!');
+                this.loading = false;
             },
 
-            getIconForCategory(cat) {
-                if(cat.includes('Header')) return 'ph-browsers';
-                if(cat.includes('Feature')) return 'ph-star';
-                if(cat.includes('Content')) return 'ph-article';
-                if(cat.includes('Commerce')) return 'ph-shopping-cart';
-                return 'ph-cube';
-            },
+            notify(title, msg, type = 'success') { const id = Date.now(); this.notifications.push({ id, title, type, show: true }); setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); },
+            setDevice(d) { this.device = d; if(window.editor) window.editor.setDevice(d); },
 
             initGrapes() {
                 window.editor = grapesjs.init({
-                    container: '#gjs', height: '100%', width: 'auto', storageManager: false, panels: { defaults: [] }, 
-                    allowScripts: 1, 
-                    deviceManager: { devices: [{name:'desktop',width:''},{name:'tablet',width:'768px',widthMedia:'992px'},{name:'mobile',width:'375px',widthMedia:'480px'}] },
-                    
-                    // DISABLE ASSET MANAGER MODAL (KITA PAKAI PANEL)
+                    container: '#gjs', height: '100%', fromElement: false, storageManager: false, panels: { defaults: [] },
+                    // MATIKAN ASSET MANAGER BAWAAN
                     assetManager: { embedAsBase64: 0, openAssetsOnDrop: 0 },
-                    
+                    deviceManager: { devices: [{name:'desktop',width:''},{name:'tablet',width:'768px',widthMedia:'992px'},{name:'mobile',width:'375px',widthMedia:'480px'}] },
                     canvas: {
                         scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
                         styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
-                        content: `<style>body{padding:20px;} details{min-height:50px;}</style>`
+                        content: `<style>body{padding:20px;}</style>`
                     },
-                    plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg', 'grapesjs-component-countdown', 'grapesjs-tabs'],
+                    plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-tabs', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg', 'grapesjs-component-countdown'],
                     selectorManager: { appendTo: '#selectors-container' },
                     traitManager: { appendTo: '#traits-container' },
-                    styleManager: { appendTo: '#styles-container', sectors: [{ name: 'Typography', open: 1, buildProps: ['font-size','font-weight','color','text-align'] },{ name: 'Layout', buildProps: ['padding','margin','display','width','height'] },{ name: 'Decor', buildProps: ['background-color','border-radius','box-shadow'] }] },
+                    styleManager: { appendTo: '#styles-container', sectors: [{name:'Typography', buildProps:['font-size','font-weight','color','text-align']},{name:'Decor', buildProps:['background-color','border-radius','padding','margin']}] },
+                    blockManager: { appendTo: '#blocks-container' },
                     layerManager: { appendTo: '#layers-container' }
                 });
 
-                // --- 1. TRAIT: UPLOAD IMAGE (BASE64 LOGIC) ---
+                // ============================================================
+                // 1. TRAIT TOMBOL UPLOAD (DI PANEL)
+                // ============================================================
                 window.editor.TraitManager.addType('file-upload', {
                     createInput({ trait }) {
                         const div = document.createElement('div'); div.className = 'w-full flex flex-col gap-2';
-                        const input = document.createElement('input'); input.type = 'file'; input.style.display = 'none'; input.accept = 'image/*';
-                        const btn = document.createElement('button'); btn.className = 'trait-btn'; btn.innerHTML = '<i class="ph ph-upload-simple"></i> UPLOAD GAMBAR';
+                        const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*'; input.style.display = 'none';
+                        const btn = document.createElement('button'); btn.className = 'trait-btn-upload'; btn.innerHTML = '<i class="ph ph-upload-simple"></i> UPLOAD GAMBAR';
                         
                         btn.onclick = () => input.click();
-                        
-                        input.onchange = (e) => {
+                        input.onchange = async (e) => {
                             const file = e.target.files[0];
                             if(!file) return;
                             
-                            // CONVERT KE BASE64 DULU
+                            // CONVERT KE BASE64 AGAR SINKRON DENGAN BACKEND CLOUDINARY (2).js
                             const reader = new FileReader();
+                            reader.readAsDataURL(file);
                             reader.onloadend = async () => {
                                 const base64String = reader.result;
                                 const formData = new FormData();
-                                formData.append('file', base64String); // Kirim string base64
-                                
+                                formData.append('file', base64String); // Backend menerima key 'file'
+
                                 try {
-                                    btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> UPLOADING...'; btn.classList.add('loading');
-                                    const res = await fetch('/api/admin/upload-image', { method:'POST', body: formData });
+                                    btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> PROSES...'; btn.disabled = true;
+                                    const res = await fetch('/api/admin/upload-image', { method: 'POST', body: formData });
                                     const data = await res.json();
-                                    const url = data.data ? data.data[0] : (data.url || (Array.isArray(data) ? data[0] : null));
                                     
+                                    // Parse Response Cloudinary
+                                    const url = data.data ? data.data[0].src : null;
                                     if(url) {
                                         trait.target.addAttributes({ src: url });
-                                        window.editorApp.notify('Upload Berhasil!');
+                                        window.editorApp.notify('Sukses', 'Gambar terupload');
                                     } else {
-                                        throw new Error('Gagal parsing URL');
+                                        throw new Error('Gagal parsing respon server');
                                     }
                                 } catch(err) {
-                                    console.error(err); window.editorApp.notify('Upload Gagal', 'error');
+                                    console.error(err); window.editorApp.notify('Gagal', 'Error upload', 'error');
                                 } finally {
-                                    btn.innerHTML = '<i class="ph ph-upload-simple"></i> UPLOAD GAMBAR'; btn.classList.remove('loading');
+                                    btn.innerHTML = '<i class="ph ph-upload-simple"></i> UPLOAD GAMBAR'; btn.disabled = false;
                                 }
                             };
-                            reader.readAsDataURL(file); // Trigger convert
                         };
                         div.appendChild(btn); div.appendChild(input);
                         return div;
                     }
                 });
 
-                // --- 2. OVERRIDE IMAGE COMPONENT ---
+                // ============================================================
+                // 2. OVERRIDE IMAGE COMPONENT
+                // Agar trait ini muncul saat image diklik
+                // ============================================================
                 window.editor.DomComponents.addType('image', {
                     model: {
                         defaults: {
                             traits: [
                                 { type: 'text', name: 'src', label: 'URL Gambar' },
-                                { type: 'file-upload', name: 'upload', label: ' ' }, // Panel Upload Button
+                                { type: 'file-upload', name: 'upload_trig', label: ' ' }, // Trait Custom
                                 { type: 'text', name: 'alt', label: 'Alt Text' }
                             ]
                         }
                     }
                 });
 
-                // --- 3. TRAIT ICON PICKER ---
-                window.editor.TraitManager.addType('icon-picker-btn', {
-                    createInput({ trait }) {
-                        const btn = document.createElement('button');
-                        btn.className = 'trait-btn';
-                        btn.innerHTML = '<span>CARI ICON</span> <i class="ph ph-magnifying-glass" style="font-size:14px;"></i>';
-                        btn.onclick = () => { if(window.editorApp) window.editorApp.showIconPicker = true; };
-                        return btn;
-                    }
-                });
-
-                // --- 4. ICONIFY COMPONENT ---
-                window.editor.DomComponents.addType('iconify-icon', {
-                    isComponent: el => el.tagName === 'ICONIFY-ICON',
-                    model: {
-                        defaults: {
-                            tagName: 'iconify-icon',
-                            droppable: false,
-                            attributes: { icon: 'ph:star-fill', width: '32', height: '32' },
-                            traits: [
-                                { type: 'icon-picker-btn', name: 'picker', label: ' ' },
-                                { type: 'text', name: 'icon', label: 'Kode Icon' },
-                                { type: 'number', name: 'width', label: 'Lebar' },
-                                { type: 'color', name: 'color', label: 'Warna', changeProp: 1 }
-                            ]
-                        },
-                        init() { this.on('change:color', this.handleColorChange); },
-                        handleColorChange() { const color = this.get('color'); this.addStyle({ color: color }); }
-                    }
-                });
-
-                // --- 5. LINK / BUTTON ---
-                window.editor.DomComponents.addType('link', {
-                    model: {
-                        defaults: {
-                            traits: [
-                                { type: 'text', name: 'href', label: 'URL / Link' },
-                                { type: 'select', name: 'target', label: 'Target', options: [{ value: '', name: 'Self' }, { value: '_blank', name: 'New Tab' }] },
-                                { type: 'text', name: 'id', label: 'ID' }
-                            ]
-                        }
-                    }
-                });
-
-                // --- 6. ACCORDION ---
-                window.editor.DomComponents.addType('details', {
-                    model: {
-                        defaults: {
-                            draggable: true, droppable: true,
-                            traits: [{ type: 'checkbox', name: 'open', label: 'Default Terbuka' }]
-                        }
-                    }
-                });
-                window.editor.DomComponents.addType('summary', {
-                    model: { defaults: { draggable: false, droppable: false, editable: true } } 
-                });
-
-                // TOOLBAR SHORTCUT ICON
-                window.editor.on('component:selected', (model) => {
-                    const toolbar = model.get('toolbar');
-                    if (!toolbar.some(t => t.command === 'open-icon-picker')) {
-                        if(model.is('iconify-icon') || model.get('tagName') === 'ICONIFY-ICON') {
-                            toolbar.unshift({ command: () => { if(window.editorApp) window.editorApp.showIconPicker = true; }, label: '<i class="ph ph-star"></i>', attributes: { title: 'Ganti Icon' } });
-                            model.set('toolbar', toolbar);
-                        }
-                    }
-                });
-
-                if(this.groupedWidgets) {
-                    Object.values(this.groupedWidgets).flat().forEach(w => {
-                        if(w.script) {
-                             window.editor.DomComponents.addType(w.id, {
-                                model: {
-                                    defaults: {
-                                        attributes: { 'data-widget-type': w.id },
-                                        script: w.script
-                                    }
-                                }
-                            });
-                        }
-                    });
-                }
-            },
-
-            addBlockToCanvas(w) {
-                const component = window.editor.addComponents(w.content)[0];
-                if(w.id === 'faq-accordion') {
-                    const details = component.find('details');
-                    if(details.length) details.forEach(d => d.addAttributes({ open: 'true' }));
-                    else if(component.is('details')) component.addAttributes({ open: 'true' });
-                }
-                if(window.innerWidth < 768) this.mobileMenuOpen = false;
-            },
-
-            handleDragStart(event, w) { event.dataTransfer.setData('text', w.content); },
-
-            applyIcon(iconString) {
-                const selected = window.editor.getSelected();
-                if (selected) {
-                    if (selected.is('iconify-icon') || selected.get('tagName') === 'ICONIFY-ICON') {
-                        selected.addAttributes({ icon: iconString });
-                        this.notify('Icon Berhasil Diubah!');
-                    } else {
-                        selected.append(`<iconify-icon icon="${iconString}" width="32"></iconify-icon>`);
-                        this.notify('Icon Disisipkan!');
-                    }
-                } else {
-                    this.notify('Pilih komponen dulu!', 'error');
-                }
-                this.closeIconPicker();
-            },
-            closeIconPicker() { this.showIconPicker = false; },
-
-            async loadPageData(slug) {
-                this.loading = true;
-                try {
-                    const res = await fetch(`/api/admin/pages/${slug}`);
-                    const data = await res.json();
-                    this.page.id = data.id; this.page.slug = data.slug; this.page.title = data.title || '';
-                    this.page.product_type = data.product_type || 'physical';
-                    if (data.product_config_json) {
-                        const c = typeof data.product_config_json === 'string' ? JSON.parse(data.product_config_json) : data.product_config_json;
-                        this.page.config = { price: c.price || 0, variants: c.variants || [], shipping: c.shipping || { weight: 1000, cod: false }, settings: c.settings || {}, active_payments: c.active_payments || [] };
-                    }
-                    if (window.editor) {
-                        let safeHtml = data.html_content || "";
-                        safeHtml = safeHtml.replace(/<script id="dynamic-widget-script">[\s\S]*?<\/script>/gm, "");
-                        window.editor.setComponents(safeHtml);
-                        window.editor.setStyle(data.css_content || '');
-                        window.editor.getWrapper().find('details').forEach(d => d.addAttributes({ open: 'true' }));
-                    }
-                } catch (e) { console.error(e); }
-                this.loading = false;
-            },
-
-            async savePage() {
-                this.loading = true;
-                try {
-                    const html = window.editor.getHtml();
-                    const css = window.editor.getCss();
-                    let generatedJS = `<script id="dynamic-widget-script">document.addEventListener("DOMContentLoaded",function(){const runWidget=(id,fn)=>{document.querySelectorAll('[data-widget-type="'+id+'"]').forEach(el=>{try{fn.call(el)}catch(e){console.error(id,e)}})};const details=document.querySelectorAll('details');details.forEach(el=>{el.removeAttribute('open');el.querySelector('summary').addEventListener('click',()=>{if(!el.hasAttribute('open'))details.forEach(o=>{if(o!==el)o.removeAttribute('open')})})});`;
-                    Object.keys(this.widgetScripts).forEach(id => { if (html.includes(`data-widget-type="${id}"`)) generatedJS += `runWidget('${id}',function(){${this.widgetScripts[id]}});`; });
-                    generatedJS += `});<\/script>`;
-                    const payload = { id: this.page.id, slug: this.page.slug, title: this.page.title, product_type: this.page.product_type, html: html + generatedJS, css: css, product_config: this.page.config };
-                    const res = await fetch('/api/admin/pages', { method: 'POST', body: JSON.stringify(payload), headers: {'Content-Type': 'application/json'} });
-                    if(res.ok) this.notify('Berhasil Disimpan!');
-                } catch (e) { this.notify('Gagal Simpan', 'error'); }
-                this.loading = false;
-            },
-            setDevice(d) { this.device = d; if (window.editor) window.editor.setDevice(d); }
+                // --- Register Blocks ---
+                const bm = window.editor.BlockManager;
+                bm.add('img-blk', { label: 'Image', category: 'Basic', content: { type: 'image', activeOnRender: 1 } });
+                bm.add('text-blk', { label: 'Text', category: 'Basic', content: '<div class="p-2">Teks Contoh</div>' });
+                bm.add('btn-blk', { label: 'Button', category: 'Basic', content: '<a class="btn btn-primary">Klik Saya</a>' });
+            }
         };
     }
     </script>
