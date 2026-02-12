@@ -274,7 +274,7 @@
                     // --- LIVE SCRIPT INJECTION ---
                     // Kita menyuntikkan script eksternal countdown.js agar berjalan di Live
                     // Script ini akan otomatis mencari .js-countdown dan menjalankannya
-                    const finalHtml = `${html}<script src="/js/countdown.js"><\/script>`;
+                    const finalHtml = `${html}<script src="countdown.js"><\/script>`;
 
                     const payload = {
                         id: this.page.id, slug: this.page.slug, title: this.page.title,
