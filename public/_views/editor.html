@@ -83,30 +83,16 @@
         .custom-scroll { overflow-y: auto; height: 100%; -webkit-overflow-scrolling: touch; }
         .gjs-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px; }
 
-        /* CUSTOM TRAIT BUTTON */
         .trait-upload-btn {
-            width: 100%;
-            padding: 8px 12px;
-            background-color: #4f46e5;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: bold;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: background 0.2s;
+            width: 100%; padding: 8px 12px; background-color: #4f46e5; color: white; border: none; border-radius: 4px;
+            font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; transition: background 0.2s;
         }
         .trait-upload-btn:hover { background-color: #4338ca; }
         .trait-upload-btn:disabled { background-color: #9ca3af; cursor: not-allowed; }
 
-        /* TOOLBAR */
         .gjs-toolbar { background-color: #1f2937 !important; border-radius: 6px !important; border: 1px solid #ffffff33 !important; box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important; display: flex !important; flex-direction: column !important; gap: 5px !important; padding: 6px 0 !important; position: absolute !important; top: 10px !important; left: auto !important; right: 10px !important; width: 36px !important; height: auto !important; z-index: 99999 !important; transform: none !important; }
         .gjs-toolbar-item { color: white !important; width: 100% !important; height: 26px !important; display: flex !important; align-items: center; justify-content: center !important; cursor: pointer !important; transition: 0.2s !important; }
         .gjs-toolbar-item:hover { color: #818cf8 !important; transform: scale(1.1); background: rgba(255,255,255,0.1); }
-        
-        /* COLOR PICKER */
         .gjs-field-color-picker { width: 25px !important; height: 25px !important; flex-shrink: 0 !important; border: 1px solid #ccc !important; border-radius: 4px !important; cursor: pointer !important; display: inline-block !important; }
         .gjs-field-color { display: flex !important; align-items: center !important; gap: 8px !important; overflow: visible !important; }
         .sp-container { z-index: 999999 !important; position: fixed !important; transform: translateX(-235px) !important; background: #ffffff !important; border: 1px solid #ddd !important; box-shadow: -5px 5px 20px rgba(0,0,0,0.3) !important; padding: 8px !important; }
@@ -260,12 +246,24 @@
                     this.page.id = data.id; this.page.slug = data.slug; this.page.title = data.title || '';
                     if (data.product_config_json) { const conf = typeof data.product_config_json === 'string' ? JSON.parse(data.product_config_json) : data.product_config_json; this.page.config = { ...this.page.config, ...conf }; }
                     if (window.editor) {
-                        let safeHtml = data.html_content || ''; safeHtml = safeHtml.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gm, ""); 
-                        window.editor.setComponents(safeHtml); window.editor.setStyle(data.css_content || '');
+                        let safeHtml = data.html_content || ''; 
+                        
+                        // Set HTML & CSS
+                        window.editor.setComponents(safeHtml); 
+                        window.editor.setStyle(data.css_content || '');
+                        
+                        // HYDRATION SCRIPT EDITOR:
+                        // Eksekusi script widget di dalam kanvas editor agar terlihat interaktif saat diedit.
                         setTimeout(() => {
                             window.editor.getWrapper().find('[data-widget-type]').forEach(comp => {
-                                const wid = comp.getAttributes()['data-widget-type']; const wData = appBuilderCache[wid];
-                                if(wData && wData.script) try { (new Function(wData.script)).call(comp.getEl()); } catch(e) {}
+                                const wid = comp.getAttributes()['data-widget-type']; 
+                                const wData = appBuilderCache[wid];
+                                if(wData && wData.script) {
+                                    try { 
+                                        // Jalankan script di context element tersebut
+                                        (new Function(wData.script)).call(comp.getEl()); 
+                                    } catch(e) { console.error("Widget Script Error:", e); }
+                                }
                             });
                         }, 800);
                     }
@@ -276,8 +274,19 @@
             async savePage() {
                 this.loading = true;
                 try {
-                    const html = window.editor.getHtml(); const css = window.editor.getCss(); const safeJs = `<script>/* Logic */<\/script>`;
-                    const payload = { id: this.page.id, slug: this.page.slug, title: this.page.title, html: html + safeJs, css: css, product_config: this.page.config };
+                    const html = window.editor.getHtml(); 
+                    const css = window.editor.getCss(); 
+                    // Kita TIDAK menyimpan script di sini. 
+                    // Script akan direkonstruksi (re-hydrated) oleh backend saat halaman dirender.
+                    
+                    const payload = { 
+                        id: this.page.id, 
+                        slug: this.page.slug, 
+                        title: this.page.title, 
+                        html: html, 
+                        css: css, 
+                        product_config: this.page.config 
+                    };
                     const res = await fetch('/api/admin/pages', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
                     if(res.ok) this.notify('Sukses', 'Saved!'); else throw new Error('Save failed');
                 } catch (e) { this.notify('Gagal', e.message, 'error'); }
@@ -290,7 +299,6 @@
                 window.editor = grapesjs.init({
                     container: '#gjs', height: '100%', width: 'auto', storageManager: false, panels: { defaults: [] }, allowScripts: 1, 
                     
-                    // Asset Manager (Opsional, tetap dipertahankan untuk bulk upload)
                     assetManager: { 
                         uploadText: 'Drop gambar di sini',
                         autoAdd: 1,
@@ -298,7 +306,6 @@
                             const files = e.dataTransfer ? e.dataTransfer.files : e.target.files;
                             for (let i = 0; i < files.length; i++) {
                                 const file = files[i];
-                                // Konversi ke Base64 juga untuk konsistensi, atau pakai FormData langsung
                                 const reader = new FileReader();
                                 reader.readAsDataURL(file);
                                 reader.onloadend = async () => {
@@ -333,171 +340,61 @@
                 const bm = window.editor.BlockManager;
                 const cmds = window.editor.Commands;
 
-                // --- [ START ] CUSTOM IMAGE UPLOAD TRAIT ---
-                
-                // 1. Definisikan Trait 'file-upload'
+                // --- CUSTOM TRAITS & COMPONENTS ---
                 window.editor.TraitManager.addType('file-upload', {
                     createInput({ trait }) {
-                        const div = document.createElement('div');
-                        div.style.width = '100%';
-
-                        const input = document.createElement('input'); 
-                        input.type = 'file'; 
-                        input.accept = 'image/*'; 
-                        input.style.display = 'none';
-                        
-                        const btn = document.createElement('button'); 
-                        btn.className = 'trait-upload-btn'; 
-                        btn.innerHTML = '<iconify-icon icon="ph:upload-simple-bold" style="vertical-align:middle;margin-right:4px;"></iconify-icon> UPLOAD GAMBAR';
-                        
+                        const div = document.createElement('div'); div.style.width = '100%';
+                        const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*'; input.style.display = 'none';
+                        const btn = document.createElement('button'); btn.className = 'trait-upload-btn'; btn.innerHTML = '<iconify-icon icon="ph:upload-simple-bold" style="vertical-align:middle;margin-right:4px;"></iconify-icon> UPLOAD GAMBAR';
                         btn.onclick = () => input.click();
-                        
                         input.onchange = () => {
-                            const file = input.files[0]; 
-                            if(!file) return;
-                            
-                            // Konversi ke Base64 (DataURL) untuk Cloudinary via Backend
-                            const reader = new FileReader(); 
-                            reader.readAsDataURL(file);
-                            
+                            const file = input.files[0]; if(!file) return;
+                            const reader = new FileReader(); reader.readAsDataURL(file);
                             reader.onloadend = async () => {
-                                const originalText = btn.innerHTML;
-                                btn.innerHTML = 'UPLOADING...'; 
-                                btn.disabled = true;
-                                
-                                const formData = new FormData(); 
-                                // Backend mengharapkan 'file' berisi string base64 atau blob
-                                formData.append('file', reader.result); 
-                                formData.append('filename', file.name);
-
+                                const originalText = btn.innerHTML; btn.innerHTML = 'UPLOADING...'; btn.disabled = true;
+                                const formData = new FormData(); formData.append('file', reader.result); formData.append('filename', file.name);
                                 try {
                                     const res = await fetch('/api/admin/upload-image', { method: 'POST', body: formData });
                                     const json = await res.json();
-                                    
-                                    // Handle Response Backend: { data: [{ src: "..." }] }
                                     const url = json.data ? json.data[0].src : (json.url || json.secure_url);
-                                    
-                                    if(url) {
-                                        trait.target.addAttributes({ src: url });
-                                        // Update tampilan di editor jika targetnya image
-                                        const imgEl = trait.target.view.el;
-                                        if(imgEl.tagName === 'IMG') imgEl.src = url;
-                                    } else {
-                                        alert('Gagal mendapatkan URL gambar');
-                                    }
-                                } catch(err) { 
-                                    alert('Upload Gagal: ' + err.message); 
-                                } finally { 
-                                    btn.innerHTML = originalText; 
-                                    btn.disabled = false; 
-                                }
+                                    if(url) { trait.target.addAttributes({ src: url }); const imgEl = trait.target.view.el; if(imgEl.tagName === 'IMG') imgEl.src = url; }
+                                    else { alert('Gagal mendapatkan URL gambar'); }
+                                } catch(err) { alert('Upload Gagal: ' + err.message); } finally { btn.innerHTML = originalText; btn.disabled = false; }
                             };
                         };
-                        div.appendChild(btn); 
-                        div.appendChild(input); 
-                        return div;
+                        div.appendChild(btn); div.appendChild(input); return div;
                     }
                 });
 
-                // 2. Override Komponen 'Image' Bawaan
-                window.editor.DomComponents.addType('image', { 
-                    model: { 
-                        defaults: { 
-                            traits: [
-                                { type: 'text', name: 'src', label: 'URL Sumber' }, 
-                                { type: 'file-upload', name: 'up', label: ' ' }, // Tombol Upload Custom
-                                { type: 'text', name: 'alt', label: 'Alt Text' }
-                            ] 
-                        } 
-                    } 
-                });
+                window.editor.DomComponents.addType('image', { model: { defaults: { traits: [ { type: 'text', name: 'src', label: 'URL Sumber' }, { type: 'file-upload', name: 'up', label: ' ' }, { type: 'text', name: 'alt', label: 'Alt Text' } ] } } });
                 
-                // --- [ END ] CUSTOM IMAGE UPLOAD TRAIT ---
-
-                // 1. REGISTER COMMAND "open-icon-picker"
-                cmds.add('open-icon-picker', {
-                    run(editor, sender) {
-                        const selected = editor.getSelected();
-                        if (selected && window.openIconifyPicker) {
-                            window.openIconifyPicker(selected);
-                        } else {
-                            alert('Pilih icon dulu');
-                        }
-                    }
-                });
+                cmds.add('open-icon-picker', { run(editor) { const s = editor.getSelected(); if (s && window.openIconifyPicker) window.openIconifyPicker(s); else alert('Pilih icon dulu'); } });
                 
-                // Asset Manager Helper Command
-                cmds.add('set-img-src', {
-                    run(editor, sender) {
-                        const component = editor.getSelected();
-                        editor.runCommand('open-assets', {
-                            target: component,
-                            onSelect() {
-                                const asset = editor.AssetManager.getSelection();
-                                if(asset && asset.length) {
-                                    const imageUrl = asset[0].getSrc();
-                                    component.addAttributes({ 'img-src': imageUrl });
-                                    const imgEl = component.view.el.querySelector('img');
-                                    if(imgEl) imgEl.src = imageUrl;
-                                }
-                                editor.Modal.close();
-                            }
-                        });
-                    }
-                });
-
-                // 2. REGISTER COMPONENTS HARDCODED (LOGIC ONLY)
-                // Kita pertahankan definisi Tipe Komponen di sini agar logic JS-nya aman.
-                // Konten HTML-nya (Blocks) akan diambil dari database.
-                domc.addType('iconify-icon', {
-                    model: {
-                        defaults: {
-                            tagName: 'iconify-icon',
-                            draggable: true, droppable: false,
-                            attributes: { icon: 'ph:star-fill', width: '24' },
-                            traits: [
-                                { type: 'button', text: 'Ganti Icon', full: true, command: 'open-icon-picker' }
-                            ]
-                        }
-                    }
-                });
-                
-                domc.addType('countdown-smart', {
-                    model: {
-                        defaults: {
-                            traits: [
-                                { type: 'datetime-local', name: 'data-expire', label: 'Waktu Berakhir' },
-                                { type: 'text', name: 'data-msg', label: 'Pesan Expired', placeholder: 'PROMO BERAKHIR' }
-                            ],
-                            attributes: { 'data-expire': '2026-12-31T23:59', 'data-msg': 'PROMO BERAKHIR' },
-                            script: function() {
-                                const el = this; const display = el.querySelector('.js-countdown-display'); const expiredBox = el.querySelector('.js-expired-msg'); const expiredText = el.querySelector('.js-expired-text'); const expireStr = el.getAttribute('data-expire'); const msgStr = el.getAttribute('data-msg') || 'PROMO BERAKHIR'; if(!expireStr) return;
-                                const update = () => {
-                                    const now = new Date().getTime(); const distance = new Date(expireStr).getTime() - now;
-                                    if (distance < 0) { if(display) display.style.display = 'none'; if(expiredBox) { expiredBox.style.display = 'block'; expiredBox.classList.remove('hidden'); if(expiredText) expiredText.innerText = msgStr; } return; }
-                                    const d = Math.floor(distance / (1000 * 60 * 60 * 24)); const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)); const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)); const s = Math.floor((distance % (1000 * 60)) / 1000);
-                                    const setTxt = (sel, val) => { const node = el.querySelector(sel); if(node) node.innerText = val < 10 ? '0'+val : val; };
-                                    setTxt('.js-d', d); setTxt('.js-h', h); setTxt('.js-m', m); setTxt('.js-s', s); requestAnimationFrame(update);
-                                }; update();
-                            }
-                        }
-                    }
-                });
-
-                domc.addType('editable-carousel', { model: { defaults: { droppable: '[data-gjs-type="carousel-slide"]', script: function() { const el = this; const slidesContainer = el.querySelector('.slides'); const items = el.querySelectorAll('.slide'); if (!slidesContainer || items.length === 0) return; let idx = 0; const show = (n) => { idx = (n + items.length) % items.length; slidesContainer.style.transform = 'translateX(-' + (idx * 100) + '%)'; }; const nextBtn = el.querySelector('.next'); if(nextBtn) nextBtn.onclick = (e) => { e.preventDefault(); show(idx + 1); }; const prevBtn = el.querySelector('.prev'); if(prevBtn) prevBtn.onclick = (e) => { e.preventDefault(); show(idx - 1); }; let interval = setInterval(() => show(idx + 1), 5000); el.onmouseenter = () => clearInterval(interval); el.onmouseleave = () => interval = setInterval(() => show(idx + 1), 5000); } } } });
-                domc.addType('carousel-slide', { model: { defaults: { tagName: 'div', classes: ['slide', 'min-w-full', 'relative', 'h-full'], traits: [ { type: 'button', label: 'Gambar Background', text: 'UPLOAD / GANTI GAMBAR', command: 'set-img-src' }, { type: 'text', name: 'title-text', label: 'Judul Promo' } ], attributes: { 'img-src': 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80', 'title-text': 'JUDUL PROMO' } }, init() { this.on('change:attributes:title-text', this.updateTitle); }, updateTitle() { const txt = this.getAttributes()['title-text']; const overlay = this.components().models.find(c => c.get('classes').includes('absolute')); if(overlay) { const h2 = overlay.components().models.find(c => c.get('tagName') === 'h2'); if(h2) h2.content = txt; } } } });
-                
-                // 3. WIDGETS DARI DATABASE (DYNAMIC)
-                // Kita menghapus semua bm.add() manual dan hanya mengandalkan fetch ini.
+                // --- PENTING: Mendaftarkan Widgets dari DB ---
                 fetch('/api/widgets').then(res => res.json()).then(widgets => {
                     widgets.forEach(w => {
                         appBuilderCache[w.id] = w;
+
+                        // 1. DAFTARKAN KOMPONEN
+                        // Kita PASTIKAN 'data-widget-type' selalu ada di attributes
+                        // Ini kuncinya agar frontend tahu script mana yang harus dijalankan.
+                        if (w.id === 'iconify-icon') return; 
                         
-                        // Registrasi Tipe Komponen jika ada attributes (Logic Dynamic)
-                        if (w.id === 'iconify-icon') return; // PROTECT ICONIFY
-                        if (w.attributes) { try { const attr = JSON.parse(w.attributes); domc.addType(w.id, { model: { defaults: attr } }); } catch(e) {} }
+                        let compDefaults = {};
+                        if (w.attributes) {
+                            try { 
+                                const parsedAttr = JSON.parse(w.attributes);
+                                compDefaults = parsedAttr;
+                            } catch(e) {}
+                        }
                         
-                        // Registrasi Block (Tampilan di Sidebar)
+                        // FORCE data-widget-type
+                        if (!compDefaults.attributes) compDefaults.attributes = {};
+                        compDefaults.attributes['data-widget-type'] = w.id;
+
+                        domc.addType(w.id, { model: { defaults: compDefaults } });
+                        
+                        // 2. DAFTARKAN BLOCK
                         if (w.category !== 'System') { 
                             if (!bm.get(w.id)) { 
                                 bm.add(w.id, { label: w.label, category: w.category, content: w.content }); 
@@ -509,12 +406,9 @@
                     this.notify('Warning', 'Gagal memuat widget library', 'error');
                 });
 
-                // 4. EVENT LISTENERS
                 window.editor.on('component:selected', () => { this.mobileMenuOpen = false; });
                 window.editor.on('canvas:click', () => { this.mobileMenuOpen = false; });
                 window.editor.on('block:drag:stop', () => { this.mobileMenuOpen = false; });
-
-                // 5. CUSTOM TOOLBAR
                 window.editor.on('component:selected', (c) => { 
                     c.set('toolbar', [
                         { attributes: { class: 'fa fa-arrows', title: 'Geser' }, command: 'tlb-move', label: '<iconify-icon icon="ph:arrows-out-cardinal-bold" style="font-size:20px;"></iconify-icon>' },
