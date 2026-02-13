@@ -240,12 +240,54 @@
             async init() {
                 this.initGrapes();
                 const slug = new URLSearchParams(window.location.search).get('slug');
+                
+                // [FIX CRITICAL] URUTAN HARUS BENAR:
+                // 1. Muat Widget Dulu (agar type 'countdown-smart' terdaftar)
+                await this.loadWidgets(); 
+                
+                // 2. Baru Muat Page Content (agar saat dipasang, dia tahu type-nya)
                 if (slug) await this.loadPageData(slug);
             },
 
             notify(title, msg, type = 'success') { const id = Date.now(); this.notifications.push({ id, title, msg, type, show: true }); setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); },
             setDevice(d) { this.device = d; if (window.editor) window.editor.setDevice(d); },
             cmd(c) { window.editor.runCommand(c); },
+
+            // [NEW] Load Widgets terpisah
+            async loadWidgets() {
+                try {
+                    const domc = window.editor.DomComponents;
+                    const bm = window.editor.BlockManager;
+                    
+                    const res = await fetch('/api/widgets');
+                    const widgets = await res.json();
+                    
+                    widgets.forEach(w => {
+                        appBuilderCache[w.id] = w;
+                        if (w.id === 'iconify-icon') return; 
+
+                        // Ambil Attributes & Defaults
+                        let compDefaults = {};
+                        if (w.attributes) { try { compDefaults = JSON.parse(w.attributes); } catch(e) {} }
+                        
+                        // PASTIKAN data-widget-type ADA
+                        if (!compDefaults.attributes) compDefaults.attributes = {};
+                        compDefaults.attributes['data-widget-type'] = w.id;
+                        
+                        // Masukkan script ke Model Component (agar jalan di editor saat drag)
+                        if (w.script) { compDefaults.script = new Function(w.script); }
+
+                        domc.addType(w.id, { model: { defaults: compDefaults } });
+                        
+                        if (w.category !== 'System') { 
+                            if (!bm.get(w.id)) { bm.add(w.id, { label: w.label, category: w.category, content: w.content }); }
+                        }
+                    });
+                } catch(err) { 
+                    console.error("Gagal memuat widgets:", err); 
+                    this.notify('Warning', 'Gagal memuat widget library', 'error'); 
+                }
+            },
 
             async loadPageData(slug) {
                 this.loading = true;
@@ -260,7 +302,7 @@
                         window.editor.setComponents(safeHtml); 
                         window.editor.setStyle(data.css_content || '');
                         
-                        // HYDRATION DI EDITOR (Agar widget interaktif saat diedit)
+                        // HYDRATION DI EDITOR (Double check agar script berjalan)
                         setTimeout(() => {
                             window.editor.getWrapper().find('[data-widget-type]').forEach(comp => {
                                 const wid = comp.getAttributes()['data-widget-type']; const wData = appBuilderCache[wid];
@@ -284,7 +326,20 @@
             },
 
             initGrapes() {
-                const bridgeCSS = `body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; padding-top: 65px !important; } img { max-width: 100% !important; height: auto !important; display: block; }`; 
+                const bridgeCSS = `
+                    body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; padding-top: 65px !important; } 
+                    img { max-width: 100% !important; height: auto !important; display: block; }
+                `; 
+                
+                // [FIX MARQUEE] Tambahkan Config Tailwind Langsung di Editor
+                const tailwindConfig = {
+                    theme: {
+                        extend: {
+                            animation: { marquee: 'marquee 25s linear infinite' },
+                            keyframes: { marquee: { '0%': { transform: 'translateX(0%)' }, '100%': { transform: 'translateX(-100%)' } } }
+                        }
+                    }
+                };
 
                 window.editor = grapesjs.init({
                     container: '#gjs', height: '100%', width: 'auto', storageManager: false, panels: { defaults: [] }, allowScripts: 1, 
@@ -311,7 +366,15 @@
                     },
 
                     canvas: {
-                        scripts: ['https://cdn.tailwindcss.com', 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'],
+                        scripts: [
+                            'https://cdn.tailwindcss.com', 
+                            'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js',
+                            // Inject Config Tailwind untuk Editor
+                            { 
+                                content: `tailwind.config = ${JSON.stringify(tailwindConfig)}`, 
+                                type: 'script' 
+                            }
+                        ],
                         styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
                         content: `<style>${bridgeCSS}</style>`
                     },
@@ -364,31 +427,6 @@
 
                 cmds.add('open-icon-picker', { run(editor) { const s = editor.getSelected(); if (s && window.openIconifyPicker) window.openIconifyPicker(s); else alert('Pilih icon dulu'); } });
                 
-                // --- 2. LOAD WIDGETS (PERBAIKAN LOGIC SCRIPT) ---
-                fetch('/api/widgets').then(res => res.json()).then(widgets => {
-                    widgets.forEach(w => {
-                        appBuilderCache[w.id] = w;
-                        if (w.id === 'iconify-icon') return; 
-
-                        // Ambil Attributes & Defaults
-                        let compDefaults = {};
-                        if (w.attributes) { try { compDefaults = JSON.parse(w.attributes); } catch(e) {} }
-                        
-                        // PASTIKAN data-widget-type ADA
-                        if (!compDefaults.attributes) compDefaults.attributes = {};
-                        compDefaults.attributes['data-widget-type'] = w.id;
-                        
-                        // Masukkan script ke Model Component (agar jalan di editor saat drag)
-                        if (w.script) { compDefaults.script = new Function(w.script); }
-
-                        domc.addType(w.id, { model: { defaults: compDefaults } });
-                        
-                        if (w.category !== 'System') { 
-                            if (!bm.get(w.id)) { bm.add(w.id, { label: w.label, category: w.category, content: w.content }); }
-                        }
-                    });
-                }).catch(err => { console.error("Gagal memuat widgets:", err); this.notify('Warning', 'Gagal memuat widget library', 'error'); });
-
                 // Event Listeners UI
                 window.editor.on('component:selected', () => { this.mobileMenuOpen = false; });
                 window.editor.on('canvas:click', () => { this.mobileMenuOpen = false; });
