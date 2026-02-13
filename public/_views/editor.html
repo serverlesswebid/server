@@ -12,6 +12,10 @@
                 if (args[0] && typeof args[0] === 'string' && (args[0].includes('cdn.tailwindcss.com') || args[0].includes('production'))) return;
                 originalWarn.apply(console, args);
             };
+            window.onerror = function(msg, url, line) {
+                console.error("Global Error:", msg, "at", line);
+                // Jangan alert error sepele, tapi log ke console
+            };
         })();
     </script>
 
@@ -22,6 +26,7 @@
     
     <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.2/dist/css/grapes.min.css">
     <script src="https://unpkg.com/grapesjs@0.21.2/dist/grapes.min.js"></script>
+    
     <script src="https://unpkg.com/grapesjs-blocks-basic@1.0.1"></script>
     <script src="https://unpkg.com/grapesjs-plugin-forms@2.0.5"></script> 
     <script src="https://unpkg.com/grapesjs-navbar@1.0.1"></script>
@@ -29,7 +34,6 @@
     <script src="https://unpkg.com/grapesjs-custom-code@1.0.1"></script>
     <script src="https://unpkg.com/grapesjs-tooltip@0.1.7"></script>
     <script src="https://unpkg.com/grapesjs-blocks-flexbox@0.1.1"></script>
-    <script src="https://unpkg.com/grapesjs-plugin-export@1.0.11"></script>
     <script src="https://unpkg.com/grapesjs-typed@1.0.5"></script>
     <script src="https://unpkg.com/grapesjs-style-bg@2.0.1"></script>
 
@@ -72,32 +76,24 @@
             .mobile-overlay.show { display: block; }
         }
 
+        /* GrapesJS Overrides */
         .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; width: 0 !important; }
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
-
-        /* BLOCKS */
         .gjs-blocks-c { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 4px !important; padding: 6px !important; }
         .gjs-block { width: 100% !important; min-height: 45px !important; padding: 4px !important; background: #fff; border: 1px solid #e5e7eb; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; transition: 0.2s; }
         .gjs-block-label { font-size: 7px !important; font-weight: 800; text-transform: uppercase; color: #4b5563; text-align: center; }
         .gjs-block i, .gjs-block iconify-icon { font-size: 14px !important; color: #6366f1; }
-
         .custom-scroll { overflow-y: auto; height: 100%; -webkit-overflow-scrolling: touch; }
         .gjs-selected { outline: 2px solid #6366f1 !important; outline-offset: -2px; }
 
-        /* TRAIT UPLOAD BUTTON STYLE */
-        .trait-upload-btn {
-            width: 100%; padding: 8px 12px; background-color: #4f46e5; color: white; border: none; border-radius: 4px;
-            font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; transition: background 0.2s;
-        }
+        /* UI Components */
+        .trait-upload-btn { width: 100%; padding: 8px 12px; background-color: #4f46e5; color: white; border: none; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: background 0.2s; }
         .trait-upload-btn:hover { background-color: #4338ca; }
         .trait-upload-btn:disabled { background-color: #9ca3af; cursor: not-allowed; }
 
-        /* TOOLBAR */
         .gjs-toolbar { background-color: #1f2937 !important; border-radius: 6px !important; border: 1px solid #ffffff33 !important; box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important; display: flex !important; flex-direction: column !important; gap: 5px !important; padding: 6px 0 !important; position: absolute !important; top: 10px !important; left: auto !important; right: 10px !important; width: 36px !important; height: auto !important; z-index: 99999 !important; transform: none !important; }
         .gjs-toolbar-item { color: white !important; width: 100% !important; height: 26px !important; display: flex !important; align-items: center; justify-content: center !important; cursor: pointer !important; transition: 0.2s !important; }
         .gjs-toolbar-item:hover { color: #818cf8 !important; transform: scale(1.1); background: rgba(255,255,255,0.1); }
-        
-        /* COLOR PICKER */
         .gjs-field-color-picker { width: 25px !important; height: 25px !important; flex-shrink: 0 !important; border: 1px solid #ccc !important; border-radius: 4px !important; cursor: pointer !important; display: inline-block !important; }
         .gjs-field-color { display: flex !important; align-items: center !important; gap: 8px !important; overflow: visible !important; }
         .sp-container { z-index: 999999 !important; position: fixed !important; transform: translateX(-235px) !important; background: #ffffff !important; border: 1px solid #ddd !important; box-shadow: -5px 5px 20px rgba(0,0,0,0.3) !important; padding: 8px !important; }
@@ -238,77 +234,110 @@
             page: { id: 0, slug: '', title: '', product_type: 'physical', config: { price: 0, settings: {} } },
 
             async init() {
-                this.initGrapes();
-                const slug = new URLSearchParams(window.location.search).get('slug');
-                
-                // [FIX CRITICAL] URUTAN HARUS BENAR:
-                // 1. Muat Widget Dulu (agar type 'countdown-smart' terdaftar)
-                await this.loadWidgets(); 
-                
-                // 2. Baru Muat Page Content (agar saat dipasang, dia tahu type-nya)
-                if (slug) await this.loadPageData(slug);
+                try {
+                    console.log("Initializing Editor...");
+                    this.initGrapes(); // 1. Init GrapesJS Canvas
+                    
+                    const slug = new URLSearchParams(window.location.search).get('slug');
+                    
+                    // [FAIL-SAFE] Load Widgets Dulu (Critical)
+                    // Gunakan try-catch di dalam agar jika widget gagal, editor TETAP JALAN
+                    try {
+                        await this.loadWidgets(); 
+                        console.log("Widgets loaded successfully.");
+                    } catch (err) {
+                        console.error("Critical: Failed to load widgets", err);
+                        this.notify('Warning', 'Gagal memuat beberapa widget, namun editor tetap berjalan.', 'error');
+                    }
+                    
+                    // 2. Load Page Content
+                    if (slug) {
+                        await this.loadPageData(slug);
+                        console.log("Page data loaded.");
+                    } else {
+                        console.log("New page mode.");
+                    }
+                } catch (e) {
+                    console.error("Fatal Editor Init Error:", e);
+                    alert("Gagal menginisialisasi editor. Silakan refresh halaman.");
+                }
             },
 
             notify(title, msg, type = 'success') { const id = Date.now(); this.notifications.push({ id, title, msg, type, show: true }); setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 3000); },
             setDevice(d) { this.device = d; if (window.editor) window.editor.setDevice(d); },
             cmd(c) { window.editor.runCommand(c); },
 
-            // [NEW] Load Widgets terpisah
             async loadWidgets() {
-                try {
-                    const domc = window.editor.DomComponents;
-                    const bm = window.editor.BlockManager;
-                    
-                    const res = await fetch('/api/widgets');
-                    const widgets = await res.json();
-                    
-                    widgets.forEach(w => {
-                        appBuilderCache[w.id] = w;
-                        if (w.id === 'iconify-icon') return; 
+                const domc = window.editor.DomComponents;
+                const bm = window.editor.BlockManager;
+                
+                const res = await fetch('/api/widgets');
+                if (!res.ok) throw new Error("API Widget Error: " + res.status);
+                
+                const widgets = await res.json();
+                if (!Array.isArray(widgets)) throw new Error("Invalid widget data format");
 
-                        // Ambil Attributes & Defaults
-                        let compDefaults = {};
-                        if (w.attributes) { try { compDefaults = JSON.parse(w.attributes); } catch(e) {} }
-                        
-                        // PASTIKAN data-widget-type ADA
-                        if (!compDefaults.attributes) compDefaults.attributes = {};
-                        compDefaults.attributes['data-widget-type'] = w.id;
-                        
-                        // Masukkan script ke Model Component (agar jalan di editor saat drag)
-                        if (w.script) { compDefaults.script = new Function(w.script); }
+                widgets.forEach(w => {
+                    appBuilderCache[w.id] = w;
+                    if (w.id === 'iconify-icon') return; 
 
-                        domc.addType(w.id, { model: { defaults: compDefaults } });
-                        
-                        if (w.category !== 'System') { 
-                            if (!bm.get(w.id)) { bm.add(w.id, { label: w.label, category: w.category, content: w.content }); }
-                        }
-                    });
-                } catch(err) { 
-                    console.error("Gagal memuat widgets:", err); 
-                    this.notify('Warning', 'Gagal memuat widget library', 'error'); 
-                }
+                    let compDefaults = {};
+                    // Parse attributes dengan aman
+                    if (w.attributes) { 
+                        try { compDefaults = JSON.parse(w.attributes); } catch(e) { console.warn("Bad attributes for", w.id); } 
+                    }
+                    
+                    if (!compDefaults.attributes) compDefaults.attributes = {};
+                    compDefaults.attributes['data-widget-type'] = w.id;
+                    
+                    // Inject script jika ada
+                    if (w.script) { 
+                        try {
+                            compDefaults.script = new Function(w.script); 
+                        } catch(e) { console.error("Script error for widget", w.id, e); }
+                    }
+
+                    // Register Component Type
+                    domc.addType(w.id, { model: { defaults: compDefaults } });
+                    
+                    // Register Block di Sidebar
+                    if (w.category !== 'System') { 
+                        if (!bm.get(w.id)) { bm.add(w.id, { label: w.label, category: w.category, content: w.content }); }
+                    }
+                });
             },
 
             async loadPageData(slug) {
                 this.loading = true;
                 try {
                     const res = await fetch(`/api/admin/pages/${slug}`);
+                    if (!res.ok) throw new Error("Gagal mengambil data halaman");
+                    
                     const data = await res.json();
                     this.page.id = data.id; this.page.slug = data.slug; this.page.title = data.title || '';
-                    if (data.product_config_json) { const conf = typeof data.product_config_json === 'string' ? JSON.parse(data.product_config_json) : data.product_config_json; this.page.config = { ...this.page.config, ...conf }; }
+                    
+                    if (data.product_config_json) { 
+                        const conf = typeof data.product_config_json === 'string' ? JSON.parse(data.product_config_json) : data.product_config_json; 
+                        this.page.config = { ...this.page.config, ...conf }; 
+                    }
+                    
                     if (window.editor) {
                         let safeHtml = data.html_content || ''; 
-                        
                         window.editor.setComponents(safeHtml); 
                         window.editor.setStyle(data.css_content || '');
                         
-                        // HYDRATION DI EDITOR (Double check agar script berjalan)
+                        // HYDRATION: Jalankan script widget yang sudah ada di kanvas
                         setTimeout(() => {
-                            window.editor.getWrapper().find('[data-widget-type]').forEach(comp => {
-                                const wid = comp.getAttributes()['data-widget-type']; const wData = appBuilderCache[wid];
-                                if(wData && wData.script) { try { (new Function(wData.script)).call(comp.getEl()); } catch(e) { console.error(e); } }
-                            });
-                        }, 800);
+                            try {
+                                window.editor.getWrapper().find('[data-widget-type]').forEach(comp => {
+                                    const wid = comp.getAttributes()['data-widget-type']; 
+                                    const wData = appBuilderCache[wid];
+                                    if(wData && wData.script) { 
+                                        try { (new Function(wData.script)).call(comp.getEl()); } catch(e) { console.error("Hydration Error:", e); } 
+                                    }
+                                });
+                            } catch(e) { console.warn("Hydration skipped", e); }
+                        }, 1000);
                     }
                 } catch (e) { this.notify('Error', e.message, 'error'); }
                 this.loading = false;
@@ -326,25 +355,30 @@
             },
 
             initGrapes() {
-                const bridgeCSS = `
-                    body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; padding-top: 65px !important; } 
-                    img { max-width: 100% !important; height: auto !important; display: block; }
-                `; 
-                
-                // [FIX MARQUEE] Tambahkan Config Tailwind Langsung di Editor
-                const tailwindConfig = {
-                    theme: {
-                        extend: {
-                            animation: { marquee: 'marquee 25s linear infinite' },
-                            keyframes: { marquee: { '0%': { transform: 'translateX(0%)' }, '100%': { transform: 'translateX(-100%)' } } }
+                // [FIX MARQUEE] Konfigurasi Tailwind Langsung di Canvas via Script Tag
+                // Ini lebih stabil daripada opsi `scripts` array
+                const tailwindScript = `
+                    <script src="https://cdn.tailwindcss.com"></` + `script>
+                    <script>
+                        tailwind.config = {
+                            theme: {
+                                extend: {
+                                    animation: { marquee: 'marquee 25s linear infinite' },
+                                    keyframes: { marquee: { '0%': { transform: 'translateX(0%)' }, '100%': { transform: 'translateX(-100%)' } } }
+                                }
+                            }
                         }
-                    }
-                };
+                    </` + `script>
+                    <style>
+                        body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; padding-top: 65px !important; } 
+                        img { max-width: 100% !important; height: auto !important; display: block; }
+                    </style>
+                `;
 
                 window.editor = grapesjs.init({
                     container: '#gjs', height: '100%', width: 'auto', storageManager: false, panels: { defaults: [] }, allowScripts: 1, 
                     
-                    // --- ASSET MANAGER (BULK UPLOAD) ---
+                    // Asset Manager
                     assetManager: { 
                         uploadText: 'Drop gambar di sini',
                         autoAdd: 1,
@@ -366,17 +400,9 @@
                     },
 
                     canvas: {
-                        scripts: [
-                            'https://cdn.tailwindcss.com', 
-                            'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js',
-                            // Inject Config Tailwind untuk Editor
-                            { 
-                                content: `tailwind.config = ${JSON.stringify(tailwindConfig)}`, 
-                                type: 'script' 
-                            }
-                        ],
+                        scripts: ['https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'], // Tailwind via content string
                         styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'],
-                        content: `<style>${bridgeCSS}</style>`
+                        content: tailwindScript // Inject config di sini
                     },
                     plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg'],
                     deviceManager: { devices: [{ id: 'desktop', width: '' }, { id: 'tablet', width: '768px' }, { id: 'mobile', width: '375px' }] },
@@ -391,7 +417,7 @@
                 const bm = window.editor.BlockManager;
                 const cmds = window.editor.Commands;
 
-                // --- 1. CUSTOM TRAIT UNTUK UPLOAD GAMBAR (PERBAIKAN) ---
+                // --- 1. CUSTOM TRAIT UNTUK UPLOAD GAMBAR ---
                 window.editor.TraitManager.addType('file-upload', {
                     createInput({ trait }) {
                         const div = document.createElement('div'); div.style.width = '100%';
