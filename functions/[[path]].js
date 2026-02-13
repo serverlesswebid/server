@@ -348,41 +348,53 @@ async function renderPage(c, page) {
     const bridgeCSS = `body { min-height: 100vh; background-color: #ffffff; overflow-x: hidden; font-family: 'Inter', sans-serif; } .swal2-container { z-index: 99999 !important; } .countdown-number { font-weight: 900; } [x-cloak] { display: none !important; }`;
     const tailwindConfig = `tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { theme: { 50:'#eef2ff', 600:'#4f46e5' } } } } }`;
 
+    // 1. FETCH WIDGET LOGIC FROM DB
+    // Karena Editor tidak menyimpan script ke dalam HTML, kita harus menyuntikkannya secara dinamis di sini.
+    let widgetScripts = '';
+    try {
+        const widgets = await widgetModule.getWidgets(c.env);
+        // Map widget ID ke Script Content
+        const scriptMap = widgets
+            .filter(w => w.script && w.script.trim() !== '')
+            .map(w => `"${w.id}": function() { ${w.script} }`)
+            .join(',');
+
+        widgetScripts = `
+        <script>
+            // --- UNIVERSAL WIDGET HYDRATOR ---
+            (function() {
+                const widgetRegistry = { ${scriptMap} };
+
+                document.addEventListener("DOMContentLoaded", function() {
+                    console.log("Hydrating Widgets...");
+                    // 1. Cari elemen yang punya atribut data-widget-type
+                    const widgets = document.querySelectorAll('[data-widget-type]');
+                    widgets.forEach(el => {
+                        const type = el.getAttribute('data-widget-type');
+                        if (widgetRegistry[type]) {
+                            try {
+                                // Eksekusi script dengan 'this' mengarah ke elemen tersebut
+                                widgetRegistry[type].call(el);
+                            } catch(e) { console.error("Widget Error:", type, e); }
+                        }
+                    });
+
+                    // 2. Fallback untuk widget hardcoded (jika ada sisa)
+                    // Misal: Countdown Smart jika belum ter-cover logic di atas
+                });
+            })();
+        </script>
+        `;
+    } catch(e) {
+        console.error("Failed to load widget scripts:", e);
+    }
+
     const systemScripts = `
     <script>
         window.BS_DATA = ${JSON.stringify({ page_id: page.id, title: page.title, config: config, active_payments: config.active_payments || [] })};
         
-        // --- LIVE COUNTDOWN ENGINE ---
+        // CHECKOUT SYSTEM
         document.addEventListener('DOMContentLoaded', () => {
-            const timers = document.querySelectorAll('.js-countdown, [data-expire]');
-            timers.forEach(el => {
-                if(el.__run) return; el.__run = true;
-                const exp = el.getAttribute('data-expire');
-                const msg = el.getAttribute('data-msg') || "WAKTU HABIS";
-                if(!exp) return;
-                
-                const update = () => {
-                    const diff = new Date(exp).getTime() - new Date().getTime();
-                    const set = (sel, v) => el.querySelectorAll(sel).forEach(n => n.innerText = v < 10 ? "0"+v : v);
-                    
-                    if(diff < 0) {
-                        const disp = el.querySelector(".js-display") || el.querySelector(".js-countdown-display");
-                        const box = el.querySelector(".js-expired-msg");
-                        const txt = el.querySelector(".js-expired-text");
-                        if(disp) disp.style.display = 'none';
-                        if(box) { box.classList.remove('hidden'); box.style.display = 'block'; if(txt) txt.innerText = msg; else box.innerText = msg; }
-                        clearInterval(el.__int); return;
-                    }
-                    const d = Math.floor(diff / 86400000);
-                    const h = Math.floor((diff % 86400000) / 3600000);
-                    const m = Math.floor((diff % 3600000) / 60000);
-                    const s = Math.floor((diff % 60000) / 1000);
-                    set('.days, .js-d', d); set('.hours, .js-h', h); set('.minutes, .js-m', m); set('.seconds, .js-s', s);
-                };
-                update(); el.__int = setInterval(update, 1000);
-            });
-
-            // CHECKOUT SYSTEM
             const box = document.body;
             if (box.innerHTML.includes('[ CHECKOUT ]')) {
                 const pays = window.BS_DATA.active_payments.map(s => \`<label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition border-gray-200 mb-2"><input type="radio" name="pay_method" value="\${s}" class="mr-3 w-4 h-4 text-blue-600"><span class="text-sm font-bold text-gray-700 uppercase">\${s.replace(/-/g, ' ')}</span></label>\`).join('') || '<p class="text-xs text-red-500">No payment method.</p>';
@@ -408,21 +420,17 @@ async function renderPage(c, page) {
     `;
 
     // --- REKONSTRUKSI HTML YANG BENAR ---
-    // 1. Ambil konten DB.
     let content = page.html_content || '';
     
-    // 2. Cek apakah ada <body> di dalam content DB
-    // Jika ada, kita INJECT script sebelum </body> penutup milik DB.
-    // Jika tidak ada (hanya div/section), kita bungkus manual.
+    // Gabungkan: Content DB + Widget Scripts (Logic) + System Scripts (Checkout)
+    const injectedScripts = `${widgetScripts}${systemScripts}`;
+
     if (content.includes('<body')) {
-        // Inject script sebelum closing body
-        content = content.replace('</body>', `${systemScripts}</body>`);
+        content = content.replace('</body>', `${injectedScripts}</body>`);
     } else {
-        // Bungkus manual jika user hanya simpan div
-        content = `<body>${content}${systemScripts}</body>`;
+        content = `<body>${content}${injectedScripts}</body>`;
     }
 
-    // 3. Render HTML Utuh
     return c.html(`
     <!DOCTYPE html>
     <html lang='id'>
