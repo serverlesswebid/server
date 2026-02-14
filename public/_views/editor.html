@@ -9,11 +9,12 @@
         (function() {
             const originalWarn = console.warn;
             console.warn = function(...args) {
+                // Filter warning bising dari Tailwind/GrapesJS
                 if (args[0] && typeof args[0] === 'string' && (args[0].includes('cdn.tailwindcss.com') || args[0].includes('production'))) return;
                 originalWarn.apply(console, args);
             };
             window.onerror = function(msg, url, line) {
-                // Filter error remeh temeh
+                // Filter error resize observer yang umum di iframe
                 if(msg.includes('ResizeObserver')) return;
                 console.error("Global Error:", msg, "at", line);
             };
@@ -37,36 +38,20 @@
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: #fff; }
         [x-cloak] { display: none !important; }
 
-        header {
-            height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100;
-            background: white; border-bottom: 1px solid #e2e8f0;
-            display: flex; align-items: center; justify-content: space-between; padding: 0 16px;
-        }
+        header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
 
-        .mobile-tools {
-            display: none; height: 50px; width: 100%; position: fixed; top: 60px; left: 0; z-index: 90;
-            background: #f8fafc; border-bottom: 1px solid #e2e8f0;
-            align-items: center; justify-content: center; gap: 15px;
-        }
+        .mobile-tools { display: none; height: 50px; width: 100%; position: fixed; top: 60px; left: 0; z-index: 90; background: #f8fafc; border-bottom: 1px solid #e2e8f0; align-items: center; justify-content: center; gap: 15px; }
 
         .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; overflow: hidden; display: flex; }
         #gjs { position: relative !important; flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; }
 
-        .sidebar-panel {
-            position: relative; width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0;
-            z-index: 50; display: flex; flex-direction: column; flex-shrink: 0;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        .sidebar-panel { position: relative; width: 320px; height: 100%; background: white; border-left: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
 
         @media (max-width: 768px) {
             .mobile-tools { display: flex; }
             .workspace { top: 110px; } 
             #gjs { right: 0 !important; bottom: 60px !important; }
-            .sidebar-panel {
-                position: fixed; right: 0; top: 110px; bottom: 0; width: 85% !important; max-width: 320px;
-                z-index: 9999 !important; transform: translateX(100%);
-                box-shadow: -5px 0 20px rgba(0,0,0,0.1);
-            }
+            .sidebar-panel { position: fixed; right: 0; top: 110px; bottom: 0; width: 85% !important; max-width: 320px; z-index: 9999 !important; transform: translateX(100%); box-shadow: -5px 0 20px rgba(0,0,0,0.1); }
             .sidebar-panel.open { transform: translateX(0); }
             .mobile-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 150; top: 110px; bottom: 0; display: none; }
             .mobile-overlay.show { display: block; }
@@ -201,7 +186,7 @@
                 <div x-show="settingsTab === 'seo'" class="space-y-5 animate-fade-in">
                      <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Meta Title</label><input x-model="page.config.settings.seo_title" class="w-full px-4 py-2.5 bg-gray-50 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"></div>
                      <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Meta Description</label><textarea x-model="page.config.settings.seo_desc" class="w-full px-4 py-2.5 bg-gray-50 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none h-24 resize-none"></textarea></div>
-                     <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Favicon URL</label><div class="flex gap-2"><input x-model="page.config.settings.favicon" class="flex-1 px-4 py-2.5 bg-gray-50 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"><img :src="page.config.settings.favicon || 'https://via.placeholder.com/32'" class="w-10 h-10 rounded border bg-gray-100 object-contain"></div></div>
+                     <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Favicon URL</label><div class="flex gap-2"><input x-model="page.config.settings.favicon" class="flex-1 px-4 py-2.5 bg-gray-50 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"><img :src="page.config.settings.favicon" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0iI2VlZSI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIi8+PC9zdmc+'" class="w-10 h-10 rounded border bg-gray-100 object-contain"></div></div>
                 </div>
                 <div x-show="settingsTab === 'advanced'" class="space-y-5 animate-fade-in">
                     <div class="p-3 bg-blue-50 text-blue-700 text-xs rounded-lg border border-blue-100"><i class="ph ph-info"></i> Masukkan kode tracking (Pixel, GTM) di sini.</div>
@@ -245,9 +230,9 @@
     // --- UTILS ---
     function safeJSONParse(input) {
         if (!input) return {};
-        if (typeof input === 'object') return input; // SUDAH OBJECT, JANGAN DIPARSE LAGI
+        if (typeof input === 'object') return input;
         try { return JSON.parse(input); } 
-        catch (e) { console.warn("JSON Parse Error:", e, input); return {}; }
+        catch (e) { return {}; }
     }
 
     // --- ICON PICKER ---
@@ -292,12 +277,9 @@
                     const res = await fetch('/api/widgets');
                     if (!res.ok) throw new Error(`API Widget Error: ${res.status}`);
                     const widgets = await res.json();
-                    if (!Array.isArray(widgets)) throw new Error("Format data widget salah");
-                    console.log(`📦 Loaded ${widgets.length} widgets`);
-
+                    
                     widgets.forEach(w => {
                         appBuilderCache[w.id] = w;
-                        // PATCH 1: GUNAKAN safeJSONParse
                         let dbConfig = safeJSONParse(w.attributes);
 
                         let compDefaults = {
@@ -308,20 +290,28 @@
                         };
 
                         let viewDef = {};
-                        // PATCH 2: CEK SCRIPT EKSISTENSI
+                        // FIX: Logic Script Aman
+                        // Jangan masukkan script ke compDefaults.script agar tidak dieksekusi GrapesJS parser
+                        // Kita hanya jalankan via onRender di Editor
                         if (w.script && typeof w.script === 'string' && w.script.trim().length > 0) {
                             try {
                                 const scriptFn = new Function(w.script);
-                                viewDef = { onRender() { try { scriptFn.call(this.el); } catch(e) { console.warn(`Widget Script Error [${w.id}]:`, e); } } };
-                                compDefaults.script = scriptFn;
-                            } catch(e) { console.error("Invalid Script in DB:", w.id, e); }
+                                viewDef = { 
+                                    onRender() { 
+                                        try { scriptFn.call(this.el); } 
+                                        catch(e) { console.warn(`Widget Script Error [${w.id}]:`, e); } 
+                                    } 
+                                };
+                            } catch(e) { console.error("Invalid Script in DB:", w.id); }
                         }
 
                         domc.addType(w.id, { model: { defaults: compDefaults }, view: viewDef });
+                        
                         if (w.category !== 'System') { 
                             if (!bm.get(w.id)) { bm.add(w.id, { label: w.label, category: w.category, content: { type: w.id, content: w.content }, select: true, activate: true }); }
                         }
                     });
+                    console.log(`📦 Loaded ${widgets.length} widgets`);
                 } catch (e) { console.error("Widget Load Failed:", e); this.notify('Warning', 'Gagal memuat widget library.', 'error'); }
             },
 
@@ -339,8 +329,10 @@
                         if(conf.settings) this.page.config.settings = { ...this.page.config.settings, ...conf.settings };
                     }
                     if (window.editor) {
-                        window.editor.setComponents(data.html_content || ''); 
+                        // Safe load
+                        window.editor.setComponents(data.html_content || '<div></div>'); 
                         window.editor.setStyle(data.css_content || '');
+                        // Force render update
                         setTimeout(() => { window.editor.runCommand('core:component-exit'); }, 500);
                     }
                     this.notify('Ready', `Halaman "${data.title}" dimuat.`);
@@ -361,9 +353,6 @@
             },
 
             initGrapes() {
-                // PATCH 3: SAFE STRING CONCATENATION FOR TAILWIND INJECTION
-                const tailwindScript = `<script src="https://cdn.tailwindcss.com"><\/script><script>tailwind.config = { theme: { extend: { animation: { marquee: 'marquee 25s linear infinite' }, keyframes: { marquee: { '0%': { transform: 'translateX(0%)' }, '100%': { transform: 'translateX(-100%)' } } } } } }<\/script><style>body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; padding-top: 1px; } div:empty { min-height: 50px; outline: 1px dashed #ccc; }</style>`;
-
                 window.editor = grapesjs.init({
                     container: '#gjs', height: '100%', width: 'auto', storageManager: false, showOffsets: 1, noticeOnUnload: 0, panels: { defaults: [] }, allowScripts: 1,
                     assetManager: { 
@@ -383,12 +372,31 @@
                             }
                         }
                     },
-                    canvas: { scripts: ['https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js'], styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'], content: tailwindScript },
+                    // FIX: Jangan inject via 'content' string, gunakan 'scripts' & 'styles' array agar tidak error parsing
+                    canvas: { 
+                        scripts: ['https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js', 'https://cdn.tailwindcss.com'], 
+                        styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'] 
+                    },
                     plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg'],
                     deviceManager: { devices: [ { id: 'desktop', width: '' }, { id: 'tablet', width: '768px' }, { id: 'mobile', width: '375px' } ] },
                     blockManager: { appendTo: '#blocks-container' },
                     styleManager: { appendTo: '#styles-container', sectors: [{name: 'Dimension', buildProps: ['width','height','padding','margin']},{name:'Typography', buildProps:['font-size','color','text-align']},{name:'Decorations', buildProps:['background-color','border-radius','border','box-shadow']}] },
                     traitManager: { appendTo: '#traits-container' }, layerManager: { appendTo: '#layers-container' }, selectorManager: { appendTo: '#selectors-container' }
+                });
+
+                // FIX: Inject Tailwind Config ke dalam Iframe Head secara manual setelah load
+                window.editor.on('canvas:load', () => {
+                    const iframeDoc = window.editor.Canvas.getDocument();
+                    if(!iframeDoc.getElementById('tw-config')) {
+                        const s = iframeDoc.createElement('script');
+                        s.id = 'tw-config';
+                        s.innerHTML = "tailwind.config = { theme: { extend: { animation: { marquee: 'marquee 25s linear infinite' }, keyframes: { marquee: { '0%': { transform: 'translateX(0%)' }, '100%': { transform: 'translateX(-100%)' } } } } } }";
+                        iframeDoc.head.appendChild(s);
+                    }
+                    // Style tambahan untuk editor
+                    const st = iframeDoc.createElement('style');
+                    st.innerHTML = "body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; padding-top: 1px; } div:empty { min-height: 50px; outline: 1px dashed #ccc; }";
+                    iframeDoc.head.appendChild(st);
                 });
 
                 const domc = window.editor.DomComponents; const cmds = window.editor.Commands; const tm = window.editor.TraitManager;
