@@ -6,17 +6,19 @@
     <title>LandingBuilder Pro - Serverless Edition</title>
     
     <script>
-        (function() {
-            const originalWarn = console.warn;
-            console.warn = function(...args) {
-                if (args[0] && typeof args[0] === 'string' && (args[0].includes('cdn.tailwindcss.com') || args[0].includes('production'))) return;
-                originalWarn.apply(console, args);
-            };
-            window.onerror = function(msg, url, line) {
-                if(msg.includes('ResizeObserver')) return;
-                console.error("Global Error:", msg, "at", line);
-            };
-        })();
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+            if (typeof args[0] === 'string' && args[0].includes('tailwindcss')) return;
+            originalWarn.apply(console, args);
+        };
+        const originalError = console.error;
+        console.error = function(...args) {
+            if (typeof args[0] === 'string' && args[0].includes('ResizeObserver')) return;
+            originalError.apply(console, args);
+        };
+        window.addEventListener('error', function(e) {
+            if (e.message.includes('ResizeObserver')) e.stopImmediatePropagation();
+        });
     </script>
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -28,10 +30,6 @@
     
     <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.2/dist/css/grapes.min.css">
     <script src="https://unpkg.com/grapesjs@0.21.2/dist/grapes.min.js"></script>
-    <script src="https://unpkg.com/grapesjs-blocks-basic@1.0.1"></script>
-    <script src="https://unpkg.com/grapesjs-plugin-forms@2.0.5"></script> 
-    <script src="https://unpkg.com/grapesjs-navbar@1.0.1"></script>
-    <script src="https://unpkg.com/grapesjs-blocks-flexbox@0.1.1"></script>
     <script src="https://unpkg.com/grapesjs-style-bg@2.0.1"></script>
 
     <style>
@@ -65,19 +63,74 @@
         .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; width: 0 !important; }
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
         
-        /* TAMPILAN BLOK WIDGET MODULAR (ELEMENTOR STYLE) */
-        .gjs-block-category { border-bottom: 1px solid #e2e8f0; }
-        .gjs-block-category .gjs-title { background-color: #f8fafc !important; color: #334155 !important; border-bottom: 1px solid #f1f5f9; font-weight: 700; font-size: 11px; padding: 12px 15px !important; text-transform: uppercase; letter-spacing: 0.5px; }
-        .gjs-block-category .gjs-blocks-c { background-color: #ffffff; display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 0 !important; padding: 10px !important; }
+        /* =======================================================
+           TAMPILAN BLOK WIDGET MODULAR & ACCORDION KATEGORI 
+           ======================================================= */
+        .gjs-block-category { border-bottom: 1px solid #e2e8f0; width: 100%; }
         
-        .gjs-block { width: 100% !important; min-height: 80px !important; padding: 15px 5px !important; background: transparent; border: 1px solid transparent; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; cursor: grab; transition: all 0.2s ease; box-shadow: none; }
+        /* Judul Kategori (Klik untuk membuka/menutup) */
+        .gjs-block-category .gjs-title { 
+            background-color: #f8fafc !important; 
+            color: #334155 !important; 
+            border-bottom: 1px solid #f1f5f9; 
+            font-weight: 700; 
+            font-size: 11px; 
+            padding: 12px 15px !important; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        /* Ikon Panah Kategori */
+        .gjs-block-category .gjs-title::after {
+            content: '';
+            display: inline-block;
+            width: 0; height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 5px solid #64748b;
+            transition: transform 0.2s ease;
+            transform: rotate(-90deg); /* Tertutup secara default */
+        }
+        
+        /* Sembunyikan isi blok saat tertutup */
+        .gjs-block-category .gjs-blocks-c { 
+            display: none !important; 
+            background-color: #ffffff; 
+            padding: 10px !important; 
+        }
+        
+        /* Buka isi blok dan putar panah saat class .gjs-open aktif */
+        .gjs-block-category.gjs-open .gjs-blocks-c { 
+            display: grid !important; 
+            grid-template-columns: repeat(3, 1fr) !important; 
+            gap: 0 !important; 
+        }
+        .gjs-block-category.gjs-open .gjs-title::after {
+            transform: rotate(0deg);
+        }
+        
+        /* Styling per Kotak Ikon Widget */
+        .gjs-block { 
+            width: 100% !important; 
+            min-height: 80px !important; 
+            padding: 15px 5px !important; 
+            background: transparent; 
+            border: 1px solid transparent; 
+            border-radius: 6px; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; 
+            cursor: grab; transition: all 0.2s ease; box-shadow: none; 
+        }
         .gjs-block:hover { border-color: #cbd5e1; background: #f8fafc; }
         .gjs-block:active { cursor: grabbing; }
         .gjs-block-label { font-size: 10px !important; font-weight: 500; color: #475569; text-align: center; line-height: 1.2; }
         .gjs-block-icon { font-size: 22px !important; color: #64748b; display: flex; align-items: center; justify-content: center; transition: color 0.2s; }
         .gjs-block:hover .gjs-block-icon { color: #4f46e5; }
         
-        /* Sidebar Styling */
+        /* Sidebar Scroll */
         .custom-scroll { overflow-y: auto; height: 100%; -webkit-overflow-scrolling: touch; }
         .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -272,18 +325,21 @@
         function debounce(func, timeout = 300){ let timer; return (...args) => { clearTimeout(timer); timer = setTimeout(() => { func.apply(this, args); }, timeout); }; }
     })();
 
-    // Helper Fungsi Ikon yang Profesional (Elementor Style)
+    // HELPER: Ikon Rapi Ala Elementor
     function getElementorIcon(category, id) {
-        if(category.toLowerCase().includes('header') || id.includes('hero')) return 'ph:layout-duotone';
-        if(category.toLowerCase().includes('feature')) return 'ph:squares-four-duotone';
-        if(category.toLowerCase().includes('commerce') || id.includes('price')) return 'ph:tag-duotone';
+        if(!category) return 'ph:cube-duotone';
+        const cat = category.toLowerCase();
+        if(cat.includes('header') || id.includes('hero')) return 'ph:layout-duotone';
+        if(cat.includes('feature')) return 'ph:squares-four-duotone';
+        if(cat.includes('commerce') || id.includes('price')) return 'ph:tag-duotone';
         if(id.includes('contact')) return 'ph:envelope-simple-duotone';
         if(id.includes('container') || id.includes('col')) return 'ph:columns-duotone';
         if(id.includes('text')) return 'ph:text-t-duotone';
         if(id.includes('image')) return 'ph:image-duotone';
-        if(id.includes('button')) return 'ph:mouse-left-click-duotone';
+        if(id.includes('button') || id.includes('link')) return 'ph:mouse-left-click-duotone';
         if(id.includes('faq') || id.includes('accordion')) return 'ph:list-dashes-duotone';
         if(id.includes('countdown')) return 'ph:timer-duotone';
+        if(id.includes('divider')) return 'ph:minus-duotone';
         return 'ph:cube-duotone';
     }
 
@@ -311,13 +367,15 @@
                 try {
                     const res = await fetch('/api/widgets');
                     if (!res.ok) throw new Error(`API Widget Error: ${res.status}`);
-                    const widgets = await res.json();
+                    let widgets = await res.json();
                     
+                    // Urutkan Widget Berdasarkan Kategori (Abjad A-Z)
+                    widgets.sort((a, b) => a.category.localeCompare(b.category));
+
                     widgets.forEach(w => {
                         appBuilderCache[w.id] = w;
                         let dbConfig = safeJSONParse(w.attributes);
 
-                        // PERBAIKAN: Identifikasi Tepat Komponen agar dapat diedit (Traits muncul)
                         let compDefaults = {
                             ...dbConfig,
                             tagName: dbConfig.tagName || 'div',
@@ -326,7 +384,6 @@
                         };
 
                         domc.addType(w.id, {
-                            // PASTIKAN isComponent mengenali blok yang diload ulang
                             isComponent: el => {
                                 if (el.getAttribute && el.getAttribute('data-gjs-type') === w.id) {
                                     return { type: w.id };
@@ -334,12 +391,11 @@
                             },
                             model: { 
                                 defaults: compDefaults,
-                                // Memastikan script berjalan dengan benar saat live
                                 script: w.script ? new Function(w.script) : undefined
                             }
                         });
                         
-                        // Menambahkan Block dengan Tampilan Rapi Ala Elementor
+                        // Render UI Blok yang Rapi dan Modular
                         if (w.category !== 'System') { 
                             if (!bm.get(w.id)) { 
                                 bm.add(w.id, { 
@@ -353,6 +409,24 @@
                             }
                         }
                     });
+
+                    // Logika Accordion Kategori Blok Setelah Di-render
+                    setTimeout(() => {
+                        const categories = document.querySelectorAll('.gjs-block-category');
+                        categories.forEach(cat => {
+                            // Buka kategori pertama saja secara default (Elementor Style)
+                            if(cat === categories[0]) cat.classList.add('gjs-open');
+                            else cat.classList.remove('gjs-open');
+
+                            const title = cat.querySelector('.gjs-title');
+                            if(title) {
+                                title.addEventListener('click', () => {
+                                    cat.classList.toggle('gjs-open');
+                                });
+                            }
+                        });
+                    }, 500);
+
                 } catch (e) { console.error("Widget Load Failed:", e); this.notify('Warning', 'Gagal memuat widget library.', 'error'); }
             },
 
@@ -390,8 +464,7 @@
                     let html = window.editor.getHtml(); 
                     const css = window.editor.getCss(); 
                     
-                    // PERBAIKAN: FAQ Accordion Fix
-                    // Hapus attribute 'open' saat save sehingga di frontend tertutup rapi
+                    // FIX ACCORDION: Bersihkan atribut 'open' saat menyimpan agar di frontend tertutup rapi
                     const tempDiv = document.createElement('div');
                     tempDiv.innerHTML = html;
                     tempDiv.querySelectorAll('details').forEach(el => el.removeAttribute('open'));
@@ -406,7 +479,16 @@
 
             initGrapes() {
                 window.editor = grapesjs.init({
-                    container: '#gjs', height: '100%', width: 'auto', storageManager: false, showOffsets: 1, noticeOnUnload: 0, panels: { defaults: [] }, allowScripts: 1,
+                    container: '#gjs', 
+                    height: '100%', 
+                    width: 'auto', 
+                    storageManager: false, 
+                    showOffsets: 1, 
+                    noticeOnUnload: 0, 
+                    panels: { defaults: [] }, 
+                    allowScripts: 1,
+                    // MENGHAPUS plugin-forms dan blocks-basic AGAR EDITOR BENAR-BENAR BERSIH
+                    plugins: ['grapesjs-style-bg'],
                     assetManager: { 
                         uploadText: 'Drop gambar di sini', autoAdd: 1,
                         uploadFile: async (e) => {
@@ -428,20 +510,10 @@
                         scripts: ['https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js', 'https://cdn.tailwindcss.com'], 
                         styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'] 
                     },
-                    plugins: ['gjs-blocks-basic', 'grapesjs-plugin-forms', 'grapesjs-navbar', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg'],
                     deviceManager: { devices: [ { id: 'desktop', width: '' }, { id: 'tablet', width: '768px' }, { id: 'mobile', width: '375px' } ] },
                     blockManager: { appendTo: '#blocks-container' },
                     styleManager: { appendTo: '#styles-container', sectors: [{name: 'Dimension', buildProps: ['width','height','padding','margin']},{name:'Typography', buildProps:['font-size','color','text-align']},{name:'Decorations', buildProps:['background-color','border-radius','border','box-shadow']}] },
-                    traitManager: { appendTo: '#traits-container' }, layerManager: { appendTo: '#layers-container' }, selectorManager: { appendTo: '#selectors-container' }
-                });
-
-                // MEMBERSIHKAN FITUR BAWAAN YANG TIDAK BERGUNA & MENGHAPUS TABEL BAWAAN
-                window.editor.on('load', () => {
-                    const bm = window.editor.BlockManager;
-                    const removeBlocks = ['video', 'map', 'table', 'countdown', 'table-cell', 'table-row', 'tbody', 'thead', 'tfoot'];
-                    removeBlocks.forEach(id => {
-                        if (bm.get(id)) bm.remove(id);
-                    });
+                    traitManager: { appendTo: '#traits-container' }, selectorManager: { appendTo: '#selectors-container' }
                 });
 
                 window.editor.on('canvas:load', () => {
@@ -471,12 +543,14 @@
                     if(!iframeDoc.getElementById('editor-base-style')) {
                         const st = iframeDoc.createElement('style');
                         st.id = 'editor-base-style';
-                        st.innerHTML = "body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; padding-top: 1px; } div:empty { min-height: 50px; outline: 1px dashed #ccc; }";
+                        // FIX ACCORDION EDIT: Matikan pointer-events pada elemen summary di dalam canvas
+                        // agar GrapesJS bisa memilih dan mengedit accordion tersebut tanpa bentrok dengan browser.
+                        st.innerHTML = "body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; padding-top: 1px; } div:empty { min-height: 50px; outline: 1px dashed #ccc; } details summary { pointer-events: none; } details { outline: 1px dashed transparent; transition: outline 0.2s; } details:hover { outline: 1px dashed #4f46e5; cursor: pointer; }";
                         iframeDoc.head.appendChild(st);
                     }
                 });
 
-                // EVENT: FAQ/ACCORDION OTOMATIS TERBUKA DI EDITOR (UNTUK MEMUDAHKAN EDIT)
+                // FIX ACCORDION BUKA OTOMATIS SAAT DI EDITOR
                 window.editor.on('component:add', (model) => {
                     if (model.get('tagName') === 'details') {
                         model.addAttributes({ open: 'true' });
