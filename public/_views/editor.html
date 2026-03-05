@@ -35,20 +35,20 @@
     <script src="https://unpkg.com/grapesjs-style-bg@2.0.1"></script>
 
     <style>
-        /* TEMA ALA ELEMENTOR */
+        /* TEMA ALA ELEMENTOR PROFESIONAL */
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: #e5e7eb; }
         [x-cloak] { display: none !important; }
 
         /* Topbar Header */
-        header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100; background: #ffffff; border-bottom: 1px solid #d1d5db; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100; background: #ffffff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
 
-        .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f3f4f6; display: flex; overflow: hidden; }
+        .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f1f5f9; display: flex; overflow: hidden; }
         
         /* Panel Kiri Khas Elementor */
-        .sidebar-panel { position: relative; width: 300px; height: 100%; background: #ffffff; border-right: 1px solid #e5e7eb; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; box-shadow: 2px 0 10px rgba(0,0,0,0.05); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .sidebar-panel { position: relative; width: 320px; height: 100%; background: #ffffff; border-right: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; box-shadow: 2px 0 10px rgba(0,0,0,0.02); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         
         /* Area Canvas GrapesJS */
-        #gjs { position: relative !important; flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; background-color: #f3f4f6; }
+        #gjs { position: relative !important; flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; background-color: #f1f5f9; }
 
         /* Mobile Adjustments */
         .mobile-tools { display: none; height: 50px; width: 100%; position: fixed; top: 60px; left: 0; z-index: 90; background: #ffffff; border-bottom: 1px solid #e5e7eb; align-items: center; justify-content: center; gap: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
@@ -65,13 +65,17 @@
         .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; width: 0 !important; }
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
         
-        /* Grid Widget Blocks */
-        .gjs-blocks-c { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; padding: 15px !important; }
-        .gjs-block { width: 100% !important; min-height: 85px !important; padding: 12px 5px !important; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: grab; transition: all 0.2s ease; box-shadow: none; }
-        .gjs-block:hover { border-color: #4f46e5; background: #eef2ff; color: #4f46e5; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.1); transform: translateY(-2px); }
+        /* TAMPILAN BLOK WIDGET MODULAR (ELEMENTOR STYLE) */
+        .gjs-block-category { border-bottom: 1px solid #e2e8f0; }
+        .gjs-block-category .gjs-title { background-color: #f8fafc !important; color: #334155 !important; border-bottom: 1px solid #f1f5f9; font-weight: 700; font-size: 11px; padding: 12px 15px !important; text-transform: uppercase; letter-spacing: 0.5px; }
+        .gjs-block-category .gjs-blocks-c { background-color: #ffffff; display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 0 !important; padding: 10px !important; }
+        
+        .gjs-block { width: 100% !important; min-height: 80px !important; padding: 15px 5px !important; background: transparent; border: 1px solid transparent; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; cursor: grab; transition: all 0.2s ease; box-shadow: none; }
+        .gjs-block:hover { border-color: #cbd5e1; background: #f8fafc; }
         .gjs-block:active { cursor: grabbing; }
-        .gjs-block-label { font-size: 11px !important; font-weight: 600; text-transform: capitalize; color: inherit; text-align: center; }
-        .gjs-block i, .gjs-block iconify-icon { font-size: 26px !important; color: inherit; }
+        .gjs-block-label { font-size: 10px !important; font-weight: 500; color: #475569; text-align: center; line-height: 1.2; }
+        .gjs-block-icon { font-size: 22px !important; color: #64748b; display: flex; align-items: center; justify-content: center; transition: color 0.2s; }
+        .gjs-block:hover .gjs-block-icon { color: #4f46e5; }
         
         /* Sidebar Styling */
         .custom-scroll { overflow-y: auto; height: 100%; -webkit-overflow-scrolling: touch; }
@@ -80,8 +84,8 @@
         
         .gjs-selected { outline: 2px solid #4f46e5 !important; outline-offset: -2px; }
         
-        /* Custom Trait Buttons */
-        .trait-custom-btn { width: 100%; padding: 10px 12px; background-color: #4f46e5; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        /* Custom Trait Buttons & Inputs */
+        .trait-custom-btn { width: 100%; padding: 10px 12px; background-color: #4f46e5; color: white; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
         .trait-custom-btn:hover { background-color: #4338ca; }
         .trait-custom-btn:disabled { background-color: #9ca3af; cursor: not-allowed; }
         
@@ -91,9 +95,11 @@
         .gjs-toolbar-item:hover { background: #334155 !important; color: #60a5fa !important; }
         
         /* GrapesJS Form Inputs */
-        .gjs-field { background-color: #ffffff !important; border: 1px solid #d1d5db !important; border-radius: 4px !important; color: #374151 !important; }
-        .gjs-sm-sector .gjs-sm-title { background-color: #f8fafc !important; border-top: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; color: #1e293b !important; font-weight: bold; padding: 12px 15px !important; }
+        .gjs-field { background-color: #ffffff !important; border: 1px solid #cbd5e1 !important; border-radius: 4px !important; color: #334155 !important; font-size: 12px !important; }
+        .gjs-sm-sector .gjs-sm-title { background-color: #f8fafc !important; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; color: #1e293b !important; font-weight: bold; padding: 12px 15px !important; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
         .gjs-sm-properties { padding: 15px !important; }
+        .gjs-trt-trait { margin-bottom: 12px !important; }
+        .gjs-label-wrp { color: #475569 !important; font-size: 11px !important; font-weight: 600 !important; text-transform: uppercase; margin-bottom: 4px; }
     </style>
 </head>
 
@@ -161,9 +167,6 @@
             
             <div class="flex-1 bg-white custom-scroll relative w-full overflow-y-auto">
                 <div x-show="tab=='blocks'" class="h-full pb-20">
-                    <div class="px-4 py-3 bg-gray-50 border-b flex items-center justify-between sticky top-0 z-10">
-                        <span class="text-xs font-bold text-gray-500">Elemen Dasar</span>
-                    </div>
                     <div id="blocks-container"></div>
                 </div>
                 <div x-show="tab=='styles'" class="h-full pb-20">
@@ -171,7 +174,9 @@
                     <div id="styles-container"></div>
                 </div>
                 <div x-show="tab=='traits'" class="h-full pb-20">
-                    <div class="p-3 text-xs font-bold text-gray-500 uppercase tracking-wider text-center border-b bg-gray-50 sticky top-0 z-10">Atribut Komponen</div>
+                    <div class="p-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b bg-gray-50 sticky top-0 z-10 flex items-center gap-2">
+                        <i class="ph ph-sliders"></i> Atribut Widget
+                    </div>
                     <div id="traits-container" class="p-4"></div>
                 </div>
             </div>
@@ -258,11 +263,29 @@
         async function searchIcons(q) { 
             if(!q) return; results.innerHTML = '<div class="col-span-full text-center py-10 text-gray-400"><i class="ph ph-spinner animate-spin text-2xl"></i><br>Mencari...</div>';
             try { const res = await fetch(`https://api.iconify.design/search?query=${q}&limit=64`); const data = await res.json(); results.innerHTML = ''; 
-                if(data.icons && data.icons.length > 0) { data.icons.forEach(icon => { const btn = document.createElement('button'); btn.className = 'p-2 hover:bg-white hover:shadow-md hover:ring-1 hover:ring-indigo-500 rounded-lg flex flex-col items-center gap-2 transition group'; btn.innerHTML = `<iconify-icon icon="${icon}" width="28" class="text-gray-600 group-hover:text-indigo-600"></iconify-icon><span class="text-[9px] text-gray-400 truncate w-full text-center group-hover:text-indigo-500">${icon.split(':')[1]}</span>`; btn.onclick = () => { if(activeModel) { activeModel.setAttributes({ icon: icon }); const el = activeModel.getEl(); if(el) el.setAttribute('icon', icon); } modal.classList.add('hidden'); }; results.appendChild(btn); }); } else { results.innerHTML = '<div class="col-span-full text-center py-10 text-gray-400">Tidak ditemukan.</div>'; }
+                if(data.icons && data.icons.length > 0) { data.icons.forEach(icon => { const btn = document.createElement('button'); btn.className = 'p-2 hover:bg-white hover:shadow-md hover:ring-1 hover:ring-indigo-500 rounded-lg flex flex-col items-center gap-2 transition group'; btn.innerHTML = `<iconify-icon icon="${icon}" width="28" class="text-gray-600 group-hover:text-indigo-600"></iconify-icon><span class="text-[9px] text-gray-400 truncate w-full text-center group-hover:text-indigo-500">${icon.split(':')[1]}</span>`; btn.onclick = () => { 
+                    if(activeModel) { activeModel.addAttributes({ icon: icon }); } 
+                    modal.classList.add('hidden'); 
+                }; results.appendChild(btn); }); } else { results.innerHTML = '<div class="col-span-full text-center py-10 text-gray-400">Tidak ditemukan.</div>'; }
             } catch(e) { results.innerHTML = '<div class="col-span-full text-center py-10 text-red-400">Error fetch iconify.</div>'; } 
         }
         function debounce(func, timeout = 300){ let timer; return (...args) => { clearTimeout(timer); timer = setTimeout(() => { func.apply(this, args); }, timeout); }; }
     })();
+
+    // Helper Fungsi Ikon yang Profesional (Elementor Style)
+    function getElementorIcon(category, id) {
+        if(category.toLowerCase().includes('header') || id.includes('hero')) return 'ph:layout-duotone';
+        if(category.toLowerCase().includes('feature')) return 'ph:squares-four-duotone';
+        if(category.toLowerCase().includes('commerce') || id.includes('price')) return 'ph:tag-duotone';
+        if(id.includes('contact')) return 'ph:envelope-simple-duotone';
+        if(id.includes('container') || id.includes('col')) return 'ph:columns-duotone';
+        if(id.includes('text')) return 'ph:text-t-duotone';
+        if(id.includes('image')) return 'ph:image-duotone';
+        if(id.includes('button')) return 'ph:mouse-left-click-duotone';
+        if(id.includes('faq') || id.includes('accordion')) return 'ph:list-dashes-duotone';
+        if(id.includes('countdown')) return 'ph:timer-duotone';
+        return 'ph:cube-duotone';
+    }
 
     function editorApp() {
         return {
@@ -294,30 +317,40 @@
                         appBuilderCache[w.id] = w;
                         let dbConfig = safeJSONParse(w.attributes);
 
+                        // PERBAIKAN: Identifikasi Tepat Komponen agar dapat diedit (Traits muncul)
                         let compDefaults = {
                             ...dbConfig,
                             tagName: dbConfig.tagName || 'div',
-                            attributes: { ...(dbConfig.attributes || {}), 'data-widget-type': w.id },
+                            attributes: { ...(dbConfig.attributes || {}), 'data-gjs-type': w.id },
                             traits: dbConfig.traits || []
                         };
 
-                        let viewDef = {};
-                        if (w.script && typeof w.script === 'string' && w.script.trim().length > 0) {
-                            try {
-                                const scriptFn = new Function(w.script);
-                                viewDef = { 
-                                    onRender() { 
-                                        try { scriptFn.call(this.el); } 
-                                        catch(e) { console.warn(`Widget Script Error [${w.id}]:`, e); } 
-                                    } 
-                                };
-                            } catch(e) { console.error("Invalid Script in DB:", w.id); }
-                        }
-
-                        domc.addType(w.id, { model: { defaults: compDefaults }, view: viewDef });
+                        domc.addType(w.id, {
+                            // PASTIKAN isComponent mengenali blok yang diload ulang
+                            isComponent: el => {
+                                if (el.getAttribute && el.getAttribute('data-gjs-type') === w.id) {
+                                    return { type: w.id };
+                                }
+                            },
+                            model: { 
+                                defaults: compDefaults,
+                                // Memastikan script berjalan dengan benar saat live
+                                script: w.script ? new Function(w.script) : undefined
+                            }
+                        });
                         
+                        // Menambahkan Block dengan Tampilan Rapi Ala Elementor
                         if (w.category !== 'System') { 
-                            if (!bm.get(w.id)) { bm.add(w.id, { label: w.label, category: w.category, content: { type: w.id, content: w.content }, select: true, activate: true }); }
+                            if (!bm.get(w.id)) { 
+                                bm.add(w.id, { 
+                                    label: `
+                                        <div class="gjs-block-icon"><iconify-icon icon="${getElementorIcon(w.category, w.id)}"></iconify-icon></div>
+                                        <div class="gjs-block-label">${w.label}</div>
+                                    `, 
+                                    category: w.category, 
+                                    content: w.content 
+                                }); 
+                            }
                         }
                     });
                 } catch (e) { console.error("Widget Load Failed:", e); this.notify('Warning', 'Gagal memuat widget library.', 'error'); }
@@ -354,7 +387,16 @@
                 if(!this.page.slug) return this.notify('Validasi', 'Slug halaman tidak boleh kosong', 'error');
                 this.loading = true;
                 try {
-                    const html = window.editor.getHtml(); const css = window.editor.getCss(); 
+                    let html = window.editor.getHtml(); 
+                    const css = window.editor.getCss(); 
+                    
+                    // PERBAIKAN: FAQ Accordion Fix
+                    // Hapus attribute 'open' saat save sehingga di frontend tertutup rapi
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = html;
+                    tempDiv.querySelectorAll('details').forEach(el => el.removeAttribute('open'));
+                    html = tempDiv.innerHTML;
+
                     const payload = { id: this.page.id, slug: this.page.slug, title: this.page.title, html: html, css: css, product_config: this.page.config, product_type: this.page.product_type };
                     const res = await fetch('/api/admin/pages', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
                     if(res.ok) { this.notify('Sukses', 'Halaman berhasil disimpan!'); } else { const err = await res.json(); throw new Error(err.message || 'Save failed'); }
@@ -393,10 +435,10 @@
                     traitManager: { appendTo: '#traits-container' }, layerManager: { appendTo: '#layers-container' }, selectorManager: { appendTo: '#selectors-container' }
                 });
 
-                // MEMBERSIHKAN FITUR BAWAAN YANG TIDAK BERGUNA/ERROR
+                // MEMBERSIHKAN FITUR BAWAAN YANG TIDAK BERGUNA & MENGHAPUS TABEL BAWAAN
                 window.editor.on('load', () => {
                     const bm = window.editor.BlockManager;
-                    const removeBlocks = ['video', 'map', 'table', 'countdown'];
+                    const removeBlocks = ['video', 'map', 'table', 'countdown', 'table-cell', 'table-row', 'tbody', 'thead', 'tfoot'];
                     removeBlocks.forEach(id => {
                         if (bm.get(id)) bm.remove(id);
                     });
@@ -434,13 +476,20 @@
                     }
                 });
 
-                const domc = window.editor.DomComponents; const cmds = window.editor.Commands; const tm = window.editor.TraitManager;
+                // EVENT: FAQ/ACCORDION OTOMATIS TERBUKA DI EDITOR (UNTUK MEMUDAHKAN EDIT)
+                window.editor.on('component:add', (model) => {
+                    if (model.get('tagName') === 'details') {
+                        model.addAttributes({ open: 'true' });
+                    }
+                });
+
+                const domc = window.editor.DomComponents; const cmds = window.editor.Commands; const tm = window.editor.TraitManager; const bm = window.editor.BlockManager;
 
                 tm.addType('file-upload', {
                     createInput({ trait }) {
                         const div = document.createElement('div'); div.style.width = '100%';
                         const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*'; input.style.display = 'none';
-                        const btn = document.createElement('button'); btn.className = 'trait-custom-btn'; btn.innerHTML = '<i class="ph ph-upload-simple"></i> UPLOAD';
+                        const btn = document.createElement('button'); btn.className = 'trait-custom-btn'; btn.innerHTML = '<i class="ph ph-upload-simple"></i> UPLOAD GAMBAR';
                         btn.onclick = () => input.click();
                         input.onchange = () => {
                             const file = input.files[0]; if(!file) return;
@@ -459,8 +508,18 @@
                     }
                 });
 
+                tm.addType('datetime-local', {
+                    createInput({ trait }) {
+                        const input = document.createElement('input');
+                        input.type = 'datetime-local';
+                        input.className = 'w-full px-2 py-2 text-xs border border-gray-300 rounded outline-none focus:border-indigo-500 bg-white font-mono';
+                        return input;
+                    }
+                });
+
                 tm.addType('icon-picker', { noLabel: true, createInput({ trait }) { const btn = document.createElement('button'); btn.className = 'trait-custom-btn w-full bg-[#1e293b] hover:bg-[#0f172a]'; btn.innerHTML = '<i class="ph ph-star"></i> PILIH ICON'; btn.onclick = () => { window.openIconifyPicker(trait.target); }; return btn; } });
                 cmds.add('open-icon-picker', { run(editor, sender, opts) { const selected = editor.getSelected(); if (selected && window.openIconifyPicker) { window.openIconifyPicker(selected); } else { alert('Pilih komponen icon terlebih dahulu'); } } });
+                
                 domc.addType('image', { model: { defaults: { traits: [ { type: 'text', name: 'src', label: 'URL Sumber' }, { type: 'file-upload', name: 'src', label: 'Upload Baru' }, { type: 'text', name: 'alt', label: 'Alt Text' } ] } } });
 
                 window.editor.on('component:selected', () => { this.mobileMenuOpen = false; });
