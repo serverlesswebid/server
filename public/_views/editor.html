@@ -37,14 +37,18 @@
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: #e5e7eb; }
         [x-cloak] { display: none !important; }
 
+        /* Topbar Header */
         header { height: 60px; width: 100%; position: fixed; top: 0; left: 0; z-index: 100; background: #ffffff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
 
         .workspace { position: absolute; top: 60px; bottom: 0; left: 0; right: 0; background: #f1f5f9; display: flex; overflow: hidden; }
         
+        /* Panel Kiri Khas Elementor */
         .sidebar-panel { position: relative; width: 320px; height: 100%; background: #ffffff; border-right: 1px solid #e2e8f0; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0; box-shadow: 2px 0 10px rgba(0,0,0,0.02); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         
+        /* Area Canvas GrapesJS */
         #gjs { position: relative !important; flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; background-color: #f1f5f9; }
 
+        /* Mobile Adjustments */
         .mobile-tools { display: none; height: 50px; width: 100%; position: fixed; top: 60px; left: 0; z-index: 90; background: #ffffff; border-bottom: 1px solid #e5e7eb; align-items: center; justify-content: center; gap: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
         @media (max-width: 768px) {
             .mobile-tools { display: flex; }
@@ -55,55 +59,40 @@
             .mobile-overlay.show { display: block; }
         }
 
+        /* OVERRIDES GRAPESJS AGAR TERLIHAT SEPERTI ELEMENTOR */
         .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; width: 0 !important; }
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
         
-        /* TAMPILAN BLOK WIDGET MODULAR & ACCORDION KATEGORI */
-        .gjs-block-category { border-bottom: 1px solid #e2e8f0; width: 100%; }
-        .gjs-block-category .gjs-title { 
-            background-color: #f8fafc !important; color: #334155 !important; 
-            border-bottom: 1px solid #f1f5f9; font-weight: 700; font-size: 11px; 
-            padding: 12px 15px !important; text-transform: uppercase; letter-spacing: 0.5px;
-            cursor: pointer; display: flex; justify-content: space-between; align-items: center;
-        }
-        .gjs-block-category .gjs-title::after {
-            content: ''; display: inline-block; width: 0; height: 0;
-            border-left: 4px solid transparent; border-right: 4px solid transparent;
-            border-top: 5px solid #64748b; transition: transform 0.2s ease; transform: rotate(-90deg);
-        }
-        .gjs-block-category .gjs-blocks-c { display: none; background-color: #ffffff; }
-        .gjs-block-category.gjs-open .gjs-blocks-c { 
-            display: grid !important; grid-template-columns: repeat(2, 1fr) !important; 
-            gap: 10px !important; padding: 15px !important; 
-        }
-        .gjs-block-category.gjs-open .gjs-title::after { transform: rotate(0deg); }
+        /* TAMPILAN BLOK WIDGET MODULAR (ELEMENTOR STYLE) */
+        .gjs-block-category { border-bottom: 1px solid #e2e8f0; }
+        .gjs-block-category .gjs-title { background-color: #f8fafc !important; color: #334155 !important; border-bottom: 1px solid #f1f5f9; font-weight: 700; font-size: 11px; padding: 12px 15px !important; text-transform: uppercase; letter-spacing: 0.5px; }
+        .gjs-block-category .gjs-blocks-c { background-color: #ffffff; display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 0 !important; padding: 10px !important; }
         
-        .gjs-block { 
-            width: 100% !important; min-height: 85px !important; padding: 12px 5px !important; 
-            background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; 
-            cursor: grab; transition: all 0.2s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.02); 
-        }
-        .gjs-block:hover { border-color: #4f46e5; background: #eef2ff; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.1); transform: translateY(-1px); }
+        .gjs-block { width: 100% !important; min-height: 80px !important; padding: 15px 5px !important; background: transparent; border: 1px solid transparent; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; cursor: grab; transition: all 0.2s ease; box-shadow: none; }
+        .gjs-block:hover { border-color: #cbd5e1; background: #f8fafc; }
         .gjs-block:active { cursor: grabbing; }
-        .gjs-block-label { font-size: 10px !important; font-weight: 600; color: #475569; text-align: center; line-height: 1.2; }
-        .gjs-block-icon { font-size: 24px !important; color: #64748b; display: flex; align-items: center; justify-content: center; transition: color 0.2s; }
-        .gjs-block:hover .gjs-block-icon, .gjs-block:hover .gjs-block-label { color: #4f46e5; }
+        .gjs-block-label { font-size: 10px !important; font-weight: 500; color: #475569; text-align: center; line-height: 1.2; }
+        .gjs-block-icon { font-size: 22px !important; color: #64748b; display: flex; align-items: center; justify-content: center; transition: color 0.2s; }
+        .gjs-block:hover .gjs-block-icon { color: #4f46e5; }
         
+        /* Sidebar Styling */
         .custom-scroll { overflow-y: auto; height: 100%; -webkit-overflow-scrolling: touch; }
         .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         
         .gjs-selected { outline: 2px solid #4f46e5 !important; outline-offset: -2px; }
         
+        /* Custom Trait Buttons & Inputs */
         .trait-custom-btn { width: 100%; padding: 10px 12px; background-color: #4f46e5; color: white; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
         .trait-custom-btn:hover { background-color: #4338ca; }
         .trait-custom-btn:disabled { background-color: #9ca3af; cursor: not-allowed; }
         
+        /* Floating Toolbar di dalam Canvas */
         .gjs-toolbar { background-color: #1e293b !important; border-radius: 6px !important; border: 1px solid #334155 !important; box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important; padding: 4px !important; gap: 4px !important; }
         .gjs-toolbar-item { color: #f8fafc !important; width: 32px !important; height: 32px !important; border-radius: 4px; transition: background 0.2s; }
         .gjs-toolbar-item:hover { background: #334155 !important; color: #60a5fa !important; }
         
+        /* GrapesJS Form Inputs */
         .gjs-field { background-color: #ffffff !important; border: 1px solid #cbd5e1 !important; border-radius: 4px !important; color: #334155 !important; font-size: 12px !important; }
         .gjs-sm-sector .gjs-sm-title { background-color: #f8fafc !important; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; color: #1e293b !important; font-weight: bold; padding: 12px 15px !important; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
         .gjs-sm-properties { padding: 15px !important; }
@@ -281,6 +270,7 @@
         function debounce(func, timeout = 300){ let timer; return (...args) => { clearTimeout(timer); timer = setTimeout(() => { func.apply(this, args); }, timeout); }; }
     })();
 
+    // Helper Fungsi Ikon yang Profesional (Elementor Style)
     function getElementorIcon(category, id) {
         if(category.toLowerCase().includes('header') || id.includes('hero')) return 'ph:layout-duotone';
         if(category.toLowerCase().includes('feature')) return 'ph:squares-four-duotone';
@@ -340,7 +330,6 @@
                             },
                             model: { 
                                 defaults: compDefaults,
-                                // KEMBALI KE KODE ANDA YANG TERBUKTI BERFUNGSI UNTUK SCRIPT DATABSE (COUNTDOWN DLL)
                                 script: w.script ? new Function(w.script) : undefined
                             }
                         });
@@ -358,23 +347,6 @@
                             }
                         }
                     });
-                    
-                    // Elementor Style: Tutup Semua Kategori Kecuali Yang Pertama Saat Render Selesai
-                    setTimeout(() => {
-                        const categories = document.querySelectorAll('.gjs-block-category');
-                        categories.forEach(cat => {
-                            if(cat === categories[0]) cat.classList.add('gjs-open');
-                            else cat.classList.remove('gjs-open');
-
-                            const title = cat.querySelector('.gjs-title');
-                            if(title) {
-                                title.addEventListener('click', () => {
-                                    cat.classList.toggle('gjs-open');
-                                });
-                            }
-                        });
-                    }, 500);
-
                 } catch (e) { console.error("Widget Load Failed:", e); this.notify('Warning', 'Gagal memuat widget library.', 'error'); }
             },
 
@@ -412,7 +384,6 @@
                     let html = window.editor.getHtml(); 
                     const css = window.editor.getCss(); 
                     
-                    // Bersihkan attribut 'open' saat save sehingga di frontend tertutup rapi
                     const tempDiv = document.createElement('div');
                     tempDiv.innerHTML = html;
                     tempDiv.querySelectorAll('details').forEach(el => el.removeAttribute('open'));
@@ -427,7 +398,9 @@
 
             initGrapes() {
                 window.editor = grapesjs.init({
-                    container: '#gjs', height: '100%', width: 'auto', storageManager: false, showOffsets: 1, noticeOnUnload: 0, panels: { defaults: [] }, allowScripts: 1,
+                    container: '#gjs', height: '100%', width: 'auto', storageManager: false, showOffsets: 1, noticeOnUnload: 0, panels: { defaults: [] }, 
+                    // INI KUNCINYA: Mengizinkan skrip yang tertanam di halaman (seperti pada page test Anda) untuk tereksekusi di dalam kanvas
+                    allowScripts: 1, 
                     assetManager: { 
                         uploadText: 'Drop gambar di sini', autoAdd: 1,
                         uploadFile: async (e) => {
@@ -449,12 +422,19 @@
                         scripts: ['https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js', 'https://cdn.tailwindcss.com'], 
                         styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'] 
                     },
-                    // PLUGIN BASIC DAN FORM DIHAPUS TOTAL! HANYA PAKAI STYLE-BG SAJA
                     plugins: ['grapesjs-navbar', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg'],
                     deviceManager: { devices: [ { id: 'desktop', width: '' }, { id: 'tablet', width: '768px' }, { id: 'mobile', width: '375px' } ] },
                     blockManager: { appendTo: '#blocks-container' },
                     styleManager: { appendTo: '#styles-container', sectors: [{name: 'Dimension', buildProps: ['width','height','padding','margin']},{name:'Typography', buildProps:['font-size','color','text-align']},{name:'Decorations', buildProps:['background-color','border-radius','border','box-shadow']}] },
                     traitManager: { appendTo: '#traits-container' }, layerManager: { appendTo: '#layers-container' }, selectorManager: { appendTo: '#selectors-container' }
+                });
+
+                window.editor.on('load', () => {
+                    const bm = window.editor.BlockManager;
+                    const removeBlocks = ['video', 'map', 'table', 'countdown', 'table-cell', 'table-row', 'tbody', 'thead', 'tfoot'];
+                    removeBlocks.forEach(id => {
+                        if (bm.get(id)) bm.remove(id);
+                    });
                 });
 
                 window.editor.on('canvas:load', () => {
@@ -484,13 +464,11 @@
                     if(!iframeDoc.getElementById('editor-base-style')) {
                         const st = iframeDoc.createElement('style');
                         st.id = 'editor-base-style';
-                        // Agar Accordion bisa di klik/diedit di dalam kanvas
-                        st.innerHTML = "body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; padding-top: 1px; } div:empty { min-height: 50px; outline: 1px dashed #ccc; } details summary { pointer-events: none; }";
+                        st.innerHTML = "body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; padding-top: 1px; } div:empty { min-height: 50px; outline: 1px dashed #ccc; }";
                         iframeDoc.head.appendChild(st);
                     }
                 });
 
-                // FAQ/ACCORDION OTOMATIS TERBUKA DI EDITOR (UNTUK MEMUDAHKAN EDIT)
                 window.editor.on('component:add', (model) => {
                     if (model.get('tagName') === 'details') {
                         model.addAttributes({ open: 'true' });
@@ -538,40 +516,14 @@
 
                 window.editor.on('component:selected', () => { this.mobileMenuOpen = false; });
                 window.editor.on('block:drag:stop', () => { this.mobileMenuOpen = false; });
-                
-                // SMART TOOLBAR & COPY/DELETE LOGIC 
                 window.editor.on('component:selected', (c) => { 
                     const currentToolbar = c.get('toolbar') || [];
                     if(currentToolbar.some(i => i.command === 'tlb-move')) return;
-                    
                     c.set('toolbar', [
                         { attributes: { class: 'fa fa-arrows', title: 'Geser' }, command: 'tlb-move', label: '<i class="ph ph-arrows-out-cardinal"></i>' },
-                        { attributes: { class: 'fa fa-arrow-up', title: 'Pilih Parent' }, command: (e) => e.runCommand('core:component-exit'), label: '<i class="ph ph-arrow-fat-up"></i>' },
-                        { 
-                            attributes: { class: 'fa fa-clone', title: 'Duplikat (Pintar)' }, 
-                            command: (ed) => {
-                                let target = ed.getSelected();
-                                // Deteksi Accordion untuk duplikat utuh
-                                if (target.get('tagName') === 'summary' || target.get('tagName') === 'SUMMARY') target = target.parent();
-                                else if (target.parent() && (target.parent().get('tagName') === 'summary' || target.parent().get('tagName') === 'SUMMARY')) target = target.parent().parent();
-                                
-                                ed.select(target);
-                                ed.runCommand('core:copy'); ed.runCommand('core:paste');
-                            }, 
-                            label: '<i class="ph ph-copy"></i>' 
-                        },
-                        { 
-                            attributes: { class: 'fa fa-trash', title: 'Hapus (Pintar)' }, 
-                            command: (ed) => {
-                                let target = ed.getSelected();
-                                // Deteksi Accordion untuk hapus utuh
-                                if (target.get('tagName') === 'summary' || target.get('tagName') === 'SUMMARY') target = target.parent();
-                                else if (target.parent() && (target.parent().get('tagName') === 'summary' || target.parent().get('tagName') === 'SUMMARY')) target = target.parent().parent();
-                                
-                                target.remove();
-                            }, 
-                            label: '<i class="ph ph-trash text-red-400"></i>' 
-                        }
+                        { attributes: { class: 'fa fa-arrow-up', title: 'Parent' }, command: (e) => e.runCommand('core:component-exit'), label: '<i class="ph ph-arrow-fat-up"></i>' },
+                        { attributes: { class: 'fa fa-clone', title: 'Duplicate' }, command: 'tlb-clone', label: '<i class="ph ph-copy"></i>' },
+                        { attributes: { class: 'fa fa-trash', title: 'Delete' }, command: 'tlb-delete', label: '<i class="ph ph-trash text-red-400"></i>' }
                     ]);
                 });
             }
