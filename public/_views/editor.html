@@ -6,19 +6,17 @@
     <title>LandingBuilder Pro - Serverless Edition</title>
     
     <script>
-        const originalWarn = console.warn;
-        console.warn = function(...args) {
-            if (typeof args[0] === 'string' && args[0].includes('tailwindcss')) return;
-            originalWarn.apply(console, args);
-        };
-        const originalError = console.error;
-        console.error = function(...args) {
-            if (typeof args[0] === 'string' && args[0].includes('ResizeObserver')) return;
-            originalError.apply(console, args);
-        };
-        window.addEventListener('error', function(e) {
-            if (e.message.includes('ResizeObserver')) e.stopImmediatePropagation();
-        });
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0] && typeof args[0] === 'string' && (args[0].includes('cdn.tailwindcss.com') || args[0].includes('production'))) return;
+                originalWarn.apply(console, args);
+            };
+            window.onerror = function(msg, url, line) {
+                if(msg.includes('ResizeObserver')) return;
+                console.error("Global Error:", msg, "at", line);
+            };
+        })();
     </script>
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -30,6 +28,8 @@
     
     <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.2/dist/css/grapes.min.css">
     <script src="https://unpkg.com/grapesjs@0.21.2/dist/grapes.min.js"></script>
+    <script src="https://unpkg.com/grapesjs-navbar@1.0.1"></script>
+    <script src="https://unpkg.com/grapesjs-blocks-flexbox@0.1.1"></script>
     <script src="https://unpkg.com/grapesjs-style-bg@2.0.1"></script>
 
     <style>
@@ -45,7 +45,6 @@
         
         #gjs { position: relative !important; flex: 1; height: 100% !important; width: auto !important; min-width: 0; overflow: hidden; background-color: #f1f5f9; }
 
-        /* Mobile Adjustments */
         .mobile-tools { display: none; height: 50px; width: 100%; position: fixed; top: 60px; left: 0; z-index: 90; background: #ffffff; border-bottom: 1px solid #e5e7eb; align-items: center; justify-content: center; gap: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
         @media (max-width: 768px) {
             .mobile-tools { display: flex; }
@@ -59,17 +58,26 @@
         .gjs-pn-views-container, .gjs-pn-panels, .gjs-pn-views, .gjs-pn-commands { display: none !important; width: 0 !important; }
         .gjs-cv-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
         
-        /* TAMPILAN BLOK WIDGET MODULAR */
+        /* TAMPILAN BLOK WIDGET MODULAR & ACCORDION KATEGORI */
         .gjs-block-category { border-bottom: 1px solid #e2e8f0; width: 100%; }
         .gjs-block-category .gjs-title { 
             background-color: #f8fafc !important; color: #334155 !important; 
             border-bottom: 1px solid #f1f5f9; font-weight: 700; font-size: 11px; 
             padding: 12px 15px !important; text-transform: uppercase; letter-spacing: 0.5px;
+            cursor: pointer; display: flex; justify-content: space-between; align-items: center;
         }
-        .gjs-block-category .gjs-blocks-c { background-color: #ffffff; }
-        .gjs-blocks-c { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; padding: 15px !important; }
+        .gjs-block-category .gjs-title::after {
+            content: ''; display: inline-block; width: 0; height: 0;
+            border-left: 4px solid transparent; border-right: 4px solid transparent;
+            border-top: 5px solid #64748b; transition: transform 0.2s ease; transform: rotate(-90deg);
+        }
+        .gjs-block-category .gjs-blocks-c { display: none; background-color: #ffffff; }
+        .gjs-block-category.gjs-open .gjs-blocks-c { 
+            display: grid !important; grid-template-columns: repeat(2, 1fr) !important; 
+            gap: 10px !important; padding: 15px !important; 
+        }
+        .gjs-block-category.gjs-open .gjs-title::after { transform: rotate(0deg); }
         
-        /* Desain Kotak Ikon */
         .gjs-block { 
             width: 100% !important; min-height: 85px !important; padding: 12px 5px !important; 
             background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; 
@@ -77,6 +85,7 @@
             cursor: grab; transition: all 0.2s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.02); 
         }
         .gjs-block:hover { border-color: #4f46e5; background: #eef2ff; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.1); transform: translateY(-1px); }
+        .gjs-block:active { cursor: grabbing; }
         .gjs-block-label { font-size: 10px !important; font-weight: 600; color: #475569; text-align: center; line-height: 1.2; }
         .gjs-block-icon { font-size: 24px !important; color: #64748b; display: flex; align-items: center; justify-content: center; transition: color 0.2s; }
         .gjs-block:hover .gjs-block-icon, .gjs-block:hover .gjs-block-label { color: #4f46e5; }
@@ -87,16 +96,14 @@
         
         .gjs-selected { outline: 2px solid #4f46e5 !important; outline-offset: -2px; }
         
-        /* Custom Trait Buttons */
         .trait-custom-btn { width: 100%; padding: 10px 12px; background-color: #4f46e5; color: white; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
         .trait-custom-btn:hover { background-color: #4338ca; }
+        .trait-custom-btn:disabled { background-color: #9ca3af; cursor: not-allowed; }
         
-        /* Floating Toolbar di dalam Canvas */
         .gjs-toolbar { background-color: #1e293b !important; border-radius: 6px !important; border: 1px solid #334155 !important; box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important; padding: 4px !important; gap: 4px !important; }
         .gjs-toolbar-item { color: #f8fafc !important; width: 32px !important; height: 32px !important; border-radius: 4px; transition: background 0.2s; }
         .gjs-toolbar-item:hover { background: #334155 !important; color: #60a5fa !important; }
         
-        /* GrapesJS Form Inputs */
         .gjs-field { background-color: #ffffff !important; border: 1px solid #cbd5e1 !important; border-radius: 4px !important; color: #334155 !important; font-size: 12px !important; }
         .gjs-sm-sector .gjs-sm-title { background-color: #f8fafc !important; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; color: #1e293b !important; font-weight: bold; padding: 12px 15px !important; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
         .gjs-sm-properties { padding: 15px !important; }
@@ -183,6 +190,7 @@
                 </div>
             </div>
         </div>
+
         <div id="gjs"></div>
     </div>
 
@@ -247,10 +255,13 @@
     </div>
 
     <script>
+    let appBuilderCache = {};
+
     function safeJSONParse(input) {
         if (!input) return {};
         if (typeof input === 'object') return input;
-        try { return JSON.parse(input); } catch (e) { return {}; }
+        try { return JSON.parse(input); } 
+        catch (e) { return {}; }
     }
 
     (function(){
@@ -271,19 +282,16 @@
     })();
 
     function getElementorIcon(category, id) {
-        if(!category) return 'ph:cube-duotone';
-        const cat = category.toLowerCase();
-        if(cat.includes('header') || id.includes('hero')) return 'ph:layout-duotone';
-        if(cat.includes('feature')) return 'ph:squares-four-duotone';
-        if(cat.includes('commerce') || id.includes('price')) return 'ph:tag-duotone';
+        if(category.toLowerCase().includes('header') || id.includes('hero')) return 'ph:layout-duotone';
+        if(category.toLowerCase().includes('feature')) return 'ph:squares-four-duotone';
+        if(category.toLowerCase().includes('commerce') || id.includes('price')) return 'ph:tag-duotone';
         if(id.includes('contact')) return 'ph:envelope-simple-duotone';
         if(id.includes('container') || id.includes('col')) return 'ph:columns-duotone';
         if(id.includes('text')) return 'ph:text-t-duotone';
         if(id.includes('image')) return 'ph:image-duotone';
-        if(id.includes('button') || id.includes('link')) return 'ph:mouse-left-click-duotone';
+        if(id.includes('button')) return 'ph:mouse-left-click-duotone';
         if(id.includes('faq') || id.includes('accordion')) return 'ph:list-dashes-duotone';
         if(id.includes('countdown')) return 'ph:timer-duotone';
-        if(id.includes('divider')) return 'ph:minus-duotone';
         return 'ph:cube-duotone';
     }
 
@@ -298,87 +306,76 @@
                     await this.loadWidgets();
                     const slug = new URLSearchParams(window.location.search).get('slug');
                     if (slug) await this.loadPageData(slug);
-                } catch (e) { console.error("Init Error:", e); this.notify('System Error', 'Gagal memuat editor.', 'error'); }
+                } catch (e) { console.error("Fatal Init Error:", e); this.notify('System Error', 'Gagal memuat editor. Cek console.', 'error'); }
             },
 
             notify(title, msg, type = 'success') { const id = Date.now(); this.notifications.push({ id, title, msg, type, show: true }); setTimeout(() => { this.notifications = this.notifications.filter(n => n.id !== id); }, 4000); },
             setDevice(d) { this.device = d; if (window.editor) window.editor.setDevice(d); this.mobileMenuOpen = false; },
             toggleMobileMenu() { this.mobileMenuOpen = !this.mobileMenuOpen; },
+            cmd(c) { window.editor.runCommand(c); },
 
             async loadWidgets() {
-                const domc = window.editor.DomComponents; 
-                const bm = window.editor.BlockManager;
-                
+                const domc = window.editor.DomComponents; const bm = window.editor.BlockManager;
                 try {
                     const res = await fetch('/api/widgets');
                     if (!res.ok) throw new Error(`API Widget Error: ${res.status}`);
-                    let widgets = await res.json();
+                    const widgets = await res.json();
                     
-                    widgets.sort((a, b) => a.category.localeCompare(b.category));
-
                     widgets.forEach(w => {
+                        appBuilderCache[w.id] = w;
                         let dbConfig = safeJSONParse(w.attributes);
-                        let scriptFn = undefined;
 
-                        // FIX COUNTDOWN: Injeksi Skrip Waktu Dinamis Universal yang Tahan Error (Mengabaikan script rusak dari DB)
-                        if (w.content && w.content.includes('cd-days')) {
-                            scriptFn = new Function(`
-                                var el = this;
-                                var update = function() {
-                                    var t = el.getAttribute('data-end-time');
-                                    if(!t) return;
-                                    
-                                    var target = new Date(t).getTime();
-                                    if(isNaN(target)) target = new Date(t.replace('T', ' ')).getTime();
-                                    if(isNaN(target)) target = new Date(t + ':00').getTime(); // Fallback Ekstra
-                                    
-                                    var dist = target - new Date().getTime();
-                                    
-                                    var dEl = el.querySelector('.cd-days');
-                                    var hEl = el.querySelector('.cd-hours');
-                                    var mEl = el.querySelector('.cd-mins');
-                                    var sEl = el.querySelector('.cd-secs');
-                                    
-                                    if (dist < 0 || isNaN(dist)) {
-                                        if(dEl) dEl.innerHTML = "00"; if(hEl) hEl.innerHTML = "00";
-                                        if(mEl) mEl.innerHTML = "00"; if(sEl) sEl.innerHTML = "00"; return;
-                                    }
-                                    
-                                    var d = Math.floor(dist / 86400000);
-                                    var h = Math.floor((dist % 86400000) / 3600000);
-                                    var m = Math.floor((dist % 3600000) / 60000);
-                                    var s = Math.floor((dist % 60000) / 1000);
-                                    
-                                    if(dEl) dEl.innerHTML = d < 10 ? '0'+d : d;
-                                    if(hEl) hEl.innerHTML = h < 10 ? '0'+h : h;
-                                    if(mEl) mEl.innerHTML = m < 10 ? '0'+m : m;
-                                    if(sEl) sEl.innerHTML = s < 10 ? '0'+s : s;
-                                };
-                                update();
-                                if(el.cdInt) clearInterval(el.cdInt);
-                                el.cdInt = setInterval(update, 1000);
-                            `);
-                        } else if (w.script) {
-                            scriptFn = new Function(w.script);
-                        }
+                        let compDefaults = {
+                            ...dbConfig,
+                            tagName: dbConfig.tagName || 'div',
+                            attributes: { ...(dbConfig.attributes || {}), 'data-gjs-type': w.id },
+                            traits: dbConfig.traits || []
+                        };
 
                         domc.addType(w.id, {
-                            isComponent: el => { if (el.getAttribute && el.getAttribute('data-gjs-type') === w.id) return { type: w.id }; },
+                            isComponent: el => {
+                                if (el.getAttribute && el.getAttribute('data-gjs-type') === w.id) {
+                                    return { type: w.id };
+                                }
+                            },
                             model: { 
-                                defaults: { ...dbConfig, tagName: dbConfig.tagName || 'div', attributes: { ...(dbConfig.attributes || {}), 'data-gjs-type': w.id }, traits: dbConfig.traits || [] },
-                                script: scriptFn
+                                defaults: compDefaults,
+                                // KEMBALI KE KODE ANDA YANG TERBUKTI BERFUNGSI UNTUK SCRIPT DATABSE (COUNTDOWN DLL)
+                                script: w.script ? new Function(w.script) : undefined
                             }
                         });
                         
                         if (w.category !== 'System') { 
-                            bm.add(w.id, { 
-                                label: `<div class="gjs-block-icon"><iconify-icon icon="${getElementorIcon(w.category, w.id)}"></iconify-icon></div><div class="gjs-block-label">${w.label}</div>`, 
-                                category: w.category, content: w.content 
-                            }); 
+                            if (!bm.get(w.id)) { 
+                                bm.add(w.id, { 
+                                    label: `
+                                        <div class="gjs-block-icon"><iconify-icon icon="${getElementorIcon(w.category, w.id)}"></iconify-icon></div>
+                                        <div class="gjs-block-label">${w.label}</div>
+                                    `, 
+                                    category: w.category, 
+                                    content: w.content 
+                                }); 
+                            }
                         }
                     });
+                    
+                    // Elementor Style: Tutup Semua Kategori Kecuali Yang Pertama Saat Render Selesai
+                    setTimeout(() => {
+                        const categories = document.querySelectorAll('.gjs-block-category');
+                        categories.forEach(cat => {
+                            if(cat === categories[0]) cat.classList.add('gjs-open');
+                            else cat.classList.remove('gjs-open');
 
-                } catch (e) { console.error("Widget Load Failed:", e); this.notify('Warning', 'Gagal memuat widget.', 'error'); }
+                            const title = cat.querySelector('.gjs-title');
+                            if(title) {
+                                title.addEventListener('click', () => {
+                                    cat.classList.toggle('gjs-open');
+                                });
+                            }
+                        });
+                    }, 500);
+
+                } catch (e) { console.error("Widget Load Failed:", e); this.notify('Warning', 'Gagal memuat widget library.', 'error'); }
             },
 
             async loadPageData(slug) {
@@ -387,7 +384,10 @@
                     const res = await fetch(`/api/admin/pages/${slug}`);
                     if (!res.ok) throw new Error("Gagal mengambil data halaman");
                     const data = await res.json();
-                    this.page.id = data.id; this.page.slug = data.slug; this.page.title = data.title || ''; this.page.product_type = data.product_type || 'physical';
+                    this.page.id = data.id; 
+                    this.page.slug = data.slug; 
+                    this.page.title = data.title || '';
+                    this.page.product_type = data.product_type || 'physical';
 
                     if (data.product_config_json) { 
                         const conf = typeof data.product_config_json === 'string' ? safeJSONParse(data.product_config_json) : data.product_config_json; 
@@ -396,10 +396,11 @@
                         if(conf.settings) this.page.config.settings = { ...this.page.config.settings, ...conf.settings };
                     }
                     if (window.editor) {
-                        window.editor.setComponents(data.html_content || '<div></div>'); window.editor.setStyle(data.css_content || '');
+                        window.editor.setComponents(data.html_content || '<div></div>'); 
+                        window.editor.setStyle(data.css_content || '');
                         setTimeout(() => { if (window.editor.getSelected()) window.editor.runCommand('core:component-exit'); }, 500);
                     }
-                    this.notify('Ready', `Halaman dimuat.`);
+                    this.notify('Ready', `Halaman dimuat dengan aman.`);
                 } catch (e) { this.notify('Error', e.message, 'error'); }
                 this.loading = false;
             },
@@ -408,11 +409,14 @@
                 if(!this.page.slug) return this.notify('Validasi', 'Slug halaman tidak boleh kosong', 'error');
                 this.loading = true;
                 try {
-                    let html = window.editor.getHtml(); const css = window.editor.getCss(); 
+                    let html = window.editor.getHtml(); 
+                    const css = window.editor.getCss(); 
                     
-                    // MEMBERSIHKAN ATRIBUT 'OPEN' PADA ACCORDION SAAT SAVE
-                    const tempDiv = document.createElement('div'); tempDiv.innerHTML = html;
-                    tempDiv.querySelectorAll('details').forEach(el => el.removeAttribute('open')); html = tempDiv.innerHTML;
+                    // Bersihkan attribut 'open' saat save sehingga di frontend tertutup rapi
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = html;
+                    tempDiv.querySelectorAll('details').forEach(el => el.removeAttribute('open'));
+                    html = tempDiv.innerHTML;
 
                     const payload = { id: this.page.id, slug: this.page.slug, title: this.page.title, html: html, css: css, product_config: this.page.config, product_type: this.page.product_type };
                     const res = await fetch('/api/admin/pages', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
@@ -424,7 +428,6 @@
             initGrapes() {
                 window.editor = grapesjs.init({
                     container: '#gjs', height: '100%', width: 'auto', storageManager: false, showOffsets: 1, noticeOnUnload: 0, panels: { defaults: [] }, allowScripts: 1,
-                    plugins: ['grapesjs-style-bg'], // PLUGIN BASIC & FORM BENAR-BENAR DIBERSIHKAN
                     assetManager: { 
                         uploadText: 'Drop gambar di sini', autoAdd: 1,
                         uploadFile: async (e) => {
@@ -437,46 +440,64 @@
                                         const res = await fetch('/api/admin/upload-image', { method: 'POST', body: fd }); const json = await res.json();
                                         let finalData = null; if (json.data && Array.isArray(json.data)) finalData = json.data[0]; else if (json.secure_url) finalData = { src: json.secure_url, width: json.width, height: json.height };
                                         if(finalData) window.editor.AssetManager.add(finalData); else alert('Gagal parse response Cloudinary');
-                                    } catch(err) { alert('Upload Gagal'); }
+                                    } catch(err) { console.error(err); alert('Upload Gagal: ' + err.message); }
                                 };
                             }
                         }
                     },
-                    canvas: { scripts: ['https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js', 'https://cdn.tailwindcss.com'], styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'] },
+                    canvas: { 
+                        scripts: ['https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js', 'https://cdn.tailwindcss.com'], 
+                        styles: ['https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css'] 
+                    },
+                    // PLUGIN BASIC DAN FORM DIHAPUS TOTAL! HANYA PAKAI STYLE-BG SAJA
+                    plugins: ['grapesjs-navbar', 'grapesjs-blocks-flexbox', 'grapesjs-style-bg'],
                     deviceManager: { devices: [ { id: 'desktop', width: '' }, { id: 'tablet', width: '768px' }, { id: 'mobile', width: '375px' } ] },
                     blockManager: { appendTo: '#blocks-container' },
                     styleManager: { appendTo: '#styles-container', sectors: [{name: 'Dimension', buildProps: ['width','height','padding','margin']},{name:'Typography', buildProps:['font-size','color','text-align']},{name:'Decorations', buildProps:['background-color','border-radius','border','box-shadow']}] },
-                    traitManager: { appendTo: '#traits-container' }, selectorManager: { appendTo: '#selectors-container' }
-                });
-
-                // MEMBERSIHKAN KATEGORI BAWAAN YANG MUNGKIN TERSISA DAN MENUTUP KATEGORI
-                window.editor.on('load', () => {
-                    window.editor.BlockManager.getAll().reset(); 
-                });
-
-                // MENUTUP SEMUA KATEGORI SECARA DEFAULT (ELEMENTOR STYLE)
-                window.editor.on('block:custom', () => {
-                    const categories = window.editor.BlockManager.getCategories();
-                    categories.each((cat, index) => { cat.set('open', index === 0); });
+                    traitManager: { appendTo: '#traits-container' }, layerManager: { appendTo: '#layers-container' }, selectorManager: { appendTo: '#selectors-container' }
                 });
 
                 window.editor.on('canvas:load', () => {
                     const iframeDoc = window.editor.Canvas.getDocument();
+                    
+                    const existingConfig = iframeDoc.getElementById('tw-config');
+                    if(existingConfig) existingConfig.remove();
+
                     const s = iframeDoc.createElement('script');
-                    s.innerHTML = `window.tailwind = window.tailwind || {}; window.tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { theme: { 50:'#eef2ff', 600:'#4f46e5' } } } } };`;
+                    s.id = 'tw-config';
+                    s.innerHTML = `
+                        window.tailwind = window.tailwind || {};
+                        window.tailwind.config = { 
+                            darkMode: 'class', 
+                            theme: { 
+                                extend: { 
+                                    fontFamily: { sans: ['Inter', 'sans-serif'] }, 
+                                    colors: { theme: { 50:'#eef2ff', 600:'#4f46e5' } },
+                                    animation: { marquee: 'marquee 25s linear infinite' }, 
+                                    keyframes: { marquee: { '0%': { transform: 'translateX(0%)' }, '100%': { transform: 'translateX(-100%)' } } } 
+                                } 
+                            } 
+                        };
+                    `;
                     iframeDoc.head.insertBefore(s, iframeDoc.head.firstChild);
 
-                    const st = iframeDoc.createElement('style');
-                    st.innerHTML = "body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; padding-top: 1px; } div:empty { min-height: 50px; outline: 1px dashed #ccc; } details summary { pointer-events: none; } details { outline: 1px dashed transparent; transition: outline 0.2s; } details:hover { outline: 1px dashed #4f46e5; cursor: pointer; }";
-                    iframeDoc.head.appendChild(st);
+                    if(!iframeDoc.getElementById('editor-base-style')) {
+                        const st = iframeDoc.createElement('style');
+                        st.id = 'editor-base-style';
+                        // Agar Accordion bisa di klik/diedit di dalam kanvas
+                        st.innerHTML = "body { font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; background-color: #ffffff; margin: 0; padding-top: 1px; } div:empty { min-height: 50px; outline: 1px dashed #ccc; } details summary { pointer-events: none; }";
+                        iframeDoc.head.appendChild(st);
+                    }
                 });
 
-                // MEMASTIKAN ACCORDION TERBUKA SAAT BERADA DI KANVAS EDITOR
+                // FAQ/ACCORDION OTOMATIS TERBUKA DI EDITOR (UNTUK MEMUDAHKAN EDIT)
                 window.editor.on('component:add', (model) => {
-                    if (model.get('tagName') === 'DETAILS') { model.addAttributes({ open: 'true' }); }
+                    if (model.get('tagName') === 'details') {
+                        model.addAttributes({ open: 'true' });
+                    }
                 });
 
-                const domc = window.editor.DomComponents; const tm = window.editor.TraitManager; const cmds = window.editor.Commands;
+                const domc = window.editor.DomComponents; const cmds = window.editor.Commands; const tm = window.editor.TraitManager; const bm = window.editor.BlockManager;
 
                 tm.addType('file-upload', {
                     createInput({ trait }) {
@@ -493,8 +514,8 @@
                                 try {
                                     const res = await fetch('/api/admin/upload-image', { method: 'POST', body: formData }); const json = await res.json();
                                     const url = json.data ? json.data[0].src : (json.url || json.secure_url);
-                                    if(url) { trait.setValue(url); trait.target.addAttributes({ [trait.get('name')]: url }); if(trait.target.get('tagName') === 'IMG') { trait.target.set('src', url); } } 
-                                } catch(err) { alert('Upload Gagal'); } finally { btn.innerHTML = originalText; btn.disabled = false; }
+                                    if(url) { trait.setValue(url); trait.target.addAttributes({ [trait.get('name')]: url }); if(trait.target.get('tagName') === 'img') { trait.target.set('src', url); } } else { alert('Gagal mendapatkan URL gambar'); }
+                                } catch(err) { alert('Upload Gagal: ' + err.message); } finally { btn.innerHTML = originalText; btn.disabled = false; }
                             };
                         };
                         div.appendChild(btn); div.appendChild(input); return div;
@@ -503,58 +524,55 @@
 
                 tm.addType('datetime-local', {
                     createInput({ trait }) {
-                        const input = document.createElement('input'); input.type = 'datetime-local';
+                        const input = document.createElement('input');
+                        input.type = 'datetime-local';
                         input.className = 'w-full px-2 py-2 text-xs border border-gray-300 rounded outline-none focus:border-indigo-500 bg-white font-mono';
                         return input;
                     }
                 });
 
                 tm.addType('icon-picker', { noLabel: true, createInput({ trait }) { const btn = document.createElement('button'); btn.className = 'trait-custom-btn w-full bg-[#1e293b] hover:bg-[#0f172a]'; btn.innerHTML = '<i class="ph ph-star"></i> PILIH ICON'; btn.onclick = () => { window.openIconifyPicker(trait.target); }; return btn; } });
-                cmds.add('open-icon-picker', { run(editor, sender, opts) { const selected = editor.getSelected(); if (selected && window.openIconifyPicker) { window.openIconifyPicker(selected); } } });
+                cmds.add('open-icon-picker', { run(editor, sender, opts) { const selected = editor.getSelected(); if (selected && window.openIconifyPicker) { window.openIconifyPicker(selected); } else { alert('Pilih komponen icon terlebih dahulu'); } } });
                 
                 domc.addType('image', { model: { defaults: { traits: [ { type: 'text', name: 'src', label: 'URL Sumber' }, { type: 'file-upload', name: 'src', label: 'Upload Baru' }, { type: 'text', name: 'alt', label: 'Alt Text' } ] } } });
 
-                // =========================================================================
-                // FIX SMART COPY / DELETE (Logika Cerdas Duplikat Accordion 1 Blok Utuh)
-                // =========================================================================
                 window.editor.on('component:selected', () => { this.mobileMenuOpen = false; });
+                window.editor.on('block:drag:stop', () => { this.mobileMenuOpen = false; });
+                
+                // SMART TOOLBAR & COPY/DELETE LOGIC 
                 window.editor.on('component:selected', (c) => { 
                     const currentToolbar = c.get('toolbar') || [];
                     if(currentToolbar.some(i => i.command === 'tlb-move')) return;
                     
                     c.set('toolbar', [
                         { attributes: { class: 'fa fa-arrows', title: 'Geser' }, command: 'tlb-move', label: '<i class="ph ph-arrows-out-cardinal"></i>' },
-                        { attributes: { class: 'fa fa-arrow-up', title: 'Pilih Induk' }, command: (e) => e.runCommand('core:component-exit'), label: '<i class="ph ph-arrow-fat-up"></i>' },
+                        { attributes: { class: 'fa fa-arrow-up', title: 'Pilih Parent' }, command: (e) => e.runCommand('core:component-exit'), label: '<i class="ph ph-arrow-fat-up"></i>' },
                         { 
-                            attributes: { class: 'fa fa-clone', title: 'Duplikat Komponen' }, 
+                            attributes: { class: 'fa fa-clone', title: 'Duplikat (Pintar)' }, 
                             command: (ed) => {
                                 let target = ed.getSelected();
-                                // Jika yang diklik anak accordion, temukan induknya (<details>)
-                                if (target.get('tagName') === 'SUMMARY') target = target.parent();
-                                else if (target.parent() && target.parent().get('tagName') === 'SUMMARY') target = target.parent().parent();
+                                // Deteksi Accordion untuk duplikat utuh
+                                if (target.get('tagName') === 'summary' || target.get('tagName') === 'SUMMARY') target = target.parent();
+                                else if (target.parent() && (target.parent().get('tagName') === 'summary' || target.parent().get('tagName') === 'SUMMARY')) target = target.parent().parent();
                                 
-                                target.collection.add(target.clone(), { at: target.index() + 1 });
+                                ed.select(target);
+                                ed.runCommand('core:copy'); ed.runCommand('core:paste');
                             }, 
                             label: '<i class="ph ph-copy"></i>' 
                         },
                         { 
-                            attributes: { class: 'fa fa-trash', title: 'Hapus Komponen' }, 
+                            attributes: { class: 'fa fa-trash', title: 'Hapus (Pintar)' }, 
                             command: (ed) => {
                                 let target = ed.getSelected();
-                                if (target.get('tagName') === 'SUMMARY') target = target.parent();
-                                else if (target.parent() && target.parent().get('tagName') === 'SUMMARY') target = target.parent().parent();
+                                // Deteksi Accordion untuk hapus utuh
+                                if (target.get('tagName') === 'summary' || target.get('tagName') === 'SUMMARY') target = target.parent();
+                                else if (target.parent() && (target.parent().get('tagName') === 'summary' || target.parent().get('tagName') === 'SUMMARY')) target = target.parent().parent();
+                                
                                 target.remove();
                             }, 
                             label: '<i class="ph ph-trash text-red-400"></i>' 
                         }
                     ]);
-                });
-
-                // Menangkap tombol "Ctrl+C" / "Cmd+C" di keyboard untuk Accordion
-                window.editor.Keymaps.add('smart-copy', '⌘+c, ctrl+c', (ed) => {
-                    let target = ed.getSelected();
-                    if (target && target.get('tagName') === 'SUMMARY' && target.parent()) { ed.select(target.parent()); }
-                    ed.runCommand('core:copy');
                 });
             }
         };
